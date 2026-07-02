@@ -1,6 +1,7 @@
 import { initializeViewManager } from './core/view-manager.js';
 import { initializeShortcuts, registerShortcut } from './core/shortcuts.js';
 import { CommandPalette } from './core/command-palette.js';
+import { QuickCapture } from './core/quick-capture.js';
 
 function toggleSidebar() {
   const sidebar = document.querySelector('.sidebar');
@@ -117,6 +118,11 @@ window.addEventListener('DOMContentLoaded', () => {
   registerShortcut('ctrl+b', () => {
     toggleSidebar();
   });
+
+  // Register Quick Capture shortcuts
+  registerShortcut('ctrl+n', () => QuickCapture.open());
+  registerShortcut('meta+n', () => QuickCapture.open());
+  registerShortcut('c', () => QuickCapture.open());
 
   console.log('Bench application shell successfully initialized.');
 });
