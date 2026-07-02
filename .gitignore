@@ -1,0 +1,29 @@
+# Node
+node_modules/
+
+# Build
+dist/
+build/
+
+# Tauri
+src-tauri/target/
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Rust
+Cargo.lock
