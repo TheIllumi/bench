@@ -1,0 +1,83 @@
+import { renderFocusView } from '../modules/focus-view.js';
+import { renderCaptureView } from '../modules/capture-view.js';
+import { renderAreasView } from '../modules/areas-view.js';
+import { renderParkingLotView } from '../modules/parking-lot-view.js';
+import { renderArchiveView } from '../modules/archive-view.js';
+import { renderSettingsView } from '../modules/settings-view.js';
+
+// Mapping of module names to their titles and render functions
+const viewMap = {
+  'focus': { title: 'Focus', render: renderFocusView },
+  'capture': { title: 'Capture', render: renderCaptureView },
+  'areas': { title: 'Areas', render: renderAreasView },
+  'parking-lot': { title: 'Parking Lot', render: renderParkingLotView },
+  'archive': { title: 'Archive', render: renderArchiveView },
+  'settings': { title: 'Settings', render: renderSettingsView }
+};
+
+let activeModule = 'focus';
+let switchViewFn = null;
+
+export function initializeViewManager() {
+  const navItems = document.querySelectorAll('.nav-item');
+  const activeViewContainer = document.getElementById('active-view');
+  const viewTitleEl = document.getElementById('view-title');
+
+  if (!activeViewContainer || !viewTitleEl) {
+    console.error('View manager initialization failed: layout elements not found.');
+    return;
+  }
+
+  // Switches the active module state and re-renders the UI
+  function switchView(moduleId) {
+    const targetView = viewMap[moduleId];
+    if (!targetView) {
+      console.warn(`View renderer for module "${moduleId}" does not exist.`);
+      return;
+    }
+
+    activeModule = moduleId;
+
+    // Update title
+    viewTitleEl.textContent = targetView.title;
+
+    // Update active class in sidebar nav items
+    navItems.forEach(item => {
+      if (item.getAttribute('data-module') === moduleId) {
+        item.classList.add('active');
+        item.focus(); // Shift focus for accessibility/keyboard comfort
+      } else {
+        item.classList.remove('active');
+      }
+    });
+
+    // Clear and render new content
+    activeViewContainer.innerHTML = '';
+    targetView.render(activeViewContainer);
+  }
+
+  // Bind click handlers to navigation items
+  navItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const moduleId = item.getAttribute('data-module');
+      switchView(moduleId);
+    });
+  });
+
+  // Load the default initial view
+  switchView(activeModule);
+
+  // Expose switchView to global module scope so shortcuts can trigger it
+  switchViewFn = switchView;
+}
+
+export function navigateTo(moduleId) {
+  if (switchViewFn) {
+    switchViewFn(moduleId);
+  }
+}
+
+export function getActiveModule() {
+  return activeModule;
+}

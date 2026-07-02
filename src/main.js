@@ -1,18 +1,12 @@
-const { invoke } = window.__TAURI__.core;
+import { initializeViewManager } from './core/view-manager.js';
+import { initializeShortcuts } from './core/shortcuts.js';
 
-let greetInputEl;
-let greetMsgEl;
+window.addEventListener('DOMContentLoaded', () => {
+  // Initialize dynamic view/module routing
+  initializeViewManager();
 
-async function greet() {
-  // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-  greetMsgEl.textContent = await invoke("greet", { name: greetInputEl.value });
-}
+  // Initialize global and navigation keyboard shortcuts
+  initializeShortcuts();
 
-window.addEventListener("DOMContentLoaded", () => {
-  greetInputEl = document.querySelector("#greet-input");
-  greetMsgEl = document.querySelector("#greet-msg");
-  document.querySelector("#greet-form").addEventListener("submit", (e) => {
-    e.preventDefault();
-    greet();
-  });
+  console.log('Bench application shell successfully initialized.');
 });
