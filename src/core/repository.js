@@ -54,7 +54,7 @@ export const Repository = {
    * @returns {Array<object>}
    */
   getByModule(moduleName) {
-    return this.getAll().filter(item => item.module === moduleName);
+    return this.getAll().filter(item => item.module === moduleName && item.type !== 'area');
   },
 
   /**
@@ -74,6 +74,7 @@ export const Repository = {
       notes: item.notes || '',
       status: item.status || 'active',
       module: item.module || 'focus',
+      areaId: item.areaId || undefined,
       createdAt: item.createdAt || now,
       updatedAt: now
     };
@@ -191,6 +192,70 @@ export const Repository = {
 
     this._saveRaw(toKeep);
     toDelete.forEach(item => EventBus.emit('itemDeleted', item));
+  },
+
+  /**
+   * Get all Area entities.
+   * @returns {Array<object>}
+   */
+  getAreas() {
+    return this.getAll().filter(item => item.type === 'area');
+  },
+
+  /**
+   * Create or update an Area entity.
+   * Fires event `areaCreated` or `areaUpdated`.
+   * @param {object} area
+   * @returns {object} The saved area
+   */
+  saveArea(area) {
+    const items = this.getAll();
+    const now = Date.now();
+    const newArea = {
+      id: area.id || crypto.randomUUID(),
+      type: 'area',
+      name: area.name || '',
+      color: area.color || '',
+      createdAt: area.createdAt || now,
+      updatedAt: now
+    };
+
+    const idx = items.findIndex(i => i.id === newArea.id && i.type === 'area');
+    if (idx !== -1) {
+      items[idx] = newArea;
+      this._saveRaw(items);
+      EventBus.emit('areaUpdated', newArea);
+    } else {
+      items.push(newArea);
+      this._saveRaw(items);
+      EventBus.emit('areaCreated', newArea);
+    }
+    return newArea;
+  },
+
+  /**
+   * Delete an Area entity if not referenced by any items.
+   * Fires event `areaDeleted`.
+   * @param {string} id
+   * @returns {boolean} True if deleted, false if in-use or not found
+   */
+  deleteArea(id) {
+    const items = this.getAll();
+
+    // Check if in use by any focus or capture tasks/items
+    const inUse = items.some(item => item.areaId === id);
+    if (inUse) {
+      return false;
+    }
+
+    const area = items.find(i => i.id === id && i.type === 'area');
+    if (!area) return false;
+
+    const filtered = items.filter(i => i.id !== id);
+    this._saveRaw(filtered);
+
+    EventBus.emit('areaDeleted', area);
+    return true;
   },
 
   /**

@@ -35,6 +35,9 @@ export function renderFocusView(container) {
   EventBus.on('itemUpdated', handleItemChange);
   EventBus.on('itemDeleted', handleItemChange);
   EventBus.on('itemMoved', handleItemChange);
+  EventBus.on('areaCreated', handleItemChange);
+  EventBus.on('areaUpdated', handleItemChange);
+  EventBus.on('areaDeleted', handleItemChange);
 
   window.removeEventListener('keydown', handleGlobalKeydown);
   window.addEventListener('keydown', handleGlobalKeydown);
@@ -63,6 +66,9 @@ function cleanupEventBus() {
   EventBus.off('itemUpdated', handleItemChange);
   EventBus.off('itemDeleted', handleItemChange);
   EventBus.off('itemMoved', handleItemChange);
+  EventBus.off('areaCreated', handleItemChange);
+  EventBus.off('areaUpdated', handleItemChange);
+  EventBus.off('areaDeleted', handleItemChange);
 }
 
 function cleanupListeners() {
@@ -243,9 +249,17 @@ function buildTaskRow(task) {
     row.appendChild(input);
     requestAnimationFrame(() => { input.focus(); input.select(); });
   } else {
+    const area = task.areaId ? Repository.getAreas().find(a => a.id === task.areaId) : null;
     const title = document.createElement('span');
     title.className = 'task-title';
-    title.textContent = task.title;
+    if (area) {
+      const areaLabel = document.createElement('span');
+      areaLabel.className = 'task-area-label';
+      areaLabel.textContent = `[${area.name}] `;
+      title.appendChild(areaLabel);
+    }
+    const textNode = document.createTextNode(task.title);
+    title.appendChild(textNode);
     row.appendChild(title);
   }
 
@@ -261,6 +275,14 @@ function buildTaskRow(task) {
     editBtn.textContent = 'edit';
     editBtn.addEventListener('click', (e) => { e.stopPropagation(); startEditing(task.id); });
     actions.appendChild(editBtn);
+
+    const assignBtn = document.createElement('button');
+    assignBtn.className = 'action-btn';
+    assignBtn.setAttribute('aria-label', 'Assign Area');
+    assignBtn.setAttribute('tabindex', '-1');
+    assignBtn.textContent = 'area';
+    assignBtn.addEventListener('click', (e) => { e.stopPropagation(); openAreaPicker(e, task); });
+    actions.appendChild(assignBtn);
   }
 
   const delBtn = document.createElement('button');
@@ -537,4 +559,67 @@ function startDrag(event, row) {
   handle.addEventListener('pointermove', onMove);
   handle.addEventListener('pointerup', onUp);
   handle.addEventListener('pointercancel', onUp);
+}
+
+/**
+ * Open floating Area picker dropdown next to active task element.
+ */
+function openAreaPicker(e, task) {
+  e.stopPropagation();
+
+  // Remove existing dropdowns
+  const existing = document.querySelector('.area-picker-dropdown');
+  if (existing) existing.remove();
+
+  const rect = e.target.getBoundingClientRect();
+  const picker = document.createElement('div');
+  picker.className = 'area-picker-dropdown';
+  
+  // Align picker below the action button
+  picker.style.top = `${rect.bottom + window.scrollY}px`;
+  picker.style.left = `${rect.left + window.scrollX}px`;
+
+  const areasList = Repository.getAreas();
+
+  if (areasList.length === 0) {
+    const disabledItem = document.createElement('div');
+    disabledItem.className = 'area-picker-item disabled';
+    disabledItem.textContent = 'No Areas created';
+    picker.appendChild(disabledItem);
+  } else {
+    // [None] selection to un-assign the area
+    const noneItem = document.createElement('div');
+    noneItem.className = 'area-picker-item';
+    noneItem.textContent = '[None]';
+    noneItem.addEventListener('click', () => {
+      Repository.update(task.id, { areaId: null });
+      picker.remove();
+    });
+    picker.appendChild(noneItem);
+
+    areasList.forEach(area => {
+      const item = document.createElement('div');
+      item.className = 'area-picker-item';
+      item.textContent = `[${area.name}]`;
+      if (task.areaId === area.id) {
+        item.classList.add('active');
+      }
+      item.addEventListener('click', () => {
+        Repository.update(task.id, { areaId: area.id });
+        picker.remove();
+      });
+      picker.appendChild(item);
+    });
+  }
+
+  document.body.appendChild(picker);
+
+  // Close dropdown on click outside
+  const closePicker = (event) => {
+    if (!picker.contains(event.target) && event.target !== e.target) {
+      picker.remove();
+      document.removeEventListener('mousedown', closePicker);
+    }
+  };
+  document.addEventListener('mousedown', closePicker);
 }

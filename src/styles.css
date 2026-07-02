@@ -940,3 +940,40 @@ body {
   margin-right: var(--space-md);
   white-space: nowrap;
 }
+
+/* Area Styling & Assignment Picker */
+.task-area-label {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  margin-right: var(--space-xxs);
+}
+
+.area-picker-dropdown {
+  position: absolute;
+  background-color: var(--color-bg-workspace);
+  border: 1px solid var(--color-border);
+  z-index: 1000;
+  min-width: 130px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: inherit;
+}
+
+.area-picker-item {
+  padding: var(--space-xs) var(--space-sm);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.area-picker-item:hover,
+.area-picker-item.active {
+  background-color: var(--color-bg-surface);
+  color: var(--color-accent-blue);
+}
+
+.area-picker-item.disabled {
+  cursor: not-allowed;
+  color: var(--color-text-muted);
+}
