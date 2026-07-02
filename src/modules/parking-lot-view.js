@@ -39,6 +39,16 @@ export function renderParkingLotView(container) {
   observer.observe(document.body, { childList: true, subtree: true });
 }
 
+/**
+ * Focus and highlight a specific parked item.
+ * Called by the Command Palette.
+ */
+export function focusAndSelectParkedTask(itemId) {
+  selectedItemId = itemId;
+  const activeContainer = document.getElementById('active-view');
+  if (activeContainer) renderParkingLotView(activeContainer);
+}
+
 function handleItemChange() {
   items = Repository.getByModule('parking-lot').sort((a, b) => b.updatedAt - a.updatedAt);
   renderView();

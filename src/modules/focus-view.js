@@ -293,6 +293,16 @@ function buildTaskRow(task) {
     actions.appendChild(parkBtn);
   }
 
+  if (!isEditing) {
+    const archiveBtn = document.createElement('button');
+    archiveBtn.className = 'action-btn';
+    archiveBtn.setAttribute('aria-label', 'Archive task');
+    archiveBtn.setAttribute('tabindex', '-1');
+    archiveBtn.textContent = 'archive';
+    archiveBtn.addEventListener('click', (e) => { e.stopPropagation(); archiveTask(task.id); });
+    actions.appendChild(archiveBtn);
+  }
+
   const delBtn = document.createElement('button');
   delBtn.className = 'action-btn';
   delBtn.setAttribute('aria-label', 'Delete task');
@@ -403,6 +413,12 @@ function parkTask(taskId) {
   Repository.move(taskId, 'parking-lot');
   if (selectedTaskId === taskId) selectedTaskId = null;
   ToastService.show('Parked.', 'success');
+}
+
+function archiveTask(taskId) {
+  Repository.move(taskId, 'archive');
+  if (selectedTaskId === taskId) selectedTaskId = null;
+  ToastService.show('Archived.', 'success');
 }
 
 // --- Keyboard Navigation ---

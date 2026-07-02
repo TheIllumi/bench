@@ -117,15 +117,15 @@ export const CommandPalette = {
  */
 function updateResults(query) {
   const normalizedQuery = query.toLowerCase().trim();
-  const tasks = Repository.getByModule('focus');
+  const items = Repository.getAll().filter(item => item.type !== 'area');
   const registeredCommands = CommandRegistry.getAll();
 
   const filteredCommands = registeredCommands.filter(cmd => 
     cmd.label.toLowerCase().includes(normalizedQuery)
   );
 
-  const filteredTasks = tasks.filter(task => 
-    task.title.toLowerCase().includes(normalizedQuery)
+  const filteredItems = items.filter(item => 
+    item.title.toLowerCase().includes(normalizedQuery)
   );
 
   visibleItems = [];
@@ -138,15 +138,60 @@ function updateResults(query) {
     });
   }
 
-  // Group tasks
-  if (filteredTasks.length > 0) {
+  // Partition items
+  const focusItems = filteredItems.filter(i => i.module === 'focus');
+  const captureItems = filteredItems.filter(i => i.module === 'capture');
+  const parkingItems = filteredItems.filter(i => i.module === 'parking-lot');
+  const archiveItems = filteredItems.filter(i => i.module === 'archive');
+
+  // Focus
+  if (focusItems.length > 0) {
     visibleItems.push({ type: 'header', label: 'Focus Tasks' });
-    filteredTasks.forEach(task => {
+    focusItems.forEach(task => {
       visibleItems.push({
         type: 'task',
         label: task.title,
         icon: task.status === 'completed' ? CHECKED_ICON : CHECKBOX_ICON,
         action: () => triggerSelectTask(task.id)
+      });
+    });
+  }
+
+  // Capture
+  if (captureItems.length > 0) {
+    visibleItems.push({ type: 'header', label: 'Captured Ideas' });
+    captureItems.forEach(task => {
+      visibleItems.push({
+        type: 'task',
+        label: task.title,
+        icon: CHECKBOX_ICON,
+        action: () => triggerSelectCapture(task.id)
+      });
+    });
+  }
+
+  // Parking Lot
+  if (parkingItems.length > 0) {
+    visibleItems.push({ type: 'header', label: 'Parking Lot' });
+    parkingItems.forEach(task => {
+      visibleItems.push({
+        type: 'task',
+        label: task.title,
+        icon: CHECKBOX_ICON,
+        action: () => triggerSelectParked(task.id)
+      });
+    });
+  }
+
+  // Archive
+  if (archiveItems.length > 0) {
+    visibleItems.push({ type: 'header', label: 'Archive' });
+    archiveItems.forEach(task => {
+      visibleItems.push({
+        type: 'task',
+        label: `[Archive] ${task.title}`,
+        icon: CHECKBOX_ICON,
+        action: () => triggerSelectArchived(task.id)
       });
     });
   }
@@ -324,6 +369,24 @@ function triggerStartFresh() {
 function triggerSelectTask(taskId) {
   import('../modules/focus-view.js').then((module) => {
     module.focusAndSelectTask(taskId);
+  });
+}
+
+function triggerSelectCapture(itemId) {
+  import('./view-manager.js').then((module) => {
+    module.navigateTo('capture');
+  });
+}
+
+function triggerSelectParked(itemId) {
+  import('../modules/parking-lot-view.js').then((module) => {
+    module.focusAndSelectParkedTask(itemId);
+  });
+}
+
+function triggerSelectArchived(itemId) {
+  import('../modules/archive-view.js').then((module) => {
+    module.focusAndSelectArchivedTask(itemId);
   });
 }
 
