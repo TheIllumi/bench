@@ -1,5 +1,5 @@
 import { navigateTo } from './view-manager.js';
-import { StorageService } from './storage.js';
+import { Repository } from './repository.js';
 import { CommandRegistry } from './command-registry.js';
 import { ToastService } from '../ui/toast.js';
 import { DialogService } from '../ui/dialog.js';
@@ -117,7 +117,7 @@ export const CommandPalette = {
  */
 function updateResults(query) {
   const normalizedQuery = query.toLowerCase().trim();
-  const tasks = StorageService.load();
+  const tasks = Repository.getByModule('focus');
   const registeredCommands = CommandRegistry.getAll();
 
   const filteredCommands = registeredCommands.filter(cmd => 
@@ -145,7 +145,7 @@ function updateResults(query) {
       visibleItems.push({
         type: 'task',
         label: task.title,
-        icon: task.completed ? CHECKED_ICON : CHECKBOX_ICON,
+        icon: task.status === 'completed' ? CHECKED_ICON : CHECKBOX_ICON,
         action: () => triggerSelectTask(task.id)
       });
     });
@@ -280,7 +280,7 @@ function triggerClearWorkspace() {
     variant: 'danger'
   }).then((confirmed) => {
     if (confirmed) {
-      StorageService.clear();
+      Repository.clearModule('focus');
       ToastService.show('Workspace database wiped successfully.', 'success');
       
       const activeContainer = document.getElementById('active-view');
@@ -298,17 +298,16 @@ function triggerClearWorkspace() {
  * Action: Clear completed tasks trigger
  */
 function triggerStartFresh() {
-  const tasks = StorageService.load();
-  const completedCount = tasks.filter(t => t.completed).length;
+  const tasks = Repository.getByModule('focus');
+  const completed = tasks.filter(t => t.status === 'completed');
 
-  if (completedCount === 0) {
+  if (completed.length === 0) {
     ToastService.show('No completed tasks to clear.', 'info');
     return;
   }
 
-  const activeTasks = tasks.filter(t => !t.completed);
-  StorageService.save(activeTasks);
-  ToastService.show(`Cleared ${completedCount} completed task${completedCount > 1 ? 's' : ''}.`, 'success');
+  completed.forEach(t => Repository.remove(t.id));
+  ToastService.show(`Cleared ${completed.length} completed task${completed.length > 1 ? 's' : ''}.`, 'success');
 
   const activeContainer = document.getElementById('active-view');
   const activeTitle = document.getElementById('view-title');

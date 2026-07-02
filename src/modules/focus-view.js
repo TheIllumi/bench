@@ -1,4 +1,5 @@
-import { StorageService } from '../core/storage.js';
+import { Repository } from '../core/repository.js';
+import { EventBus } from '../core/event-bus.js';
 import { ToastService } from '../ui/toast.js';
 import { renderEmptyState } from '../ui/empty-state.js';
 import { createButton } from '../ui/button.js';
@@ -20,11 +21,20 @@ const TRASH_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="1
  */
 export function renderFocusView(container) {
   containerEl = container;
-  tasks = StorageService.load();
+  tasks = Repository.getByModule('focus');
 
   if (!selectedTaskId) editingTaskId = null;
 
   renderView();
+
+  // Reset EventBus listeners to prevent duplicate registration
+  cleanupEventBus();
+  
+  // Register EventBus listeners for reactive rendering
+  EventBus.on('itemCreated', handleItemChange);
+  EventBus.on('itemUpdated', handleItemChange);
+  EventBus.on('itemDeleted', handleItemChange);
+  EventBus.on('itemMoved', handleItemChange);
 
   window.removeEventListener('keydown', handleGlobalKeydown);
   window.addEventListener('keydown', handleGlobalKeydown);
@@ -39,6 +49,25 @@ export function focusAndSelectTask(taskId) {
   editingTaskId = taskId;
   const activeContainer = document.getElementById('active-view');
   if (activeContainer) renderFocusView(activeContainer);
+}
+
+// --- Event Handlers & Cleanup ---
+
+function handleItemChange() {
+  tasks = Repository.getByModule('focus');
+  renderView();
+}
+
+function cleanupEventBus() {
+  EventBus.off('itemCreated', handleItemChange);
+  EventBus.off('itemUpdated', handleItemChange);
+  EventBus.off('itemDeleted', handleItemChange);
+  EventBus.off('itemMoved', handleItemChange);
+}
+
+function cleanupListeners() {
+  cleanupEventBus();
+  window.removeEventListener('keydown', handleGlobalKeydown);
 }
 
 // --- State Crossfade ---
@@ -84,8 +113,8 @@ function crossfade(buildFn) {
 function renderView() {
   if (!containerEl) return;
 
-  const active = tasks.filter(t => !t.completed);
-  const completed = tasks.filter(t => t.completed);
+  const active = tasks.filter(t => t.status === 'active');
+  const completed = tasks.filter(t => t.status === 'completed');
 
   if (tasks.length === 0 && !isCreating) {
     crossfade(() => renderEmpty());
@@ -172,7 +201,9 @@ function buildTaskRow(task) {
   row.className = 'task-item';
   row.setAttribute('data-id', task.id);
 
-  if (task.completed) {
+  const isCompleted = task.status === 'completed';
+
+  if (isCompleted) {
     row.classList.add('completed');
     row.setAttribute('role', 'listitem');
     row.setAttribute('tabindex', '-1');
@@ -183,10 +214,10 @@ function buildTaskRow(task) {
     if (task.id === selectedTaskId) row.classList.add('selected');
   }
 
-  const isEditing = task.id === editingTaskId && !task.completed;
+  const isEditing = task.id === editingTaskId && !isCompleted;
 
   // Drag handle (active tasks only)
-  if (!task.completed) {
+  if (!isCompleted) {
     const handle = document.createElement('div');
     handle.className = 'drag-handle';
     handle.innerHTML = GRIP_ICON;
@@ -196,7 +227,7 @@ function buildTaskRow(task) {
 
   // Checkbox
   row.appendChild(createCheckbox({
-    checked: task.completed,
+    checked: isCompleted,
     onChange: () => toggleCompletion(task.id)
   }));
 
@@ -222,7 +253,7 @@ function buildTaskRow(task) {
   const actions = document.createElement('div');
   actions.className = 'task-actions';
 
-  if (!task.completed && !isEditing) {
+  if (!isCompleted && !isEditing) {
     const editBtn = document.createElement('button');
     editBtn.className = 'action-btn';
     editBtn.setAttribute('aria-label', 'Edit task');
@@ -242,7 +273,7 @@ function buildTaskRow(task) {
   row.appendChild(actions);
 
   // Click to select (active, non-editing only)
-  if (!task.completed && !isEditing) {
+  if (!isCompleted && !isEditing) {
     row.addEventListener('click', () => {
       selectedTaskId = task.id;
       isCreating = false;
@@ -260,12 +291,13 @@ function handleCreateKeyDown(event) {
     const title = event.target.value.trim();
     if (!title) return;
 
-    tasks.push({ id: crypto.randomUUID(), title, completed: false });
-    StorageService.save(tasks);
-    ToastService.show('Task added.', 'success');
+    Repository.save({
+      title,
+      status: 'active',
+      module: 'focus'
+    });
     event.target.value = '';
     isCreating = false;
-    renderView();
   } else if (event.key === 'Escape') {
     isCreating = false;
     renderView();
@@ -276,11 +308,13 @@ function toggleCompletion(taskId) {
   const task = tasks.find(t => t.id === taskId);
   if (!task) return;
 
-  task.completed = !task.completed;
-  if (task.completed && selectedTaskId === taskId) selectedTaskId = null;
-  StorageService.save(tasks);
-  ToastService.show(task.completed ? 'Task completed.' : 'Task reopened.', task.completed ? 'success' : 'info');
-  renderView();
+  const nextStatus = task.status === 'completed' ? 'active' : 'completed';
+  if (nextStatus === 'completed' && selectedTaskId === taskId) {
+    selectedTaskId = null;
+  }
+  
+  Repository.update(taskId, { status: nextStatus });
+  ToastService.show(nextStatus === 'completed' ? 'Task completed.' : 'Task reopened.', nextStatus === 'completed' ? 'success' : 'info');
 }
 
 function startEditing(taskId) {
@@ -307,8 +341,7 @@ function commitEdit(taskId, newTitle) {
   const title = newTitle.trim();
 
   if (task && title && task.title !== title) {
-    task.title = title;
-    StorageService.save(tasks);
+    Repository.update(taskId, { title });
   }
 
   editingTaskId = null;
@@ -317,31 +350,30 @@ function commitEdit(taskId, newTitle) {
 }
 
 function deleteTask(taskId) {
-  const deletedTask = tasks.find(t => t.id === taskId);
-  const deletedIndex = tasks.indexOf(deletedTask);
+  const allItems = Repository.getAll();
+  const deletedTask = allItems.find(t => t.id === taskId);
+  if (!deletedTask) return;
+  
+  const deletedIndex = allItems.indexOf(deletedTask);
 
-  tasks = tasks.filter(t => t.id !== taskId);
+  Repository.remove(taskId);
+  
   if (selectedTaskId === taskId) selectedTaskId = null;
   if (editingTaskId === taskId) editingTaskId = null;
-  StorageService.save(tasks);
 
   ToastService.show('Task removed.', 'info', 5000, {
     label: 'Undo',
     callback: () => {
-      tasks.splice(deletedIndex, 0, deletedTask);
-      StorageService.save(tasks);
-      renderView();
+      Repository.save(deletedTask, deletedIndex);
     }
   });
-
-  renderView();
 }
 
 // --- Keyboard Navigation ---
 
 function handleGlobalKeydown(event) {
   if (!containerEl || !document.body.contains(containerEl)) {
-    window.removeEventListener('keydown', handleGlobalKeydown);
+    cleanupListeners();
     return;
   }
 
@@ -354,7 +386,7 @@ function handleGlobalKeydown(event) {
 
   if (isTextInput) return;
 
-  const active = tasks.filter(t => !t.completed);
+  const active = tasks.filter(t => t.status === 'active');
 
   // Global Keys (when not typing)
   if (event.key.toLowerCase() === 'a') {
@@ -373,11 +405,9 @@ function handleGlobalKeydown(event) {
   if (event.key.toLowerCase() === 'r') {
     if (active.length === 0 && tasks.length > 0) {
       event.preventDefault();
-      tasks = [];
-      StorageService.save(tasks);
+      Repository.clearModule('focus');
       isCreating = false;
       ToastService.show('Focus cleared.', 'info');
-      renderView();
     }
     return;
   }
@@ -499,14 +529,9 @@ function startDrag(event, row) {
 
     const list = document.getElementById('active-tasks-list');
     const ids = [...list.querySelectorAll('.task-item')].map(el => el.dataset.id);
-    const active = tasks.filter(t => !t.completed);
-    const completed = tasks.filter(t => t.completed);
-    const reordered = ids.map(id => active.find(t => t.id === id)).filter(Boolean);
-
-    tasks = [...reordered, ...completed];
-    StorageService.save(tasks);
+    
+    Repository.reorder('focus', ids);
     dragEl = null;
-    renderView();
   }
 
   handle.addEventListener('pointermove', onMove);
