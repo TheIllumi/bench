@@ -9,6 +9,23 @@
   </head>
 
   <body>
+    <div class="title-bar">
+      <div class="title-bar-drag" data-tauri-drag-region>
+        <span class="titlebar-logo">bench</span>
+        <span class="titlebar-center">ctrl+k</span>
+      </div>
+      <div class="titlebar-controls">
+        <button class="win-btn" id="win-min" aria-label="minimize">
+          <svg width="10" height="1" viewBox="0 0 10 1"><rect width="10" height="1" fill="currentColor"/></svg>
+        </button>
+        <button class="win-btn" id="win-max" aria-label="maximize">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor"><rect x="0.5" y="0.5" width="9" height="9"/></svg>
+        </button>
+        <button class="win-btn" id="win-close" aria-label="close">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor"><path d="M0.5 0.5 L9.5 9.5 M9.5 0.5 L0.5 9.5" stroke-width="1.2"/></svg>
+        </button>
+      </div>
+    </div>
     <div class="app-container">
       <!-- Left Sidebar navigation -->
       <aside class="sidebar">

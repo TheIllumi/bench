@@ -17,13 +17,82 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Custom Title Bar */
+.title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 34px;
+  background-color: var(--color-bg-workspace);
+  border-bottom: 1px solid var(--color-border);
+  padding: 0;
+  user-select: none;
+  font-size: var(--font-size-xs);
+  flex-shrink: 0;
+}
+
+.title-bar-drag {
+  flex-grow: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding-left: var(--space-md);
+}
+
+.titlebar-logo {
+  font-weight: 700;
+  color: var(--color-accent-blue);
+  margin-right: var(--space-md);
+  text-transform: lowercase;
+}
+
+.titlebar-center {
+  margin-left: auto;
+  margin-right: var(--space-md);
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.titlebar-controls {
+  display: flex;
+  height: 100%;
+  flex-shrink: 0;
+}
+
+.win-btn {
+  width: 46px;
+  height: 100%;
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+  outline: none;
+}
+
+.win-btn:hover {
+  background-color: var(--color-accent-focus);
+  color: var(--color-text-primary);
+}
+
+.win-btn#win-close:hover {
+  background-color: #e81123 !important;
+  color: #ffffff !important;
 }
 
 /* App Container Layout */
 .app-container {
   display: grid;
   grid-template-columns: var(--sidebar-width, 200px) 1fr;
-  height: 100vh;
+  height: calc(100vh - 34px);
   width: 100vw;
 }
 
