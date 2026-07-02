@@ -1,4 +1,5 @@
 import { navigateTo } from './view-manager.js';
+import { CommandPalette } from './command-palette.js';
 
 // Dictionary of registered key combinations and their callbacks
 const shortcutRegistry = {};
@@ -24,9 +25,10 @@ function handleKeyDown(event) {
     activeEl.isContentEditable
   );
 
-  // Still allow navigation shortcuts even inside text inputs if desired, 
-  // but for safety, we allow Alt keys to bypass input checks as they aren't standard typing keys.
-  if (isTextInput && !event.altKey && !event.ctrlKey && !event.metaKey) {
+  // Allow command palette triggers even inside input fields
+  const isPaletteShortcut = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k';
+
+  if (isTextInput && !isPaletteShortcut && !event.altKey && !event.ctrlKey && !event.metaKey) {
     return;
   }
 
@@ -69,5 +71,9 @@ export function initializeShortcuts() {
   registerShortcut('alt+5', () => navigateTo('archive'));
   registerShortcut('alt+6', () => navigateTo('settings'));
 
-  console.log('Keyboard shortcuts initialized: Alt+1 to Alt+6 navigate modules.');
+  // Pre-register Command Palette shortcuts
+  registerShortcut('ctrl+k', () => CommandPalette.toggle());
+  registerShortcut('meta+k', () => CommandPalette.toggle());
+
+  console.log('Keyboard shortcuts initialized: Alt+1 to Alt+6 navigate; Ctrl+K opens Command Palette.');
 }

@@ -1,277 +1,270 @@
 import { StorageService } from '../core/storage.js';
+import { ToastService } from '../ui/toast.js';
+import { renderEmptyState } from '../ui/empty-state.js';
+import { createButton } from '../ui/button.js';
+import { createInput } from '../ui/input.js';
+import { createCheckbox } from '../ui/checkbox.js';
 
-// Module level state
 let tasks = [];
-let isCreating = false;
 let editingTaskId = null;
 let selectedTaskId = null;
 let containerEl = null;
+let isCreating = false;
 
-// Icons (Lucide SVGs embedded inline)
-const GRIP_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="drag-handle"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>`;
-const CHECK_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+const GRIP_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>`;
 const EDIT_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
 const TRASH_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>`;
 
 /**
- * Entry point to render and control the Focus module view.
- * @param {HTMLElement} container - Active view container element
+ * Mount the Focus view into the given container.
  */
 export function renderFocusView(container) {
   containerEl = container;
   tasks = StorageService.load();
-  editingTaskId = null;
-  selectedTaskId = null;
+
+  if (!selectedTaskId) editingTaskId = null;
 
   renderView();
 
-  // Bind global keyboard event handler for selection shortcuts
   window.removeEventListener('keydown', handleGlobalKeydown);
   window.addEventListener('keydown', handleGlobalKeydown);
 }
 
 /**
- * Main render function redrawing the DOM based on state.
+ * Navigate to a specific task and open it for editing.
+ * Called by the Command Palette search.
  */
+export function focusAndSelectTask(taskId) {
+  selectedTaskId = taskId;
+  editingTaskId = taskId;
+  const activeContainer = document.getElementById('active-view');
+  if (activeContainer) renderFocusView(activeContainer);
+}
+
+// --- State Crossfade ---
+
+/**
+ * Replace container contents with a crossfade transition.
+ * Fades out old content, calls buildFn to populate new content, then fades in.
+ */
+function crossfade(buildFn) {
+  if (!containerEl) return;
+
+  // If container is empty (first render), skip the fade-out
+  if (!containerEl.firstChild) {
+    buildFn();
+    containerEl.classList.add('view-fade-in');
+    requestAnimationFrame(() => containerEl.classList.add('view-visible'));
+    return;
+  }
+
+  containerEl.classList.remove('view-visible');
+  containerEl.classList.add('view-fade-in');
+
+  const onDone = () => {
+    containerEl.removeEventListener('transitionend', onDone);
+    buildFn();
+    requestAnimationFrame(() => containerEl.classList.add('view-visible'));
+  };
+
+  containerEl.addEventListener('transitionend', onDone, { once: true });
+
+  // Safety fallback
+  setTimeout(() => {
+    if (!containerEl.classList.contains('view-visible')) {
+      containerEl.removeEventListener('transitionend', onDone);
+      buildFn();
+      requestAnimationFrame(() => containerEl.classList.add('view-visible'));
+    }
+  }, 200);
+}
+
+// --- Rendering ---
+
 function renderView() {
   if (!containerEl) return;
 
-  const activeTasks = tasks.filter(t => !t.completed);
-  const completedTasks = tasks.filter(t => t.completed);
+  const active = tasks.filter(t => !t.completed);
+  const completed = tasks.filter(t => t.completed);
 
-  // 1. Core Empty State
   if (tasks.length === 0 && !isCreating) {
-    renderEmptyStateScreen();
-    return;
+    crossfade(() => renderEmpty());
+  } else if (active.length === 0 && tasks.length > 0 && !isCreating) {
+    crossfade(() => renderAllComplete());
+  } else {
+    crossfade(() => renderTaskList(active, completed));
   }
-
-  // 2. "Start Fresh" Completed State
-  if (tasks.length > 0 && activeTasks.length === 0) {
-    renderStartFreshScreen();
-    return;
-  }
-
-  // 3. Focus List View
-  renderTaskListScreen(activeTasks, completedTasks);
 }
 
-/**
- * Screen: True Empty State
- */
-function renderEmptyStateScreen() {
+function renderEmpty() {
   containerEl.innerHTML = `
-    <div id="focus-module-container" class="placeholder-view">
-      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-      <h2>Focus starts here.</h2>
-      <p>Choose the three things that matter most today.</p>
-      <button class="empty-action-btn" id="add-first-task-btn">Add your first task</button>
+    <div class="placeholder-view">
+      <h2>focus</h2>
+      <p>No active tasks.</p>
+      <p style="color: var(--color-text-muted); margin-top: var(--space-xs);">Press <span style="color: var(--color-accent-blue)">A</span> to create one.</p>
     </div>
   `;
-
-  document.getElementById('add-first-task-btn').addEventListener('click', () => {
-    isCreating = true;
-    renderView();
-  });
 }
 
-/**
- * Screen: Celebratory completed state
- */
-function renderStartFreshScreen() {
+function renderAllComplete() {
   containerEl.innerHTML = `
-    <div id="focus-module-container" class="placeholder-view">
-      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-blue)"><path d="M20 6 9 17l-5-5"/></svg>
-      <h2>Nice work.</h2>
+    <div class="placeholder-view">
+      <h2>nice work.</h2>
       <p>Everything in Focus is complete.</p>
-      <button class="primary-action-btn" id="start-fresh-btn">Start fresh</button>
+      <p style="color: var(--color-text-muted); margin-top: var(--space-xs);">Press <span style="color: var(--color-accent-blue)">R</span> to start fresh.</p>
     </div>
   `;
-
-  document.getElementById('start-fresh-btn').addEventListener('click', () => {
-    tasks = [];
-    isCreating = false;
-    StorageService.save(tasks);
-    renderView();
-  });
 }
 
-/**
- * Screen: Main interactive tasks lists
- */
-function renderTaskListScreen(activeTasks, completedTasks) {
-  const showWarningBanner = activeTasks.length >= 3;
-  const showInput = activeTasks.length < 3;
+function renderTaskList(active, completed) {
+  const atLimit = active.length >= 3;
+  const showInput = !atLimit || isCreating;
 
   containerEl.innerHTML = `
-    <div id="focus-module-container" class="focus-container">
-      
-      <!-- Focus Cap Warning Banner -->
-      ${showWarningBanner ? `
-        <div class="focus-limit-banner">
-          You're focusing on enough already. Complete something before adding more.
-        </div>
-      ` : ''}
-
-      <!-- Inline Task Input Field -->
-      ${showInput ? `
-        <div class="task-input-container">
-          <input type="text" class="task-input" id="new-task-input" placeholder="Add a focus task..." autocomplete="off">
-        </div>
-      ` : ''}
-
-      <!-- Active Tasks List -->
-      <div class="tasks-list-active" id="active-tasks-list"></div>
-
-      <!-- Completed Tasks List -->
-      ${completedTasks.length > 0 ? `
+    <div class="focus-container">
+      ${atLimit ? `<div class="focus-limit-banner" role="status">You\u2019re focusing on enough already. Complete something before adding more.</div>` : ''}
+      ${showInput ? `<div id="task-input-portal" class="task-input-container"></div>` : ''}
+      <div class="tasks-list-active" id="active-tasks-list" role="listbox" aria-label="Active focus tasks"></div>
+      ${completed.length > 0 ? `
         <div class="completed-header">Completed</div>
-        <div class="tasks-list-completed" id="completed-tasks-list"></div>
+        <div class="tasks-list-completed" id="completed-tasks-list" role="list" aria-label="Completed tasks"></div>
       ` : ''}
-
     </div>
   `;
 
-  // Focus and bind creation input if rendered
+  // Input
   if (showInput) {
-    const inputEl = document.getElementById('new-task-input');
-    inputEl.focus();
-    inputEl.addEventListener('keydown', handleCreateTaskKeyDown);
-  }
-
-  // Populate active list
-  const activeListEl = document.getElementById('active-tasks-list');
-  activeTasks.forEach(task => {
-    const taskItem = createTaskItemDOM(task);
-    activeListEl.appendChild(taskItem);
-  });
-
-  // Populate completed list
-  const completedListEl = document.getElementById('completed-tasks-list');
-  if (completedListEl) {
-    completedTasks.forEach(task => {
-      const taskItem = createTaskItemDOM(task);
-      completedListEl.appendChild(taskItem);
+    const portal = document.getElementById('task-input-portal');
+    const input = createInput({
+      placeholder: 'Add a focus task\u2026',
+      onKeyDown: handleCreateKeyDown,
+      id: 'new-task-input'
     });
-  }
-}
+    input.setAttribute('aria-label', 'Create a new focus task');
+    portal.appendChild(input);
 
-/**
- * Dynamic creation of a single task item DOM node with event bindings.
- */
-function createTaskItemDOM(task) {
-  const item = document.createElement('div');
-  item.className = 'task-item';
-  item.setAttribute('data-id', task.id);
-  if (task.completed) item.classList.add('completed');
-  if (task.id === selectedTaskId) item.classList.add('selected');
-
-  const isEditing = task.id === editingTaskId && !task.completed;
-
-  // Build internal markup
-  item.innerHTML = `
-    <!-- Drag Handle (Active items only) -->
-    ${!task.completed ? `<div class="drag-handle">${GRIP_ICON}</div>` : ''}
-
-    <!-- Custom Checkbox -->
-    <button class="checkbox-btn ${task.completed ? 'checked' : ''}" aria-label="Toggle completion">
-      ${CHECK_ICON}
-    </button>
-
-    <!-- Task Content Area -->
-    ${isEditing ? `
-      <input type="text" class="task-edit-input" value="${escapeHtml(task.title)}" autocomplete="off">
-    ` : `
-      <span class="task-title">${escapeHtml(task.title)}</span>
-    `}
-
-    <!-- Actions (Edit/Delete on Hover) -->
-    <div class="task-actions">
-      ${!task.completed ? `
-        <button class="action-btn edit-action" aria-label="Edit task">${EDIT_ICON}</button>
-      ` : ''}
-      <button class="action-btn delete-action" aria-label="Delete task">${TRASH_ICON}</button>
-    </div>
-  `;
-
-  // Bind Event Listeners
-  
-  // 1. Completion toggle
-  const checkboxBtn = item.querySelector('.checkbox-btn');
-  checkboxBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleTaskCompletion(task.id);
-  });
-
-  // 2. Inline Edit triggers
-  if (isEditing) {
-    const editInput = item.querySelector('.task-edit-input');
-    // Autofocus and select text
-    setTimeout(() => {
-      editInput.focus();
-      editInput.select();
-    }, 0);
-
-    editInput.addEventListener('keydown', (e) => handleEditKeyDown(e, task.id));
-    editInput.addEventListener('blur', (e) => saveTaskTitle(task.id, e.target.value));
-  } else if (!task.completed) {
-    // Edit icon click
-    const editBtn = item.querySelector('.edit-action');
-    if (editBtn) {
-      editBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        startEditing(task.id);
-      });
+    if (!selectedTaskId || isCreating) {
+      requestAnimationFrame(() => input.focus());
     }
   }
 
-  // 3. Deletion click
-  const deleteBtn = item.querySelector('.delete-action');
-  deleteBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    deleteTask(task.id);
-  });
+  // Active tasks
+  const activeList = document.getElementById('active-tasks-list');
+  active.forEach(task => activeList.appendChild(buildTaskRow(task)));
 
-  // 4. Selection click (Only active tasks can be selected)
+  // Completed tasks
+  const completedList = document.getElementById('completed-tasks-list');
+  if (completedList) {
+    completed.forEach(task => completedList.appendChild(buildTaskRow(task)));
+  }
+
+  // Restore keyboard focus to selected task after re-render
+  if (selectedTaskId && !editingTaskId && !isCreating) {
+    const el = activeList.querySelector(`[data-id="${selectedTaskId}"]`);
+    if (el) requestAnimationFrame(() => el.focus());
+  }
+}
+
+// --- Task Row Builder ---
+
+function buildTaskRow(task) {
+  const row = document.createElement('div');
+  row.className = 'task-item';
+  row.setAttribute('data-id', task.id);
+
+  if (task.completed) {
+    row.classList.add('completed');
+    row.setAttribute('role', 'listitem');
+    row.setAttribute('tabindex', '-1');
+  } else {
+    row.setAttribute('role', 'option');
+    row.setAttribute('aria-selected', task.id === selectedTaskId ? 'true' : 'false');
+    row.setAttribute('tabindex', '0');
+    if (task.id === selectedTaskId) row.classList.add('selected');
+  }
+
+  const isEditing = task.id === editingTaskId && !task.completed;
+
+  // Drag handle (active tasks only)
+  if (!task.completed) {
+    const handle = document.createElement('div');
+    handle.className = 'drag-handle';
+    handle.innerHTML = GRIP_ICON;
+    handle.addEventListener('pointerdown', (e) => startDrag(e, row));
+    row.appendChild(handle);
+  }
+
+  // Checkbox
+  row.appendChild(createCheckbox({
+    checked: task.completed,
+    onChange: () => toggleCompletion(task.id)
+  }));
+
+  // Title or edit input
+  if (isEditing) {
+    const input = createInput({
+      value: task.title,
+      onKeyDown: (e) => handleEditKeyDown(e, task.id),
+      onBlur: (e) => commitEdit(task.id, e.target.value),
+      className: 'task-edit-input'
+    });
+    input.setAttribute('aria-label', 'Edit task title');
+    row.appendChild(input);
+    requestAnimationFrame(() => { input.focus(); input.select(); });
+  } else {
+    const title = document.createElement('span');
+    title.className = 'task-title';
+    title.textContent = task.title;
+    row.appendChild(title);
+  }
+
+  // Hover actions (TUI style text actions)
+  const actions = document.createElement('div');
+  actions.className = 'task-actions';
+
   if (!task.completed && !isEditing) {
-    item.addEventListener('click', (e) => {
-      e.stopPropagation();
+    const editBtn = document.createElement('button');
+    editBtn.className = 'action-btn';
+    editBtn.setAttribute('aria-label', 'Edit task');
+    editBtn.setAttribute('tabindex', '-1');
+    editBtn.textContent = 'edit';
+    editBtn.addEventListener('click', (e) => { e.stopPropagation(); startEditing(task.id); });
+    actions.appendChild(editBtn);
+  }
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'action-btn';
+  delBtn.setAttribute('aria-label', 'Delete task');
+  delBtn.setAttribute('tabindex', '-1');
+  delBtn.textContent = 'del';
+  delBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteTask(task.id); });
+  actions.appendChild(delBtn);
+  row.appendChild(actions);
+
+  // Click to select (active, non-editing only)
+  if (!task.completed && !isEditing) {
+    row.addEventListener('click', () => {
       selectedTaskId = task.id;
+      isCreating = false;
       renderView();
     });
   }
 
-  // 5. Pointer-Based Drag and Drop (Active items only)
-  if (!task.completed) {
-    const dragHandle = item.querySelector('.drag-handle');
-    dragHandle.addEventListener('pointerdown', (e) => handleDragStart(e, item));
-  }
-
-  return item;
+  return row;
 }
 
-/**
- * Handle new task input key actions.
- */
-function handleCreateTaskKeyDown(event) {
+// --- Task Operations ---
+
+function handleCreateKeyDown(event) {
   if (event.key === 'Enter') {
-    const value = event.target.value.trim();
-    if (!value) return;
+    const title = event.target.value.trim();
+    if (!title) return;
 
-    const newTask = {
-      id: crypto.randomUUID(),
-      title: value,
-      completed: false
-    };
-
-    tasks.push(newTask);
+    tasks.push({ id: crypto.randomUUID(), title, completed: false });
     StorageService.save(tasks);
-    
-    // Clear input, keep focus if we can still add more, else close input
+    ToastService.show('Task added.', 'success');
     event.target.value = '';
-    const activeCount = tasks.filter(t => !t.completed).length;
-    if (activeCount >= 3) {
-      isCreating = false;
-    }
+    isCreating = false;
     renderView();
   } else if (event.key === 'Escape') {
     isCreating = false;
@@ -279,184 +272,244 @@ function handleCreateTaskKeyDown(event) {
   }
 }
 
-/**
- * Toggle task completion state.
- */
-function toggleTaskCompletion(taskId) {
+function toggleCompletion(taskId) {
   const task = tasks.find(t => t.id === taskId);
-  if (task) {
-    task.completed = !task.completed;
-    // Clear selection if completing
-    if (task.completed && selectedTaskId === taskId) {
-      selectedTaskId = null;
-    }
-    StorageService.save(tasks);
-    renderView();
-  }
-}
+  if (!task) return;
 
-/**
- * Transition task to edit mode.
- */
-function startEditing(taskId) {
-  editingTaskId = taskId;
-  selectedTaskId = taskId;
+  task.completed = !task.completed;
+  if (task.completed && selectedTaskId === taskId) selectedTaskId = null;
+  StorageService.save(tasks);
+  ToastService.show(task.completed ? 'Task completed.' : 'Task reopened.', task.completed ? 'success' : 'info');
   renderView();
 }
 
-/**
- * Handle edit input key actions.
- */
+function startEditing(taskId) {
+  editingTaskId = taskId;
+  selectedTaskId = taskId;
+  isCreating = false;
+  renderView();
+}
+
 function handleEditKeyDown(event, taskId) {
   if (event.key === 'Enter') {
     event.preventDefault();
-    saveTaskTitle(taskId, event.target.value);
+    commitEdit(taskId, event.target.value);
   } else if (event.key === 'Escape') {
     event.preventDefault();
     editingTaskId = null;
+    selectedTaskId = null;
     renderView();
   }
 }
 
-/**
- * Persist revised task title.
- */
-function saveTaskTitle(taskId, newTitle) {
+function commitEdit(taskId, newTitle) {
   const task = tasks.find(t => t.id === taskId);
   const title = newTitle.trim();
-  if (task && title) {
+
+  if (task && title && task.title !== title) {
     task.title = title;
     StorageService.save(tasks);
   }
+
   editingTaskId = null;
   selectedTaskId = null;
   renderView();
 }
 
-/**
- * Remove task from collection.
- */
 function deleteTask(taskId) {
+  const deletedTask = tasks.find(t => t.id === taskId);
+  const deletedIndex = tasks.indexOf(deletedTask);
+
   tasks = tasks.filter(t => t.id !== taskId);
   if (selectedTaskId === taskId) selectedTaskId = null;
   if (editingTaskId === taskId) editingTaskId = null;
   StorageService.save(tasks);
+
+  ToastService.show('Task removed.', 'info', 5000, {
+    label: 'Undo',
+    callback: () => {
+      tasks.splice(deletedIndex, 0, deletedTask);
+      StorageService.save(tasks);
+      renderView();
+    }
+  });
+
   renderView();
 }
 
-/**
- * Handle keys globally when Focus view is active and task is selected.
- */
-function handleSelectionKeydown(event) {
-  if (!selectedTaskId || editingTaskId) return;
+// --- Keyboard Navigation ---
 
-  const task = tasks.find(t => t.id === selectedTaskId);
-  if (!task || task.completed) return;
-
-  if (event.key === 'Enter') {
-    event.preventDefault();
-    editingTaskId = selectedTaskId;
-    renderView();
-  } else if (event.key === 'Escape') {
-    event.preventDefault();
-    selectedTaskId = null;
-    renderView();
-  } else if (event.key === 'Delete' || event.key === 'Backspace') {
-    event.preventDefault();
-    deleteTask(selectedTaskId);
-  } else if (event.key === ' ') {
-    event.preventDefault();
-    toggleTaskCompletion(selectedTaskId);
-  }
-}
-
-/**
- * Clean cleanup when navigating out
- */
 function handleGlobalKeydown(event) {
   if (!containerEl || !document.body.contains(containerEl)) {
     window.removeEventListener('keydown', handleGlobalKeydown);
     return;
   }
-  handleSelectionKeydown(event);
+
+  const activeEl = document.activeElement;
+  const isTextInput = activeEl && (
+    activeEl.tagName === 'INPUT' || 
+    activeEl.tagName === 'TEXTAREA' || 
+    activeEl.isContentEditable
+  );
+
+  if (isTextInput) return;
+
+  const active = tasks.filter(t => !t.completed);
+
+  // Global Keys (when not typing)
+  if (event.key.toLowerCase() === 'a') {
+    if (active.length < 3) {
+      event.preventDefault();
+      isCreating = true;
+      selectedTaskId = null;
+      renderView();
+    } else {
+      ToastService.show("Focus is full. Complete a task first.", "info");
+    }
+    return;
+  }
+
+  // Clear workspace (R key on completed view)
+  if (event.key.toLowerCase() === 'r') {
+    if (active.length === 0 && tasks.length > 0) {
+      event.preventDefault();
+      tasks = [];
+      StorageService.save(tasks);
+      isCreating = false;
+      ToastService.show('Focus cleared.', 'info');
+      renderView();
+    }
+    return;
+  }
+
+  if (!selectedTaskId || editingTaskId) {
+    // If no task selected, pressing ArrowDown selects first active task
+    if (event.key === 'ArrowDown' && active.length > 0) {
+      event.preventDefault();
+      selectedTaskId = active[0].id;
+      renderView();
+    }
+    return;
+  }
+
+  const idx = active.findIndex(t => t.id === selectedTaskId);
+  if (idx === -1) return;
+
+  switch (event.key) {
+    case 'ArrowDown':
+      event.preventDefault();
+      if (idx < active.length - 1) {
+        selectedTaskId = active[idx + 1].id;
+        renderView();
+      }
+      break;
+    case 'ArrowUp':
+      event.preventDefault();
+      if (idx > 0) {
+        selectedTaskId = active[idx - 1].id;
+        renderView();
+      } else {
+        selectedTaskId = null;
+        renderView();
+      }
+      break;
+    case 'Enter':
+    case 'e':
+    case 'E':
+      event.preventDefault();
+      startEditing(selectedTaskId);
+      break;
+    case 'Escape':
+      event.preventDefault();
+      selectedTaskId = null;
+      renderView();
+      break;
+    case ' ':
+      event.preventDefault();
+      toggleCompletion(selectedTaskId);
+      break;
+    case 'Delete':
+    case 'Backspace':
+    case 'd':
+    case 'D':
+    case 'x':
+    case 'X':
+      event.preventDefault();
+      deleteTask(selectedTaskId);
+      break;
+  }
 }
 
-/**
- * Custom Pointer-Based Drag and Drop Logic.
- */
-let activeDragEl = null;
+// --- Pointer Drag-and-Drop with Ghost Preview ---
 
-function handleDragStart(event, itemDOM) {
-  // Capture pointer events on the handle
-  event.target.setPointerCapture(event.pointerId);
-  activeDragEl = itemDOM;
-  activeDragEl.classList.add('dragging');
+let dragEl = null;
+let ghostEl = null;
 
-  // Register move and lift listeners dynamically
-  const onPointerMove = (moveEvent) => {
-    if (!activeDragEl) return;
-    moveEvent.preventDefault();
+function startDrag(event, row) {
+  const handle = event.target;
+  handle.setPointerCapture(event.pointerId);
+  dragEl = row;
+  dragEl.classList.add('dragging');
 
-    const container = document.getElementById('active-tasks-list');
-    if (!container) return;
+  // Create floating ghost preview
+  ghostEl = row.cloneNode(true);
+  ghostEl.className = 'task-item drag-ghost';
+  ghostEl.style.width = row.offsetWidth + 'px';
+  ghostEl.style.left = row.getBoundingClientRect().left + 'px';
+  ghostEl.style.top = event.clientY - row.offsetHeight / 2 + 'px';
+  document.body.appendChild(ghostEl);
 
-    const clientY = moveEvent.clientY;
-    const siblings = [...container.querySelectorAll('.task-item:not(.dragging)')];
+  function onMove(e) {
+    if (!dragEl) return;
+    e.preventDefault();
 
-    // Identify matching insertion sibling based on cursor position
-    const nextSibling = siblings.find(sibling => {
-      const box = sibling.getBoundingClientRect();
-      return clientY <= box.top + box.height / 2;
+    if (ghostEl) {
+      ghostEl.style.top = e.clientY - ghostEl.offsetHeight / 2 + 'px';
+    }
+
+    const list = document.getElementById('active-tasks-list');
+    if (!list) return;
+
+    const siblings = [...list.querySelectorAll('.task-item:not(.dragging)')];
+    const target = siblings.find(s => {
+      const rect = s.getBoundingClientRect();
+      return e.clientY <= rect.top + rect.height / 2;
     });
 
-    if (nextSibling) {
-      container.insertBefore(activeDragEl, nextSibling);
+    if (target) {
+      list.insertBefore(dragEl, target);
     } else {
-      container.appendChild(activeDragEl);
+      list.appendChild(dragEl);
     }
-  };
+  }
 
-  const onPointerUp = (upEvent) => {
-    upEvent.target.releasePointerCapture(upEvent.pointerId);
-    
-    if (activeDragEl) {
-      activeDragEl.classList.remove('dragging');
+  function onUp(e) {
+    handle.releasePointerCapture(e.pointerId);
+    handle.removeEventListener('pointermove', onMove);
+    handle.removeEventListener('pointerup', onUp);
+    handle.removeEventListener('pointercancel', onUp);
 
-      // Extract new list sequence from DOM order
-      const container = document.getElementById('active-tasks-list');
-      const reorderedIds = [...container.querySelectorAll('.task-item')].map(el => el.getAttribute('data-id'));
-
-      // Reorder in-memory tasks array
-      const activeTasks = tasks.filter(t => !t.completed);
-      const completedTasks = tasks.filter(t => t.completed);
-      const newActiveTasks = reorderedIds.map(id => activeTasks.find(t => t.id === id)).filter(Boolean);
-
-      tasks = [...newActiveTasks, ...completedTasks];
-      StorageService.save(tasks);
-      
-      activeDragEl = null;
-      renderView(); // Clear DOM adjustments and perform fresh layout
+    if (ghostEl && ghostEl.parentNode) {
+      ghostEl.parentNode.removeChild(ghostEl);
+      ghostEl = null;
     }
 
-    event.target.removeEventListener('pointermove', onPointerMove);
-    event.target.removeEventListener('pointerup', onPointerUp);
-    event.target.removeEventListener('pointercancel', onPointerUp);
-  };
+    if (!dragEl) return;
+    dragEl.classList.remove('dragging');
 
-  event.target.addEventListener('pointermove', onPointerMove);
-  event.target.addEventListener('pointerup', onPointerUp);
-  event.target.addEventListener('pointercancel', onPointerUp);
-}
+    const list = document.getElementById('active-tasks-list');
+    const ids = [...list.querySelectorAll('.task-item')].map(el => el.dataset.id);
+    const active = tasks.filter(t => !t.completed);
+    const completed = tasks.filter(t => t.completed);
+    const reordered = ids.map(id => active.find(t => t.id === id)).filter(Boolean);
 
-/**
- * Escapes HTML characters to prevent XSS.
- */
-function escapeHtml(str) {
-  if (!str) return '';
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    tasks = [...reordered, ...completed];
+    StorageService.save(tasks);
+    dragEl = null;
+    renderView();
+  }
+
+  handle.addEventListener('pointermove', onMove);
+  handle.addEventListener('pointerup', onUp);
+  handle.addEventListener('pointercancel', onUp);
 }

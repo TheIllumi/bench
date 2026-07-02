@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap');
+
+/* Centralized Design Tokens — TUI/Terminal Aesthetic */
+:root {
+  /* Layout */
+  --sidebar-width: 200px;
+  --header-height: 48px;
+
+  /* Colors */
+  --color-bg-workspace: #0b0b0b;
+  --color-bg-sidebar: #0b0b0b;
+  --color-bg-content: #0b0b0b;
+  --color-text-primary: #e8e8e8;
+  --color-text-secondary: #8b8b8b;
+  --color-text-muted: #4e4e4e;
+  --color-border: #1c1c1c;
+  --color-accent-blue: #7aa2f7;
+  --color-accent-focus: #111111;
+  --color-success: #9ece6a;
+  --color-warning: #e0af68;
+  --color-danger: #f7768e;
+  
+  /* Spacing */
+  --space-2xs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  
+  /* Border Radii (Flat TUI Style) */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  
+  /* Transitions & Easing (Subtle/Crisp) */
+  --ease-standard: cubic-bezier(0.25, 1, 0.5, 1);
+  --duration-fast: 100ms;
+  --duration-normal: 150ms;
+  
+  /* Box Shadows (Flat TUI Style, no shadows except border styling) */
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  
+  /* Typographical Sizes */
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-md: 14px;
+  --font-size-lg: 16px;
+}
