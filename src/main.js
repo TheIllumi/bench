@@ -13,12 +13,34 @@ function toggleSidebar() {
 
 function initializeWindowControls() {
   if (window.__TAURI__) {
-    const { getCurrentWindow } = window.__TAURI__.window;
-    const appWindow = getCurrentWindow();
+    const { getCurrentWebviewWindow } = window.__TAURI__.webviewWindow;
+    const appWindow = getCurrentWebviewWindow();
 
     const minBtn = document.getElementById('win-min');
     const maxBtn = document.getElementById('win-max');
     const closeBtn = document.getElementById('win-close');
+
+    // Function to update icon based on actual maximized state
+    const updateIcon = async () => {
+      if (!maxBtn) return;
+      const isMax = await appWindow.isMaximized();
+      if (isMax) {
+        maxBtn.innerHTML = `
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor">
+            <path d="M3 1 H9 V7" stroke-width="1"/>
+            <rect x="1" y="3" width="6" height="6"/>
+          </svg>
+        `;
+        maxBtn.setAttribute('aria-label', 'restore');
+      } else {
+        maxBtn.innerHTML = `
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor">
+            <rect x="1" y="1" width="8" height="8"/>
+          </svg>
+        `;
+        maxBtn.setAttribute('aria-label', 'maximize');
+      }
+    };
 
     if (minBtn) {
       minBtn.addEventListener('click', () => {
@@ -27,8 +49,9 @@ function initializeWindowControls() {
     }
 
     if (maxBtn) {
-      maxBtn.addEventListener('click', () => {
-        appWindow.toggleMaximize();
+      maxBtn.addEventListener('click', async () => {
+        await appWindow.toggleMaximize();
+        updateIcon();
       });
     }
 
@@ -41,10 +64,15 @@ function initializeWindowControls() {
     // Support double click on drag region to toggle maximize
     const dragRegion = document.querySelector('.title-bar-drag');
     if (dragRegion) {
-      dragRegion.addEventListener('dblclick', () => {
-        appWindow.toggleMaximize();
+      dragRegion.addEventListener('dblclick', async () => {
+        await appWindow.toggleMaximize();
+        updateIcon();
       });
     }
+
+    // Update icon initially and on window resize (which happens on maximize/restore)
+    updateIcon();
+    window.addEventListener('resize', updateIcon);
   } else {
     console.log('Custom window controls running in browser mock mode.');
   }
