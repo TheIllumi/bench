@@ -147,6 +147,14 @@ function buildCaptureRow(item) {
     moveToFocus(item.id);
   });
 
+  const parkBtn = document.createElement('button');
+  parkBtn.className = 'action-btn';
+  parkBtn.textContent = 'park';
+  parkBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    parkItem(item.id);
+  });
+
   const archiveBtn = document.createElement('button');
   archiveBtn.className = 'action-btn';
   archiveBtn.textContent = 'archive';
@@ -164,6 +172,7 @@ function buildCaptureRow(item) {
   });
 
   actions.appendChild(focusBtn);
+  actions.appendChild(parkBtn);
   actions.appendChild(archiveBtn);
   actions.appendChild(delBtn);
   row.appendChild(actions);
@@ -182,6 +191,11 @@ function moveToFocus(itemId) {
 
   Repository.move(itemId, 'focus');
   ToastService.show('Moved to Focus.', 'success');
+}
+
+function parkItem(itemId) {
+  Repository.move(itemId, 'parking-lot');
+  ToastService.show('Parked.', 'success');
 }
 
 function archiveItem(itemId) {

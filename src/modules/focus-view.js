@@ -283,6 +283,14 @@ function buildTaskRow(task) {
     assignBtn.textContent = 'area';
     assignBtn.addEventListener('click', (e) => { e.stopPropagation(); openAreaPicker(e, task); });
     actions.appendChild(assignBtn);
+
+    const parkBtn = document.createElement('button');
+    parkBtn.className = 'action-btn';
+    parkBtn.setAttribute('aria-label', 'Park task');
+    parkBtn.setAttribute('tabindex', '-1');
+    parkBtn.textContent = 'park';
+    parkBtn.addEventListener('click', (e) => { e.stopPropagation(); parkTask(task.id); });
+    actions.appendChild(parkBtn);
   }
 
   const delBtn = document.createElement('button');
@@ -389,6 +397,12 @@ function deleteTask(taskId) {
       Repository.save(deletedTask, deletedIndex);
     }
   });
+}
+
+function parkTask(taskId) {
+  Repository.move(taskId, 'parking-lot');
+  if (selectedTaskId === taskId) selectedTaskId = null;
+  ToastService.show('Parked.', 'success');
 }
 
 // --- Keyboard Navigation ---
