@@ -1,6 +1,7 @@
 import { Repository } from '../core/repository.js';
 import { EventBus } from '../core/event-bus.js';
 import { ToastService } from '../ui/toast.js';
+import { crossfade, getRelativeTime } from '../ui/utils.js';
 
 let containerEl = null;
 let items = [];
@@ -41,57 +42,14 @@ function cleanupEventBus() {
   EventBus.off('itemDeleted', handleItemChange);
 }
 
-// --- Relative Time Helper ---
-function getRelativeTime(timestamp) {
-  const diff = Date.now() - timestamp;
-  const secs = Math.floor(diff / 1000);
-  if (secs < 60) return 'just now';
-  const mins = Math.floor(secs / 60);
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
-
-// --- Crossfade Transition ---
-function crossfade(buildFn) {
-  if (!containerEl) return;
-
-  if (!containerEl.firstChild) {
-    buildFn();
-    containerEl.classList.add('view-fade-in');
-    requestAnimationFrame(() => containerEl.classList.add('view-visible'));
-    return;
-  }
-
-  containerEl.classList.remove('view-visible');
-  containerEl.classList.add('view-fade-in');
-
-  const onDone = () => {
-    containerEl.removeEventListener('transitionend', onDone);
-    buildFn();
-    requestAnimationFrame(() => containerEl.classList.add('view-visible'));
-  };
-  containerEl.addEventListener('transitionend', onDone, { once: true });
-
-  setTimeout(() => {
-    if (!containerEl.classList.contains('view-visible')) {
-      containerEl.removeEventListener('transitionend', onDone);
-      buildFn();
-      requestAnimationFrame(() => containerEl.classList.add('view-visible'));
-    }
-  }, 200);
-}
-
 // --- Rendering ---
 function renderView() {
   if (!containerEl) return;
 
   if (items.length === 0) {
-    crossfade(() => renderEmpty());
+    crossfade(containerEl, () => renderEmpty());
   } else {
-    crossfade(() => renderCaptureList());
+    crossfade(containerEl, () => renderCaptureList());
   }
 }
 

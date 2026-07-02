@@ -5,6 +5,7 @@ import { renderEmptyState } from '../ui/empty-state.js';
 import { createButton } from '../ui/button.js';
 import { createInput } from '../ui/input.js';
 import { createCheckbox } from '../ui/checkbox.js';
+import { crossfade } from '../ui/utils.js';
 
 let tasks = [];
 let editingTaskId = null;
@@ -76,44 +77,6 @@ function cleanupListeners() {
   window.removeEventListener('keydown', handleGlobalKeydown);
 }
 
-// --- State Crossfade ---
-
-/**
- * Replace container contents with a crossfade transition.
- * Fades out old content, calls buildFn to populate new content, then fades in.
- */
-function crossfade(buildFn) {
-  if (!containerEl) return;
-
-  // If container is empty (first render), skip the fade-out
-  if (!containerEl.firstChild) {
-    buildFn();
-    containerEl.classList.add('view-fade-in');
-    requestAnimationFrame(() => containerEl.classList.add('view-visible'));
-    return;
-  }
-
-  containerEl.classList.remove('view-visible');
-  containerEl.classList.add('view-fade-in');
-
-  const onDone = () => {
-    containerEl.removeEventListener('transitionend', onDone);
-    buildFn();
-    requestAnimationFrame(() => containerEl.classList.add('view-visible'));
-  };
-
-  containerEl.addEventListener('transitionend', onDone, { once: true });
-
-  // Safety fallback
-  setTimeout(() => {
-    if (!containerEl.classList.contains('view-visible')) {
-      containerEl.removeEventListener('transitionend', onDone);
-      buildFn();
-      requestAnimationFrame(() => containerEl.classList.add('view-visible'));
-    }
-  }, 200);
-}
-
 // --- Rendering ---
 
 function renderView() {
@@ -123,11 +86,11 @@ function renderView() {
   const completed = tasks.filter(t => t.status === 'completed');
 
   if (tasks.length === 0 && !isCreating) {
-    crossfade(() => renderEmpty());
+    crossfade(containerEl, () => renderEmpty());
   } else if (active.length === 0 && tasks.length > 0 && !isCreating) {
-    crossfade(() => renderAllComplete());
+    crossfade(containerEl, () => renderAllComplete());
   } else {
-    crossfade(() => renderTaskList(active, completed));
+    crossfade(containerEl, () => renderTaskList(active, completed));
   }
 }
 

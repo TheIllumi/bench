@@ -1,7 +1,9 @@
 import { Repository } from '../core/repository.js';
 import { EventBus } from '../core/event-bus.js';
 import { ToastService } from '../ui/toast.js';
+import { DialogService } from '../ui/dialog.js';
 import { createInput } from '../ui/input.js';
+import { crossfade } from '../ui/utils.js';
 
 let areas = [];
 let selectedAreaId = null;
@@ -54,44 +56,14 @@ function cleanupListeners() {
   window.removeEventListener('keydown', handleGlobalKeydown);
 }
 
-// --- Crossfade Transition ---
-function crossfade(buildFn) {
-  if (!containerEl) return;
-
-  if (!containerEl.firstChild) {
-    buildFn();
-    containerEl.classList.add('view-fade-in');
-    requestAnimationFrame(() => containerEl.classList.add('view-visible'));
-    return;
-  }
-
-  containerEl.classList.remove('view-visible');
-  containerEl.classList.add('view-fade-in');
-
-  const onDone = () => {
-    containerEl.removeEventListener('transitionend', onDone);
-    buildFn();
-    requestAnimationFrame(() => containerEl.classList.add('view-visible'));
-  };
-  containerEl.addEventListener('transitionend', onDone, { once: true });
-
-  setTimeout(() => {
-    if (!containerEl.classList.contains('view-visible')) {
-      containerEl.removeEventListener('transitionend', onDone);
-      buildFn();
-      requestAnimationFrame(() => containerEl.classList.add('view-visible'));
-    }
-  }, 200);
-}
-
 // --- Rendering ---
 function renderView() {
   if (!containerEl) return;
 
   if (areas.length === 0 && !isCreating) {
-    crossfade(() => renderEmpty());
+    crossfade(containerEl, () => renderEmpty());
   } else {
-    crossfade(() => renderAreasList());
+    crossfade(containerEl, () => renderAreasList());
   }
 }
 
@@ -289,16 +261,27 @@ function commitEdit(areaId, newName) {
 }
 
 function deleteArea(areaId) {
-  const deleted = Repository.deleteArea(areaId);
-  if (!deleted) {
-    ToastService.show('Cannot delete Area: it contains active or completed tasks.', 'error');
-    return;
-  }
+  const area = areas.find(a => a.id === areaId);
+  if (!area) return;
 
-  if (selectedAreaId === areaId) selectedAreaId = null;
-  if (editingAreaId === areaId) editingAreaId = null;
-
-  ToastService.show('Area deleted.', 'info');
+  DialogService.confirm({
+    title: 'Delete Area',
+    message: `Are you sure you want to permanently delete the Area [${area.name}]?`,
+    confirmText: 'Delete',
+    cancelText: 'Cancel',
+    variant: 'danger'
+  }).then((confirmed) => {
+    if (confirmed) {
+      const deleted = Repository.deleteArea(areaId);
+      if (!deleted) {
+        ToastService.show('Cannot delete Area: it is referenced by active or completed tasks.', 'error');
+        return;
+      }
+      if (selectedAreaId === areaId) selectedAreaId = null;
+      if (editingAreaId === areaId) editingAreaId = null;
+      ToastService.show('Area deleted.', 'info');
+    }
+  });
 }
 
 // --- Keyboard Navigation ---
