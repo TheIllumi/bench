@@ -41,6 +41,7 @@ body {
   display: flex;
   align-items: center;
   padding-left: var(--space-md);
+  position: relative;
 }
 
 .titlebar-logo {
@@ -48,13 +49,28 @@ body {
   color: var(--color-accent-blue);
   margin-right: var(--space-md);
   text-transform: lowercase;
+  pointer-events: none;
 }
 
-.titlebar-center {
-  margin-left: auto;
-  margin-right: var(--space-md);
+.titlebar-shortcut-btn {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  background: transparent;
+  border: 1px solid var(--color-border);
   color: var(--color-text-muted);
-  font-size: 11px;
+  font-family: inherit;
+  font-size: 10px;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-standard);
+  outline: none;
+  pointer-events: auto;
+}
+
+.titlebar-shortcut-btn:hover {
+  border-color: var(--color-text-secondary);
+  color: var(--color-text-primary);
 }
 
 .titlebar-controls {
@@ -91,44 +107,26 @@ body {
 /* App Container Layout */
 .app-container {
   display: grid;
-  grid-template-columns: var(--sidebar-width, 200px) 1fr;
+  grid-template-columns: auto 1fr;
   height: calc(100vh - 34px);
   width: 100vw;
 }
 
 /* Sidebar Styling */
 .sidebar {
+  width: var(--sidebar-width, 200px);
   background-color: var(--color-bg-sidebar);
   border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: calc(100vh - 34px);
   user-select: none;
+  transition: width var(--duration-normal) var(--ease-standard);
+  overflow-x: hidden;
 }
 
-.sidebar-header {
-  height: var(--header-height, 48px);
-  border-bottom: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  padding: 0 var(--space-md);
-}
-
-.logo-text {
-  font-size: var(--font-size-md);
-  font-weight: 700;
-  color: var(--color-accent-blue);
-  text-transform: lowercase;
-}
-
-.logo-text::after {
-  content: '▋';
-  color: var(--color-text-primary);
-  animation: blink 1s step-end infinite;
-}
-
-@keyframes blink {
-  50% { opacity: 0; }
+.sidebar.collapsed {
+  --sidebar-width: 56px;
 }
 
 .sidebar-nav {
@@ -136,6 +134,7 @@ body {
   flex-direction: column;
   padding: var(--space-sm) 0;
   flex-grow: 1;
+  height: 100%;
 }
 
 .nav-item {
@@ -147,7 +146,16 @@ body {
   font-size: var(--font-size-sm);
   font-weight: 500;
   position: relative;
-  transition: color var(--duration-fast) var(--ease-standard);
+  transition: color var(--duration-fast) var(--ease-standard),
+              padding var(--duration-normal) var(--ease-standard),
+              justify-content var(--duration-normal) var(--ease-standard);
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  outline: none;
 }
 
 .nav-item::before {
@@ -155,6 +163,7 @@ body {
   white-space: pre;
   color: var(--color-accent-blue);
   margin-right: 4px;
+  transition: opacity var(--duration-normal) var(--ease-standard);
 }
 
 .nav-item.active {
@@ -171,14 +180,18 @@ body {
   color: var(--color-text-secondary);
   width: 14px;
   height: 14px;
+  flex-shrink: 0;
+  transition: margin var(--duration-normal) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
 }
 
-.nav-item.active svg {
-  color: var(--color-text-primary);
-}
-
-.nav-item-bottom {
-  margin-top: auto;
+.nav-label {
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity var(--duration-normal) var(--ease-standard);
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .nav-shortcut {
@@ -186,6 +199,7 @@ body {
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
   font-family: inherit;
+  transition: opacity var(--duration-normal) var(--ease-standard);
 }
 
 .nav-item:hover {
@@ -195,6 +209,49 @@ body {
 
 .nav-item:focus-visible {
   outline: 1px solid var(--color-accent-blue);
+}
+
+/* Collapsed Sidebar overrides */
+.sidebar.collapsed .nav-item {
+  padding-left: 0;
+  padding-right: 0;
+  justify-content: center;
+}
+
+.sidebar.collapsed .nav-item::before {
+  opacity: 0;
+  width: 0;
+  margin: 0;
+  display: none;
+}
+
+.sidebar.collapsed .nav-item svg {
+  margin-right: 0;
+}
+
+.sidebar.collapsed .nav-label {
+  opacity: 0;
+  width: 0;
+  display: none;
+}
+
+.sidebar.collapsed .nav-shortcut {
+  opacity: 0;
+  width: 0;
+  display: none;
+}
+
+.sidebar.collapsed .nav-item.active svg {
+  color: var(--color-accent-blue);
+}
+
+/* Rotate toggle chevron when collapsed */
+.sidebar.collapsed #sidebar-toggle .toggle-icon {
+  transform: rotate(180deg);
+}
+
+#sidebar-toggle .toggle-icon {
+  transition: transform var(--duration-normal) var(--ease-standard);
 }
 
 /* Main Content Panel */

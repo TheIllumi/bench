@@ -12,7 +12,7 @@
     <div class="title-bar">
       <div class="title-bar-drag" data-tauri-drag-region>
         <span class="titlebar-logo">bench</span>
-        <span class="titlebar-center">ctrl+k</span>
+        <button class="titlebar-shortcut-btn" id="titlebar-shortcut-btn" title="Open Command Palette (Ctrl+K)">ctrl+k</button>
       </div>
       <div class="titlebar-controls">
         <button class="win-btn" id="win-min" aria-label="minimize">
@@ -29,9 +29,6 @@
     <div class="app-container">
       <!-- Left Sidebar navigation -->
       <aside class="sidebar">
-        <div class="sidebar-header">
-          <span class="logo-text">Bench</span>
-        </div>
         <nav class="sidebar-nav">
           <a href="#" class="nav-item" data-module="focus">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
@@ -63,6 +60,11 @@
             <span class="nav-label">Settings</span>
             <span class="nav-shortcut">⌥6</span>
           </a>
+          <button class="nav-item" id="sidebar-toggle" aria-label="Collapse sidebar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide toggle-icon"><polyline points="15 18 9 12 15 6"/></svg>
+            <span class="nav-label">Collapse</span>
+            <span class="nav-shortcut">^B</span>
+          </button>
         </nav>
       </aside>
 
