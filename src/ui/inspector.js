@@ -79,6 +79,11 @@ export const Inspector = {
    */
   open(item) {
     if (!panelEl) return;
+    if (currentItem && currentItem.id === item.id) {
+      currentItem = { ...currentItem, ...item };
+      syncFields();
+      return;
+    }
     this.flushPendingSaves();
     currentItem = { ...item };
     panelEl.classList.add('open');
@@ -163,13 +168,17 @@ function renderItem() {
     <div class="inspector-resize-handle" id="inspector-resize-handle"></div>
     <div class="inspector-content">
       <div class="inspector-header">
-        <span class="inspector-save-indicator" id="inspector-save-indicator"></span>
+        <span class="inspector-title-label">Item Inspector</span>
+        <div class="inspector-header-right">
+          <span class="inspector-save-indicator" id="inspector-save-indicator"></span>
+          <button class="inspector-close-btn" id="inspector-close-btn" aria-label="Close inspector">[&times;]</button>
+        </div>
       </div>
       <div class="inspector-fields">
         <div class="inspector-field">
           <label class="inspector-label">title</label>
-          <input type="text" class="inspector-title-input" id="inspector-title-input"
-                 value="${escapeAttr(currentItem.title)}" spellcheck="false" />
+          <textarea class="inspector-title-input" id="inspector-title-input"
+                    placeholder="Title" spellcheck="false" rows="1">${escapeHtml(currentItem.title || '')}</textarea>
         </div>
         <div class="inspector-field">
           <label class="inspector-label">area</label>
@@ -207,14 +216,24 @@ function renderItem() {
   updatedField = document.getElementById('inspector-updated-value');
 
   // Bind title events
+  titleInput.addEventListener('input', handleTitleInput);
   titleInput.addEventListener('blur', handleTitleBlur);
   titleInput.addEventListener('keydown', handleTitleKeydown);
+  autoGrowTextarea(titleInput);
 
   // Bind notes events
   notesTextarea.addEventListener('input', handleNotesInput);
   notesTextarea.addEventListener('blur', handleNotesBlur);
   notesTextarea.addEventListener('keydown', handleNotesKeydown);
   autoGrowTextarea(notesTextarea);
+
+  // Bind close button
+  const closeBtn = document.getElementById('inspector-close-btn');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      EventBus.emit('itemSelected', null);
+    });
+  }
 
   // Bind resize handle
   const resizeHandle = document.getElementById('inspector-resize-handle');
@@ -233,6 +252,7 @@ function syncFields() {
   // Only update title if the user is not actively editing it
   if (titleInput && document.activeElement !== titleInput) {
     titleInput.value = currentItem.title;
+    autoGrowTextarea(titleInput);
   }
 
   // Only update notes if the user is not actively editing them
@@ -248,6 +268,10 @@ function syncFields() {
 }
 
 // --- Title Handling ---
+
+function handleTitleInput() {
+  autoGrowTextarea(titleInput);
+}
 
 function handleTitleBlur() {
   if (!currentItem || !titleInput) return;
@@ -412,6 +436,10 @@ function handleResizeMove(e) {
   let newWidth = resizeStartWidth + delta;
   newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth));
   panelEl.style.setProperty('--inspector-width', `${newWidth}px`);
+
+  // Live reflow heights during drag resize
+  autoGrowTextarea(notesTextarea);
+  autoGrowTextarea(titleInput);
 }
 
 function handleResizeEnd() {

@@ -541,6 +541,7 @@ body {
   font-size: var(--font-size-sm);
   color: var(--color-text-primary);
   flex-grow: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -570,6 +571,7 @@ body {
   gap: var(--space-xs);
   align-items: center;
   opacity: 0;
+  flex-shrink: 0;
 }
 
 .task-item:hover .task-actions {
@@ -939,6 +941,7 @@ body {
   color: var(--color-text-muted);
   margin-right: var(--space-md);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* Area Styling & Assignment Picker */
@@ -1113,6 +1116,10 @@ body {
   width: 100%;
   padding: 0;
   outline: none;
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-wrap: break-word;
   transition: border-color var(--duration-fast) var(--ease-standard);
 }
 
@@ -1176,3 +1183,35 @@ body {
   margin-top: var(--space-xs) !important;
   font-size: var(--font-size-xs) !important;
 }
+
+.inspector-title-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-transform: lowercase;
+  font-family: var(--font-mono);
+  user-select: none;
+}
+
+.inspector-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.inspector-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  padding: 0 var(--space-xs);
+  transition: color var(--duration-fast) var(--ease-standard);
+  outline: none;
+  user-select: none;
+}
+
+.inspector-close-btn:hover {
+  color: var(--color-accent-blue);
+}
+
