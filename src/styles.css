@@ -1219,3 +1219,60 @@ body {
   color: var(--color-accent-blue);
 }
 
+/* Shortcuts Modal styles */
+.shortcuts-modal-container {
+  display: flex;
+  flex-direction: column;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.shortcuts-group-title {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: bold;
+  color: var(--color-accent-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: var(--space-md);
+  margin-bottom: var(--space-xs);
+  padding-bottom: 2px;
+  border-bottom: 1px dashed var(--color-border);
+}
+
+.shortcuts-group-title:first-of-type {
+  margin-top: 0;
+}
+
+.shortcuts-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+}
+
+.shortcuts-table tr {
+  border-bottom: 1px solid var(--color-bg-sidebar);
+}
+
+.shortcuts-table tr:last-child {
+  border-bottom: none;
+}
+
+.shortcuts-table td {
+  padding: 6px 0;
+  vertical-align: middle;
+}
+
+.shortcuts-key {
+  color: var(--color-accent-orange, #ff9e64);
+  font-weight: bold;
+  padding-right: var(--space-md);
+  white-space: nowrap;
+  width: 180px; /* Visually separated */
+}
+
+.shortcuts-desc {
+  color: var(--color-text-secondary);
+}
+

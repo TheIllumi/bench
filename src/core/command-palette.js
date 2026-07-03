@@ -3,6 +3,7 @@ import { Repository } from './repository.js';
 import { CommandRegistry } from './command-registry.js';
 import { ToastService } from '../ui/toast.js';
 import { DialogService } from '../ui/dialog.js';
+import { createModal } from '../ui/modal.js';
 
 // Icons
 const TARGET_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`;
@@ -22,6 +23,10 @@ CommandRegistry.register({ id: 'nav-areas', label: 'Go to Areas', category: 'Nav
 CommandRegistry.register({ id: 'nav-parking-lot', label: 'Go to Parking Lot', category: 'Navigation', action: () => navigateTo('parking-lot'), shortcut: '⌥4', icon: COFFEE_ICON });
 CommandRegistry.register({ id: 'nav-archive', label: 'Go to Archive', category: 'Navigation', action: () => navigateTo('archive'), shortcut: '⌥5', icon: ARCHIVE_ICON });
 CommandRegistry.register({ id: 'nav-settings', label: 'Go to Settings', category: 'Navigation', action: () => navigateTo('settings'), shortcut: '⌥6', icon: SETTINGS_ICON });
+
+const KEYBOARD_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="12" rx="2" x="2" y="6"/><path d="M6 12h.01"/><path d="M10 12h.01"/><path d="M14 12h.01"/><path d="M18 12h.01"/><path d="M6 16h.01"/><path d="M18 16h.01"/><path d="M10 16h4"/></svg>`;
+CommandRegistry.register({ id: 'show-shortcuts', label: 'Show Keyboard Shortcuts', category: 'Help', action: showShortcutsModal, icon: KEYBOARD_ICON });
+
 CommandRegistry.register({ id: 'action-start-fresh', label: 'Start fresh (Clear Completed Focus Tasks)', category: 'Actions', action: triggerStartFresh, icon: CHECKED_ICON });
 CommandRegistry.register({ id: 'action-clear-workspace', label: 'Clear Workspace (Wipe Database)', category: 'Actions', action: triggerClearWorkspace, icon: TRASH_ICON });
 
@@ -321,6 +326,53 @@ function executeItem(item) {
   if (item.action) {
     item.action();
   }
+}
+
+/**
+ * Action: Display the lightweight Keyboard Shortcuts modal overlay
+ */
+function showShortcutsModal() {
+  const content = `
+    <div class="shortcuts-modal-container">
+      <div class="shortcuts-group-title">Global</div>
+      <table class="shortcuts-table">
+        <tr><td class="shortcuts-key">Ctrl+K / ⌘+K</td><td class="shortcuts-desc">Open Command Palette</td></tr>
+        <tr><td class="shortcuts-key">Ctrl+N / ⌘+N / C</td><td class="shortcuts-desc">Open Quick Capture</td></tr>
+        <tr><td class="shortcuts-key">Alt+1</td><td class="shortcuts-desc">Go to Focus</td></tr>
+        <tr><td class="shortcuts-key">Alt+2</td><td class="shortcuts-desc">Go to Capture</td></tr>
+        <tr><td class="shortcuts-key">Alt+3</td><td class="shortcuts-desc">Go to Areas</td></tr>
+        <tr><td class="shortcuts-key">Alt+4</td><td class="shortcuts-desc">Go to Parking Lot</td></tr>
+        <tr><td class="shortcuts-key">Alt+5</td><td class="shortcuts-desc">Go to Archive</td></tr>
+        <tr><td class="shortcuts-key">Alt+6</td><td class="shortcuts-desc">Go to Settings</td></tr>
+        <tr><td class="shortcuts-key">Ctrl+B</td><td class="shortcuts-desc">Toggle Sidebar</td></tr>
+        <tr><td class="shortcuts-key">Escape</td><td class="shortcuts-desc">Close active overlay / modal</td></tr>
+      </table>
+      
+      <div class="shortcuts-group-title">List Navigation & Actions</div>
+      <table class="shortcuts-table">
+        <tr><td class="shortcuts-key">Arrow Up / Down</td><td class="shortcuts-desc">Move selection</td></tr>
+        <tr><td class="shortcuts-key">Enter</td><td class="shortcuts-desc">Open selected item in Inspector</td></tr>
+        <tr><td class="shortcuts-key">F</td><td class="shortcuts-desc">Move selected item to Focus</td></tr>
+        <tr><td class="shortcuts-key">P</td><td class="shortcuts-desc">Move selected item to Parking Lot</td></tr>
+        <tr><td class="shortcuts-key">A</td><td class="shortcuts-desc">Move selected item to Archive</td></tr>
+        <tr><td class="shortcuts-key">D / Delete</td><td class="shortcuts-desc">Delete selected item</td></tr>
+      </table>
+      
+      <div class="shortcuts-group-title">Inspector & Notes Editor</div>
+      <table class="shortcuts-table">
+        <tr><td class="shortcuts-key">Ctrl+L / ⌘+L</td><td class="shortcuts-desc">Focus title field</td></tr>
+        <tr><td class="shortcuts-key">Ctrl+Enter / ⌘+Enter</td><td class="shortcuts-desc">Save changes & return focus to list</td></tr>
+        <tr><td class="shortcuts-key">Ctrl+S / ⌘+S</td><td class="shortcuts-desc">Force immediate save</td></tr>
+        <tr><td class="shortcuts-key">Escape</td><td class="shortcuts-desc">Blur editor first / close Inspector</td></tr>
+        <tr><td class="shortcuts-key">Tab</td><td class="shortcuts-desc">Insert 2 spaces</td></tr>
+      </table>
+    </div>
+  `;
+
+  createModal({
+    title: 'keyboard shortcuts',
+    contentNode: content
+  });
 }
 
 /**
