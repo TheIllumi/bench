@@ -98,7 +98,7 @@ function renderEmpty() {
     <div class="placeholder-view">
       <h2>archive</h2>
       <p>Archive is empty.</p>
-      <p style="color: var(--color-text-muted); font-size: var(--font-size-xs); max-width: 320px; margin: var(--space-sm) auto; line-height: 1.4;">
+      <p style="color: var(--color-text-muted); font-size: var(--font-size-xs); max-width: 320px; margin: var(--space-sm) 0 0 0; line-height: 1.4;">
         Finished work and discarded ideas will live here.
       </p>
     </div>

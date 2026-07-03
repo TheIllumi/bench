@@ -77,10 +77,10 @@ function renderEmpty() {
     <div class="placeholder-view">
       <h2>areas</h2>
       <p>No Areas yet.</p>
-      <p style="color: var(--color-text-muted); font-size: var(--font-size-xs); max-width: 320px; margin: var(--space-sm) auto; line-height: 1.4;">
+      <p style="color: var(--color-text-muted); font-size: var(--font-size-xs); max-width: 320px; margin: var(--space-sm) 0 var(--space-xs) 0; line-height: 1.4;">
         Areas represent ongoing, long-term responsibilities rather than projects.
       </p>
-      <p style="color: var(--color-text-secondary); font-size: var(--font-size-xs); margin-bottom: var(--space-md);">
+      <p style="color: var(--color-text-secondary); font-size: var(--font-size-xs); margin-bottom: var(--space-md); margin-top: 0;">
         Examples: University, Health, Career, Finance
       </p>
       <div>

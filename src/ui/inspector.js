@@ -178,7 +178,7 @@ function renderItem() {
         <div class="inspector-field">
           <label class="inspector-label">title</label>
           <textarea class="inspector-title-input" id="inspector-title-input"
-                    placeholder="Title" spellcheck="false" rows="1">${escapeHtml(currentItem.title || '')}</textarea>
+                    placeholder="title" spellcheck="false" rows="1">${escapeHtml(currentItem.title || '')}</textarea>
         </div>
         <div class="inspector-field">
           <label class="inspector-label">area</label>
@@ -201,7 +201,7 @@ function renderItem() {
       <div class="inspector-notes-section">
         <label class="inspector-label">notes</label>
         <textarea class="inspector-notes-editor" id="inspector-notes-editor"
-                  placeholder="Write notes here…" spellcheck="false">${escapeHtml(currentItem.notes || '')}</textarea>
+                  placeholder="write notes here…" spellcheck="false">${escapeHtml(currentItem.notes || '')}</textarea>
       </div>
     </div>
   `;
