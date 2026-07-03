@@ -266,6 +266,10 @@ function handleTitleKeydown(e) {
   if (e.key === 'Enter') {
     e.preventDefault();
     titleInput.blur();
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    e.stopPropagation();
+    titleInput.blur();
   }
 }
 
@@ -338,6 +342,13 @@ function handleNotesKeydown(e) {
     pendingField = null;
     pendingValue = null;
     showSaveState('Saving…');
+  }
+
+  // Escape blurs notes editor first, stops event propagation
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    e.stopPropagation();
+    notesTextarea.blur();
   }
 }
 

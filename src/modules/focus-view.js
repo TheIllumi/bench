@@ -416,14 +416,13 @@ function handleGlobalKeydown(event) {
     return;
   }
 
-  const activeEl = document.activeElement;
-  const isTextInput = activeEl && (
-    activeEl.tagName === 'INPUT' || 
-    activeEl.tagName === 'TEXTAREA' || 
-    activeEl.isContentEditable
+  const el = document.activeElement;
+  const editing = el && (
+    el.tagName === 'INPUT' || 
+    el.tagName === 'TEXTAREA' || 
+    el.isContentEditable
   );
-
-  if (isTextInput) return;
+  if (editing) return;
 
   const active = tasks.filter(t => t.status === 'active');
 
