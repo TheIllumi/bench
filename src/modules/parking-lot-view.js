@@ -9,6 +9,7 @@ let containerEl = null;
 let items = [];
 let selectedItemId = null;
 let editingItemId = null;
+let filterAreaId = '';
 
 /**
  * Mount the Parking Lot view.
@@ -90,16 +91,62 @@ function cleanupListeners() {
 function renderView() {
   if (!containerEl) return;
 
+  const filteredItems = filterAreaId ? items.filter(t => t.areaId === filterAreaId) : items;
+
+  containerEl.innerHTML = `
+    <div class="focus-container">
+      <div class="view-filter-bar" style="margin-bottom: var(--space-sm); display: flex; align-items: center; gap: var(--space-xs); font-family: var(--font-mono); font-size: var(--font-size-xs);">
+        <span style="color: var(--color-text-muted);">area</span>
+        <select id="area-filter-select" class="inspector-select" style="width: auto; min-width: 80px; padding: 2px 4px; border: 1px solid var(--color-border);">
+        </select>
+      </div>
+      <div id="view-content-area"></div>
+    </div>
+  `;
+
+  renderAreaFilter();
+
+  const contentArea = document.getElementById('view-content-area');
+
   if (items.length === 0) {
-    crossfade(containerEl, () => renderEmpty());
+    renderEmpty(contentArea);
+  } else if (filteredItems.length === 0) {
+    contentArea.innerHTML = `
+      <div class="placeholder-view" style="height: auto; padding: var(--space-md) 0;">
+        <p style="color: var(--color-text-muted);">No tasks match the selected Area filter.</p>
+      </div>
+    `;
   } else {
-    crossfade(containerEl, () => renderParkingList());
+    renderParkingList(contentArea, filteredItems);
   }
 }
 
-function renderEmpty() {
-  containerEl.innerHTML = `
-    <div class="placeholder-view">
+function renderAreaFilter() {
+  const select = document.getElementById('area-filter-select');
+  if (!select) return;
+
+  const activeAreas = Repository.getAreas().filter(a => !a.archived);
+  let html = `<option value="">all</option>`;
+  activeAreas.forEach(a => {
+    html += `<option value="${a.id}" ${filterAreaId === a.id ? 'selected' : ''}>${a.name}</option>`;
+  });
+  select.innerHTML = html;
+
+  select.addEventListener('change', (e) => {
+    filterAreaId = e.target.value;
+    if (selectedItemId) {
+      const task = items.find(t => t.id === selectedItemId);
+      if (task && task.areaId !== filterAreaId && filterAreaId !== '') {
+        setSelectedItemId(null);
+      }
+    }
+    renderView();
+  });
+}
+
+function renderEmpty(targetEl) {
+  targetEl.innerHTML = `
+    <div class="placeholder-view" style="height: auto; padding: var(--space-lg) 0;">
       <h2>parking lot</h2>
       <p>Nothing parked.</p>
       <p style="color: var(--color-text-muted); font-size: var(--font-size-xs); max-width: 320px; margin: var(--space-sm) 0 0 0; line-height: 1.4;">
@@ -109,16 +156,14 @@ function renderEmpty() {
   `;
 }
 
-function renderParkingList() {
-  containerEl.innerHTML = `
-    <div class="focus-container">
-      <div class="completed-header" style="margin-bottom: var(--space-sm);">Parked items</div>
-      <div class="tasks-list-active" id="parking-items-list" role="listbox" aria-label="Parked items"></div>
-    </div>
+function renderParkingList(targetEl, listItems) {
+  targetEl.innerHTML = `
+    <div class="completed-header" style="margin-bottom: var(--space-sm);">Parked items</div>
+    <div class="tasks-list-active" id="parking-items-list" role="listbox" aria-label="Parked items"></div>
   `;
 
   const listEl = document.getElementById('parking-items-list');
-  items.forEach(item => {
+  listItems.forEach(item => {
     listEl.appendChild(buildParkRow(item));
   });
 

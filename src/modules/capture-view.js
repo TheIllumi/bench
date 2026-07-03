@@ -6,6 +6,7 @@ import { crossfade, getRelativeTime } from '../ui/utils.js';
 let containerEl = null;
 let items = [];
 let selectedItemId = null;
+let filterAreaId = '';
 
 export function renderCaptureView(container) {
   container.innerHTML = '';
@@ -71,16 +72,62 @@ function cleanupListeners() {
 function renderView() {
   if (!containerEl) return;
 
+  const filteredItems = filterAreaId ? items.filter(t => t.areaId === filterAreaId) : items;
+
+  containerEl.innerHTML = `
+    <div class="focus-container">
+      <div class="view-filter-bar" style="margin-bottom: var(--space-sm); display: flex; align-items: center; gap: var(--space-xs); font-family: var(--font-mono); font-size: var(--font-size-xs);">
+        <span style="color: var(--color-text-muted);">area</span>
+        <select id="area-filter-select" class="inspector-select" style="width: auto; min-width: 80px; padding: 2px 4px; border: 1px solid var(--color-border);">
+        </select>
+      </div>
+      <div id="view-content-area"></div>
+    </div>
+  `;
+
+  renderAreaFilter();
+
+  const contentArea = document.getElementById('view-content-area');
+
   if (items.length === 0) {
-    crossfade(containerEl, () => renderEmpty());
+    renderEmpty(contentArea);
+  } else if (filteredItems.length === 0) {
+    contentArea.innerHTML = `
+      <div class="placeholder-view" style="height: auto; padding: var(--space-md) 0;">
+        <p style="color: var(--color-text-muted);">No tasks match the selected Area filter.</p>
+      </div>
+    `;
   } else {
-    crossfade(containerEl, () => renderCaptureList());
+    renderCaptureList(contentArea, filteredItems);
   }
 }
 
-function renderEmpty() {
-  containerEl.innerHTML = `
-    <div class="placeholder-view">
+function renderAreaFilter() {
+  const select = document.getElementById('area-filter-select');
+  if (!select) return;
+
+  const activeAreas = Repository.getAreas().filter(a => !a.archived);
+  let html = `<option value="">all</option>`;
+  activeAreas.forEach(a => {
+    html += `<option value="${a.id}" ${filterAreaId === a.id ? 'selected' : ''}>${a.name}</option>`;
+  });
+  select.innerHTML = html;
+
+  select.addEventListener('change', (e) => {
+    filterAreaId = e.target.value;
+    if (selectedItemId) {
+      const task = items.find(t => t.id === selectedItemId);
+      if (task && task.areaId !== filterAreaId && filterAreaId !== '') {
+        setSelectedItemId(null);
+      }
+    }
+    renderView();
+  });
+}
+
+function renderEmpty(targetEl) {
+  targetEl.innerHTML = `
+    <div class="placeholder-view" style="height: auto; padding: var(--space-lg) 0;">
       <h2>capture</h2>
       <p>No captured thoughts.</p>
       <p style="color: var(--color-text-muted); margin-top: var(--space-xs);">Press <span style="color: var(--color-accent-blue)">C</span> to capture an idea.</p>
@@ -88,15 +135,13 @@ function renderEmpty() {
   `;
 }
 
-function renderCaptureList() {
-  containerEl.innerHTML = `
-    <div class="focus-container">
-      <div class="tasks-list-active" id="capture-items-list" role="listbox" tabindex="-1"></div>
-    </div>
+function renderCaptureList(targetEl, listItems) {
+  targetEl.innerHTML = `
+    <div class="tasks-list-active" id="capture-items-list" role="listbox" tabindex="-1"></div>
   `;
 
   const listEl = document.getElementById('capture-items-list');
-  items.forEach(item => {
+  listItems.forEach(item => {
     listEl.appendChild(buildCaptureRow(item));
   });
 

@@ -12,6 +12,7 @@ let editingTaskId = null;
 let selectedTaskId = null;
 let containerEl = null;
 let isCreating = false;
+let filterAreaId = '';
 
 const GRIP_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>`;
 const EDIT_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
@@ -109,18 +110,65 @@ function renderView() {
   const active = tasks.filter(t => t.status === 'active');
   const completed = tasks.filter(t => t.status === 'completed');
 
+  const filteredActive = filterAreaId ? active.filter(t => t.areaId === filterAreaId) : active;
+  const filteredCompleted = filterAreaId ? completed.filter(t => t.areaId === filterAreaId) : completed;
+
+  containerEl.innerHTML = `
+    <div class="focus-container">
+      <div class="view-filter-bar" style="margin-bottom: var(--space-sm); display: flex; align-items: center; gap: var(--space-xs); font-family: var(--font-mono); font-size: var(--font-size-xs);">
+        <span style="color: var(--color-text-muted);">area</span>
+        <select id="area-filter-select" class="inspector-select" style="width: auto; min-width: 80px; padding: 2px 4px; border: 1px solid var(--color-border);">
+        </select>
+      </div>
+      <div id="view-content-area"></div>
+    </div>
+  `;
+
+  renderAreaFilter();
+
+  const contentArea = document.getElementById('view-content-area');
+
   if (tasks.length === 0 && !isCreating) {
-    crossfade(containerEl, () => renderEmpty());
-  } else if (active.length === 0 && tasks.length > 0 && !isCreating) {
-    crossfade(containerEl, () => renderAllComplete());
+    renderEmpty(contentArea);
+  } else if (filteredActive.length === 0 && filteredCompleted.length === 0 && !isCreating) {
+    contentArea.innerHTML = `
+      <div class="placeholder-view" style="height: auto; padding: var(--space-md) 0;">
+        <p style="color: var(--color-text-muted);">No tasks match the selected Area filter.</p>
+      </div>
+    `;
+  } else if (filteredActive.length === 0 && tasks.length > 0 && !isCreating) {
+    renderAllComplete(contentArea);
   } else {
-    crossfade(containerEl, () => renderTaskList(active, completed));
+    renderTaskList(contentArea, filteredActive, filteredCompleted);
   }
 }
 
-function renderEmpty() {
-  containerEl.innerHTML = `
-    <div class="placeholder-view">
+function renderAreaFilter() {
+  const select = document.getElementById('area-filter-select');
+  if (!select) return;
+
+  const activeAreas = Repository.getAreas().filter(a => !a.archived);
+  let html = `<option value="">all</option>`;
+  activeAreas.forEach(a => {
+    html += `<option value="${a.id}" ${filterAreaId === a.id ? 'selected' : ''}>${a.name}</option>`;
+  });
+  select.innerHTML = html;
+
+  select.addEventListener('change', (e) => {
+    filterAreaId = e.target.value;
+    if (selectedTaskId) {
+      const task = tasks.find(t => t.id === selectedTaskId);
+      if (task && task.areaId !== filterAreaId && filterAreaId !== '') {
+        setSelectedTaskId(null);
+      }
+    }
+    renderView();
+  });
+}
+
+function renderEmpty(targetEl) {
+  targetEl.innerHTML = `
+    <div class="placeholder-view" style="height: auto; padding: var(--space-lg) 0;">
       <h2>focus</h2>
       <p>No active tasks.</p>
       <p style="color: var(--color-text-muted); margin-top: var(--space-xs);">Press <span style="color: var(--color-accent-blue)">A</span> to create one.</p>
@@ -128,9 +176,9 @@ function renderEmpty() {
   `;
 }
 
-function renderAllComplete() {
-  containerEl.innerHTML = `
-    <div class="placeholder-view">
+function renderAllComplete(targetEl) {
+  targetEl.innerHTML = `
+    <div class="placeholder-view" style="height: auto; padding: var(--space-lg) 0;">
       <h2>nice work.</h2>
       <p>Everything in Focus is complete.</p>
       <p style="color: var(--color-text-muted); margin-top: var(--space-xs);">Press <span style="color: var(--color-accent-blue)">R</span> to start fresh.</p>
@@ -138,17 +186,17 @@ function renderAllComplete() {
   `;
 }
 
-function renderTaskList(active, completed) {
+function renderTaskList(targetEl, active, completed) {
   const atLimit = active.length >= 3;
   const showInput = !atLimit || isCreating;
 
-  containerEl.innerHTML = `
-    <div class="focus-container">
-      ${atLimit ? `<div class="focus-limit-banner" role="status">You\u2019re focusing on enough already. Complete something before adding more.</div>` : ''}
+  targetEl.innerHTML = `
+    <div style="display: flex; flex-direction: column;">
+      ${atLimit ? `<div class="focus-limit-banner" role="status" style="margin-bottom: var(--space-xs);">You\u2019re focusing on enough already. Complete something before adding more.</div>` : ''}
       ${showInput ? `<div id="task-input-portal" class="task-input-container"></div>` : ''}
       <div class="tasks-list-active" id="active-tasks-list" role="listbox" aria-label="Active focus tasks"></div>
       ${completed.length > 0 ? `
-        <div class="completed-header">Completed</div>
+        <div class="completed-header" style="margin-top: var(--space-md);">Completed</div>
         <div class="tasks-list-completed" id="completed-tasks-list" role="list" aria-label="Completed tasks"></div>
       ` : ''}
     </div>

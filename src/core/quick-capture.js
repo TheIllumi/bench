@@ -10,7 +10,7 @@ let modalEl = null;
  * from anywhere in the application.
  */
 export const QuickCapture = {
-  open() {
+  open(defaultAreaId = undefined) {
     if (isOpen) return;
     isOpen = true;
 
@@ -52,7 +52,8 @@ export const QuickCapture = {
           Repository.save({
             title: value,
             status: 'active',
-            module: 'capture'
+            module: 'capture',
+            areaId: defaultAreaId
           });
           ToastService.show('Captured.', 'success');
         }

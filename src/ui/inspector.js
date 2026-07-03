@@ -1,5 +1,7 @@
 import { EventBus } from '../core/event-bus.js';
 import { getRelativeTime } from './utils.js';
+import { Repository } from '../core/repository.js';
+import { QuickCapture } from '../core/quick-capture.js';
 
 const STORAGE_KEY_WIDTH = 'bench_inspector_width';
 const DEFAULT_WIDTH = 320;
@@ -284,7 +286,13 @@ function renderItem() {
         ${fieldsHtml}
       </div>
       <div class="inspector-section future-metadata"></div>
-      <div class="inspector-notes-section">
+      ${isArea ? `
+        <div class="inspector-area-tasks-section" style="margin-top: var(--space-md); border-top: 1px solid var(--color-border); padding-top: var(--space-sm);">
+          <div class="inspector-label" style="text-transform: lowercase; margin-bottom: var(--space-2xs);">tasks</div>
+          <div id="inspector-area-tasks-list-portal"></div>
+        </div>
+      ` : ''}
+      <div class="inspector-notes-section" style="${isArea ? 'flex: none; height: auto; min-height: 120px; margin-top: var(--space-xs);' : ''}">
         <label class="inspector-label">${notesLabel}</label>
         <textarea class="inspector-notes-editor" id="inspector-notes-editor"
                   placeholder="${notesPlaceholder}" spellcheck="false">${escapeHtml(notesValue)}</textarea>
@@ -299,6 +307,11 @@ function renderItem() {
   moduleField = document.getElementById('inspector-module-value');
   createdField = document.getElementById('inspector-created-value');
   updatedField = document.getElementById('inspector-updated-value');
+
+  // Populate tasks list if Area
+  if (isArea) {
+    syncAreaTasks();
+  }
 
   // Bind title events
   titleInput.addEventListener('input', handleTitleInput);
@@ -324,6 +337,36 @@ function renderItem() {
           value: val
         });
         showSaveState('Saving…');
+      });
+    }
+  }
+
+  // Bind Area Tasks interactions
+  if (isArea) {
+    const listContainer = panelEl.querySelector('.inspector-area-tasks-section');
+    if (listContainer) {
+      listContainer.addEventListener('click', (e) => {
+        const toggleEl = e.target.closest('.inspector-task-toggle');
+        if (toggleEl) {
+          e.stopPropagation();
+          const taskId = toggleEl.getAttribute('data-task-id');
+          const task = Repository.getAll().find(t => t.id === taskId);
+          if (task) {
+            const nextStatus = task.status === 'completed' ? 'active' : 'completed';
+            Repository.update(taskId, { status: nextStatus });
+          }
+          return;
+        }
+
+        const titleEl = e.target.closest('.inspector-task-title');
+        if (titleEl) {
+          e.stopPropagation();
+          const taskId = titleEl.getAttribute('data-task-id');
+          const task = Repository.getAll().find(t => t.id === taskId);
+          if (task) {
+            EventBus.emit('itemSelected', task);
+          }
+        }
       });
     }
   }
@@ -373,6 +416,7 @@ function syncFields() {
     if (archivedEl) {
       archivedEl.textContent = currentItem.archived ? 'yes' : 'no';
     }
+    syncAreaTasks();
   } else {
     const areaSelect = document.getElementById('inspector-area-select');
     if (areaSelect && document.activeElement !== areaSelect) {
@@ -383,6 +427,67 @@ function syncFields() {
 
   if (createdField) createdField.textContent = getRelativeTime(currentItem.createdAt);
   if (updatedField) updatedField.textContent = getRelativeTime(currentItem.updatedAt);
+}
+
+function syncAreaTasks() {
+  if (!currentItem || currentItem.type !== 'area') return;
+  const listContainer = document.getElementById('inspector-area-tasks-list-portal');
+  if (!listContainer) return;
+
+  const allTasks = Repository.getAll().filter(item => 
+    item.type !== 'area' && 
+    item.areaId === currentItem.id &&
+    item.module !== 'archive'
+  );
+
+  let tasksHtml = '';
+  const totalCount = allTasks.length;
+
+  if (totalCount === 0) {
+    tasksHtml = `
+      <div class="inspector-area-tasks-empty" style="font-family: var(--font-mono); font-size: var(--font-size-xs); color: var(--color-text-muted); line-height: 1.6; padding-top: var(--space-xs);">
+        No tasks yet.<br>
+        Tasks assigned to this Area<br>
+        will appear here.<br><br>
+        Press <span style="color: var(--color-accent-blue)">n</span> to create one.
+      </div>
+    `;
+  } else {
+    const modulesToRender = [
+      { id: 'focus', label: 'focus' },
+      { id: 'capture', label: 'capture' },
+      { id: 'parking-lot', label: 'parking lot' }
+    ];
+
+    modulesToRender.forEach(m => {
+      const moduleTasks = allTasks.filter(t => t.module === m.id);
+      if (moduleTasks.length > 0) {
+        tasksHtml += `
+          <div class="inspector-area-module-group" style="margin-top: var(--space-xs);">
+            <div class="inspector-label" style="text-transform: lowercase; font-size: 11px; margin-bottom: 2px;">${m.label}</div>
+            <div style="display: flex; flex-direction: column; gap: var(--space-2xs); padding-left: var(--space-xs);">
+        `;
+        moduleTasks.forEach(task => {
+          tasksHtml += `
+            <div class="inspector-area-task-item" style="display: flex; align-items: flex-start; gap: var(--space-xs); font-family: var(--font-mono); font-size: var(--font-size-xs); color: var(--color-text-secondary); line-height: 1.4; padding: 2px 0;">
+              <span style="color: var(--color-text-muted); cursor: pointer; user-select: none;" class="inspector-task-toggle" data-task-id="${task.id}">
+                ${task.status === 'completed' ? '■' : '□'}
+              </span>
+              <span style="cursor: pointer; text-decoration: ${task.status === 'completed' ? 'line-through' : 'none'}; word-break: break-all;" class="inspector-task-title" data-task-id="${task.id}">
+                ${escapeHtml(task.title)}
+              </span>
+            </div>
+          `;
+        });
+        tasksHtml += `
+            </div>
+          </div>
+        `;
+      }
+    });
+  }
+
+  listContainer.innerHTML = tasksHtml;
 }
 
 // --- Title Handling ---
@@ -528,6 +633,21 @@ function handlePanelKeydown(e) {
       titleInput.select();
     }
     return;
+  }
+
+  // Press N to create a task in the active Area
+  if (e.key.toLowerCase() === 'n' && currentItem && currentItem.type === 'area') {
+    const el = document.activeElement;
+    const editing = el && (
+      el.tagName === 'INPUT' || 
+      el.tagName === 'TEXTAREA' || 
+      el.isContentEditable
+    );
+    if (!editing) {
+      e.preventDefault();
+      QuickCapture.open(currentItem.id);
+      return;
+    }
   }
 }
 

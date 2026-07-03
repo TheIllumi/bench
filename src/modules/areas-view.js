@@ -47,6 +47,14 @@ export function renderAreasView(container) {
   observer.observe(document.body, { childList: true, subtree: true });
 }
 
+export function focusAndSelectArea(areaId) {
+  setSelectedAreaId(areaId);
+  editingAreaId = null;
+  isCreating = false;
+  const activeContainer = document.getElementById('active-view');
+  if (activeContainer) renderAreasView(activeContainer);
+}
+
 function handleAreaChange() {
   areas = Repository.getAreas().filter(a => !a.archived);
   renderView();
@@ -69,11 +77,18 @@ function cleanupListeners() {
 
 function setSelectedAreaId(id) {
   selectedAreaId = id;
+  const viewTitleEl = document.getElementById('view-title');
   if (id) {
     const area = areas.find(a => a.id === id) || Repository.getAreas().find(a => a.id === id);
     EventBus.emit('itemSelected', area || null);
+    if (viewTitleEl && area) {
+      viewTitleEl.innerHTML = `Areas <span style="color: var(--color-text-muted); font-weight: normal; margin: 0 6px;">&gt;</span> ${area.name}`;
+    }
   } else {
     EventBus.emit('itemSelected', null);
+    if (viewTitleEl) {
+      viewTitleEl.textContent = 'Areas';
+    }
   }
 }
 
@@ -94,10 +109,10 @@ function renderEmpty() {
       <h2>areas</h2>
       <p>No Areas yet.</p>
       <p style="color: var(--color-text-muted); font-size: var(--font-size-xs); max-width: 320px; margin: var(--space-sm) 0 var(--space-xs) 0; line-height: 1.4;">
-        Areas represent ongoing, long-term responsibilities rather than projects.
+        Areas organize related work.
       </p>
       <p style="color: var(--color-text-secondary); font-size: var(--font-size-xs); margin-bottom: var(--space-md); margin-top: 0;">
-        Examples: University, Health, Career, Finance
+        Press <span style="color: var(--color-accent-blue)">N</span> to create your first Area.
       </p>
       <div>
         <button id="add-area-btn-empty" class="action-btn" style="border: 1px solid var(--color-border); padding: var(--space-xs) var(--space-sm);">+ New Area</button>
@@ -213,23 +228,28 @@ function buildAreaRow(area) {
       content.appendChild(descSpan);
     }
 
+    // Compute active, completed, parked counts
+    const allItems = Repository.getAll().filter(item => item.type !== 'area' && item.areaId === area.id);
+    const activeCount = allItems.filter(item => (item.module === 'focus' || item.module === 'capture') && item.status !== 'completed').length;
+    const completedCount = allItems.filter(item => item.status === 'completed' && item.module !== 'archive').length;
+    const parkedCount = allItems.filter(item => item.module === 'parking-lot' && item.status !== 'completed').length;
+
+    const statsDiv = document.createElement('div');
+    statsDiv.className = 'area-stats';
+    statsDiv.style.display = 'flex';
+    statsDiv.style.gap = 'var(--space-sm)';
+    statsDiv.style.fontSize = 'var(--font-size-xs)';
+    statsDiv.style.color = 'var(--color-text-muted)';
+    statsDiv.style.marginTop = '2px';
+
+    statsDiv.innerHTML = `
+      <span>${activeCount} active</span>
+      <span>${completedCount} completed</span>
+      <span>${parkedCount} parked</span>
+    `;
+
+    content.appendChild(statsDiv);
     row.appendChild(content);
-
-    // Compute active task count
-    const activeCount = Repository.getAll().filter(item => 
-      item.type !== 'area' && 
-      item.areaId === area.id && 
-      item.module !== 'archive'
-    ).length;
-
-    const countBadge = document.createElement('span');
-    countBadge.className = 'area-count-badge';
-    countBadge.textContent = `${activeCount} active item${activeCount === 1 ? '' : 's'}`;
-    countBadge.style.fontSize = 'var(--font-size-xs)';
-    countBadge.style.color = 'var(--color-text-muted)';
-    countBadge.style.marginLeft = 'var(--space-sm)';
-    countBadge.style.flexShrink = '0';
-    row.appendChild(countBadge);
   }
 
   // TUI plain text hover actions
@@ -249,7 +269,7 @@ function buildAreaRow(area) {
 
   const delBtn = document.createElement('button');
   delBtn.className = 'action-btn';
-  delBtn.textContent = 'archive'; // Plain TUI style label matches specifications
+  delBtn.textContent = 'archive';
   delBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     deleteArea(area.id);
@@ -265,7 +285,8 @@ function buildAreaRow(area) {
       renderView();
     });
     row.addEventListener('dblclick', () => {
-      startEditing(area.id);
+      setSelectedAreaId(area.id);
+      renderView();
     });
   }
 
@@ -360,6 +381,17 @@ function deleteArea(areaId) {
   const area = areas.find(a => a.id === areaId);
   if (!area) return;
 
+  const allTasks = Repository.getAll().filter(item => 
+    item.type !== 'area' && 
+    item.areaId === area.id && 
+    item.module !== 'archive'
+  );
+
+  if (allTasks.length > 0) {
+    ToastService.show(`Area contains ${allTasks.length} task${allTasks.length === 1 ? '' : 's'}. Move them first or archive them too.`, 'error');
+    return;
+  }
+
   DialogService.confirm({
     title: 'Archive Area',
     message: `Are you sure you want to archive the Area [${area.name}]?`,
@@ -392,8 +424,8 @@ function handleGlobalKeydown(event) {
   );
   if (editing) return;
 
-  // Press A to Add Area
-  if (event.key.toLowerCase() === 'a') {
+  // Press N to create an Area (or press A)
+  if (event.key.toLowerCase() === 'n' || event.key.toLowerCase() === 'a') {
     event.preventDefault();
     isCreating = true;
     setSelectedAreaId(null);
@@ -433,7 +465,17 @@ function handleGlobalKeydown(event) {
       break;
     case 'Enter':
       event.preventDefault();
-      startEditing(selectedAreaId);
+      if (event.ctrlKey || event.metaKey) {
+        setSelectedAreaId(selectedAreaId);
+        const titleInput = document.getElementById('inspector-title-input');
+        if (titleInput) {
+          titleInput.focus();
+          titleInput.select();
+        }
+      } else {
+        setSelectedAreaId(selectedAreaId);
+        renderView();
+      }
       break;
     case 'Escape':
       event.preventDefault();

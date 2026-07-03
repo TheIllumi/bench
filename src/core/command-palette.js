@@ -122,14 +122,21 @@ export const CommandPalette = {
  */
 function updateResults(query) {
   const normalizedQuery = query.toLowerCase().trim();
-  const items = Repository.getAll().filter(item => item.type !== 'area');
+  const allItems = Repository.getAll();
+  const tasks = allItems.filter(item => item.type !== 'area');
+  const areas = allItems.filter(item => item.type === 'area' && !item.archived);
   const registeredCommands = CommandRegistry.getAll();
 
   const filteredCommands = registeredCommands.filter(cmd => 
     cmd.label.toLowerCase().includes(normalizedQuery)
   );
 
-  const filteredItems = items.filter(item => 
+  const filteredAreas = areas.filter(area => 
+    area.name.toLowerCase().includes(normalizedQuery) ||
+    (area.description && area.description.toLowerCase().includes(normalizedQuery))
+  );
+
+  const filteredItems = tasks.filter(item => 
     item.title.toLowerCase().includes(normalizedQuery) ||
     (item.notes && item.notes.toLowerCase().includes(normalizedQuery))
   );
@@ -150,6 +157,19 @@ function updateResults(query) {
     visibleItems.push({ type: 'header', label: 'Commands' });
     filteredCommands.forEach(cmd => {
       visibleItems.push({ type: 'command', ...cmd });
+    });
+  }
+
+  // Group Areas (appearing before Tasks)
+  if (filteredAreas.length > 0) {
+    visibleItems.push({ type: 'header', label: 'Areas' });
+    filteredAreas.forEach(area => {
+      visibleItems.push({
+        type: 'area',
+        label: area.name,
+        icon: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-accent-blue)"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`,
+        action: () => triggerSelectArea(area.id)
+      });
     });
   }
 
@@ -460,6 +480,15 @@ function triggerSelectArchived(itemId) {
     vm.navigateTo('archive');
     import('../modules/archive-view.js').then((module) => {
       module.focusAndSelectArchivedTask(itemId);
+    });
+  });
+}
+
+function triggerSelectArea(areaId) {
+  import('./view-manager.js').then((vm) => {
+    vm.navigateTo('areas');
+    import('../modules/areas-view.js').then((module) => {
+      module.focusAndSelectArea(areaId);
     });
   });
 }
