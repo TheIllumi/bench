@@ -436,10 +436,6 @@ function handleResizeMove(e) {
   let newWidth = resizeStartWidth + delta;
   newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth));
   panelEl.style.setProperty('--inspector-width', `${newWidth}px`);
-
-  // Live reflow heights during drag resize
-  autoGrowTextarea(notesTextarea);
-  autoGrowTextarea(titleInput);
 }
 
 function handleResizeEnd() {
@@ -453,11 +449,19 @@ function handleResizeEnd() {
   // Persist width
   const currentWidth = panelEl.offsetWidth;
   localStorage.setItem(STORAGE_KEY_WIDTH, String(currentWidth));
+
+  // Recalculate text height once at the end of resize reflow
+  autoGrowTextarea(notesTextarea);
+  autoGrowTextarea(titleInput);
 }
 
 function handleResizeReset() {
   panelEl.style.setProperty('--inspector-width', `${DEFAULT_WIDTH}px`);
   localStorage.setItem(STORAGE_KEY_WIDTH, String(DEFAULT_WIDTH));
+  
+  // Recalculate text height once at the end of resize reflow
+  autoGrowTextarea(notesTextarea);
+  autoGrowTextarea(titleInput);
 }
 
 // --- Save State Indicator ---

@@ -106,10 +106,10 @@ body {
 
 /* App Container Layout */
 .app-container {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+  display: flex;
   height: calc(100vh - 34px);
   width: 100vw;
+  overflow: hidden;
 }
 
 /* Sidebar Styling */
@@ -259,7 +259,10 @@ body {
   background-color: var(--color-bg-content);
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
+  flex: 1 0.001 auto;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .title-area {
@@ -1008,7 +1011,9 @@ body {
 
 .inspector-panel {
   --inspector-width: 320px;
+  flex: 0 999 0px;
   width: 0;
+  min-width: 0;
   opacity: 0;
   pointer-events: none;
   overflow: hidden;
@@ -1018,12 +1023,14 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
-  transition: width var(--duration-normal) var(--ease-standard),
+  transition: flex var(--duration-normal) var(--ease-standard),
+              width var(--duration-normal) var(--ease-standard),
               opacity var(--duration-normal) var(--ease-standard),
               border-left-color var(--duration-normal) var(--ease-standard);
 }
 
 .inspector-panel.open {
+  flex: 0 999 var(--inspector-width);
   width: var(--inspector-width);
   min-width: 260px;
   max-width: 520px;
