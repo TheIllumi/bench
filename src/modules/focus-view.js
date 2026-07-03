@@ -180,10 +180,14 @@ function renderTaskList(active, completed) {
     completed.forEach(task => completedList.appendChild(buildTaskRow(task)));
   }
 
-  // Restore keyboard focus to selected task after re-render
+  // Restore keyboard focus to selected task after re-render (only if user is not editing in the Inspector)
   if (selectedTaskId && !editingTaskId && !isCreating) {
-    const el = activeList.querySelector(`[data-id="${selectedTaskId}"]`);
-    if (el) requestAnimationFrame(() => el.focus());
+    const activeEl = document.activeElement;
+    const isEditingInInspector = activeEl && activeEl.closest('#inspector-panel');
+    if (!isEditingInInspector) {
+      const el = activeList.querySelector(`[data-id="${selectedTaskId}"]`);
+      if (el) requestAnimationFrame(() => el.focus());
+    }
   }
 }
 

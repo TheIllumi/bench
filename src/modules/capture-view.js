@@ -100,10 +100,14 @@ function renderCaptureList() {
     listEl.appendChild(buildCaptureRow(item));
   });
 
-  // Restore focus if an item was selected
+  // Restore focus if an item was selected (only if user is not editing in the Inspector)
   if (selectedItemId) {
-    const selectedEl = listEl.querySelector(`[data-id="${selectedItemId}"]`);
-    if (selectedEl) selectedEl.focus();
+    const activeEl = document.activeElement;
+    const isEditingInInspector = activeEl && activeEl.closest('#inspector-panel');
+    if (!isEditingInInspector) {
+      const selectedEl = listEl.querySelector(`[data-id="${selectedItemId}"]`);
+      if (selectedEl) selectedEl.focus();
+    }
   }
 }
 

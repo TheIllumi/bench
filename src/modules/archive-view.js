@@ -118,10 +118,14 @@ function renderArchiveList() {
     listEl.appendChild(buildArchiveRow(item));
   });
 
-  // Restore keyboard focus
+  // Restore keyboard focus (only if user is not editing in the Inspector)
   if (selectedItemId) {
-    const el = listEl.querySelector(`[data-id="${selectedItemId}"]`);
-    if (el) requestAnimationFrame(() => el.focus());
+    const activeEl = document.activeElement;
+    const isEditingInInspector = activeEl && activeEl.closest('#inspector-panel');
+    if (!isEditingInInspector) {
+      const el = listEl.querySelector(`[data-id="${selectedItemId}"]`);
+      if (el) requestAnimationFrame(() => el.focus());
+    }
   }
 }
 
