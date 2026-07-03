@@ -19,16 +19,36 @@ const viewMap = {
 
 let activeModule = 'focus';
 let switchViewFn = null;
+let viewTitleEl = null;
+
+export function setViewTitle(title, breadcrumb = null) {
+  if (!viewTitleEl) return;
+  const activeTarget = viewMap[activeModule];
+  if (activeTarget && title !== activeTarget.title) {
+    // Ignore updates from unmounted/inactive views
+    return;
+  }
+  if (breadcrumb) {
+    viewTitleEl.innerHTML = `${title} <span style="color: var(--color-text-muted); font-weight: normal; margin: 0 6px;">&gt;</span> ${breadcrumb}`;
+  } else {
+    viewTitleEl.textContent = title;
+  }
+}
 
 export function initializeViewManager() {
   const navItems = document.querySelectorAll('.nav-item');
   const activeViewContainer = document.getElementById('active-view');
-  const viewTitleEl = document.getElementById('view-title');
+  viewTitleEl = document.getElementById('view-title');
 
   if (!activeViewContainer || !viewTitleEl) {
     console.error('View manager initialization failed: layout elements not found.');
     return;
   }
+
+  // Listen to breadcrumb/title changes from views
+  EventBus.on('viewTitleChanged', ({ title, breadcrumb }) => {
+    setViewTitle(title, breadcrumb);
+  });
 
   // Switches the active module state and re-renders the UI
   function switchView(moduleId) {
@@ -45,7 +65,7 @@ export function initializeViewManager() {
     EventBus.emit('itemSelected', null);
 
     // Update title
-    viewTitleEl.textContent = targetView.title;
+    setViewTitle(targetView.title);
 
     // Update active class in sidebar nav items
     navItems.forEach(item => {

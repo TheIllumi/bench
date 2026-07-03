@@ -77,18 +77,15 @@ function cleanupListeners() {
 
 function setSelectedAreaId(id) {
   selectedAreaId = id;
-  const viewTitleEl = document.getElementById('view-title');
   if (id) {
     const area = areas.find(a => a.id === id) || Repository.getAreas().find(a => a.id === id);
     EventBus.emit('itemSelected', area || null);
-    if (viewTitleEl && area) {
-      viewTitleEl.innerHTML = `Areas <span style="color: var(--color-text-muted); font-weight: normal; margin: 0 6px;">&gt;</span> ${area.name}`;
+    if (area) {
+      EventBus.emit('viewTitleChanged', { title: 'Areas', breadcrumb: area.name });
     }
   } else {
     EventBus.emit('itemSelected', null);
-    if (viewTitleEl) {
-      viewTitleEl.textContent = 'Areas';
-    }
+    EventBus.emit('viewTitleChanged', { title: 'Areas', breadcrumb: null });
   }
 }
 
