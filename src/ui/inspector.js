@@ -168,7 +168,7 @@ function renderItem() {
     <div class="inspector-resize-handle" id="inspector-resize-handle"></div>
     <div class="inspector-content">
       <div class="inspector-header">
-        <span class="inspector-title-label">Item Inspector</span>
+        <span class="inspector-title-label">details</span>
         <div class="inspector-header-right">
           <span class="inspector-save-indicator" id="inspector-save-indicator"></span>
           <button class="inspector-close-btn" id="inspector-close-btn" aria-label="Close inspector">[&times;]</button>

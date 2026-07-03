@@ -100,16 +100,52 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Restore persisted sidebar collapsed state
   const sidebar = document.querySelector('.sidebar');
   const toggleBtn = document.getElementById('sidebar-toggle');
   
-  if (sidebar) {
+  // Track previous breakpoint states
+  let wasAbove900 = window.innerWidth >= 900;
+  let wasAbove700 = window.innerWidth >= 700;
+
+  function handleWindowResize() {
+    const width = window.innerWidth;
+
+    // Narrow breakpoint (< 900px): Automatically close Inspector when transitioning from wide
+    if (width < 900 && wasAbove900) {
+      if (Inspector.isOpen()) {
+        EventBus.emit('itemSelected', null);
+      }
+    }
+
+    // Very narrow breakpoint (< 700px): Force collapse sidebar to icon-only mode
+    if (sidebar) {
+      if (width < 700) {
+        sidebar.classList.add('collapsed');
+      } else if (width >= 700 && !wasAbove700) {
+        const isCollapsed = localStorage.getItem('bench_sidebar_collapsed') === 'true';
+        if (isCollapsed) {
+          sidebar.classList.add('collapsed');
+        } else {
+          sidebar.classList.remove('collapsed');
+        }
+      }
+    }
+
+    wasAbove900 = width >= 900;
+    wasAbove700 = width >= 700;
+  }
+
+  // Restore persisted sidebar collapsed state on startup (if width allows)
+  if (sidebar && window.innerWidth >= 700) {
     const isCollapsed = localStorage.getItem('bench_sidebar_collapsed') === 'true';
     if (isCollapsed) {
       sidebar.classList.add('collapsed');
     }
   }
+
+  window.addEventListener('resize', handleWindowResize);
+  // Apply initial breakpoint state
+  handleWindowResize();
 
   if (toggleBtn) {
     toggleBtn.addEventListener('click', () => {

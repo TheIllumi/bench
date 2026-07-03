@@ -19,6 +19,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   display: flex;
   flex-direction: column;
+  min-width: 600px;
 }
 
 /* Custom Title Bar */
@@ -106,7 +107,8 @@ body {
 
 /* App Container Layout */
 .app-container {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   height: calc(100vh - 34px);
   width: 100vw;
   overflow: hidden;
@@ -260,9 +262,6 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
-  flex: 1 0.001 auto;
-  min-width: 0;
-  overflow: hidden;
 }
 
 .title-area {
@@ -1011,9 +1010,7 @@ body {
 
 .inspector-panel {
   --inspector-width: 320px;
-  flex: 0 999 0px;
   width: 0;
-  min-width: 0;
   opacity: 0;
   pointer-events: none;
   overflow: hidden;
@@ -1023,14 +1020,12 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
-  transition: flex var(--duration-normal) var(--ease-standard),
-              width var(--duration-normal) var(--ease-standard),
+  transition: width var(--duration-normal) var(--ease-standard),
               opacity var(--duration-normal) var(--ease-standard),
               border-left-color var(--duration-normal) var(--ease-standard);
 }
 
 .inspector-panel.open {
-  flex: 0 999 var(--inspector-width);
   width: var(--inspector-width);
   min-width: 260px;
   max-width: 520px;
@@ -1062,17 +1057,19 @@ body {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  padding: var(--space-md);
+  padding: var(--space-sm) var(--space-md) var(--space-md) var(--space-md);
   min-width: 0;
 }
 
 /* Header with save indicator */
 .inspector-header {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   min-height: 20px;
-  margin-bottom: var(--space-sm);
+  margin-bottom: var(--space-xs);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .inspector-save-indicator {
@@ -1103,7 +1100,7 @@ body {
 .inspector-label {
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
-  min-width: 56px;
+  min-width: 80px;
   flex-shrink: 0;
   user-select: none;
 }
