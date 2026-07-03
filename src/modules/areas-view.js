@@ -15,7 +15,11 @@ let isCreating = false;
  * Mount the Areas view.
  */
 export function renderAreasView(container) {
-  containerEl = container;
+  container.innerHTML = '';
+  containerEl = document.createElement('div');
+  containerEl.className = 'areas-view';
+  container.appendChild(containerEl);
+
   areas = Repository.getAreas();
 
   if (!selectedAreaId) editingAreaId = null;
@@ -54,6 +58,7 @@ function cleanupEventBus() {
 function cleanupListeners() {
   cleanupEventBus();
   window.removeEventListener('keydown', handleGlobalKeydown);
+  selectedAreaId = null;
 }
 
 // --- Rendering ---

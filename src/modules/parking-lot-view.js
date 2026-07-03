@@ -14,8 +14,16 @@ let editingItemId = null;
  * Mount the Parking Lot view.
  */
 export function renderParkingLotView(container) {
-  containerEl = container;
+  container.innerHTML = '';
+  containerEl = document.createElement('div');
+  containerEl.className = 'parking-lot-view';
+  container.appendChild(containerEl);
+
   items = Repository.getByModule('parking-lot').sort((a, b) => b.updatedAt - a.updatedAt);
+
+  if (selectedItemId && !items.find(i => i.id === selectedItemId)) {
+    setSelectedItemId(null);
+  }
 
   if (!selectedItemId) editingItemId = null;
 
@@ -45,7 +53,7 @@ export function renderParkingLotView(container) {
  * Called by the Command Palette.
  */
 export function focusAndSelectParkedTask(itemId) {
-  selectedItemId = itemId;
+  setSelectedItemId(itemId);
   const activeContainer = document.getElementById('active-view');
   if (activeContainer) renderParkingLotView(activeContainer);
 }
@@ -53,6 +61,16 @@ export function focusAndSelectParkedTask(itemId) {
 function handleItemChange() {
   items = Repository.getByModule('parking-lot').sort((a, b) => b.updatedAt - a.updatedAt);
   renderView();
+}
+
+function setSelectedItemId(id) {
+  selectedItemId = id;
+  if (id) {
+    const item = items.find(i => i.id === id);
+    EventBus.emit('itemSelected', item || null);
+  } else {
+    EventBus.emit('itemSelected', null);
+  }
 }
 
 function cleanupEventBus() {
@@ -65,6 +83,7 @@ function cleanupEventBus() {
 function cleanupListeners() {
   cleanupEventBus();
   window.removeEventListener('keydown', handleGlobalKeydown);
+  setSelectedItemId(null);
 }
 
 // --- Rendering ---
@@ -201,7 +220,7 @@ function buildParkRow(item) {
 
   if (!isEditing) {
     row.addEventListener('click', () => {
-      selectedItemId = item.id;
+      setSelectedItemId(item.id);
       renderView();
     });
     row.addEventListener('dblclick', () => {
@@ -222,19 +241,19 @@ function moveToFocus(itemId) {
   }
 
   Repository.move(itemId, 'focus');
-  if (selectedItemId === itemId) selectedItemId = null;
+  if (selectedItemId === itemId) setSelectedItemId(null);
   ToastService.show('Moved to Focus.', 'success');
 }
 
 function moveToCapture(itemId) {
   Repository.move(itemId, 'capture');
-  if (selectedItemId === itemId) selectedItemId = null;
+  if (selectedItemId === itemId) setSelectedItemId(null);
   ToastService.show('Moved to Capture.', 'success');
 }
 
 function moveToArchive(itemId) {
   Repository.move(itemId, 'archive');
-  if (selectedItemId === itemId) selectedItemId = null;
+  if (selectedItemId === itemId) setSelectedItemId(null);
   ToastService.show('Archived.', 'success');
 }
 
@@ -248,7 +267,7 @@ function deleteItem(itemId) {
   }).then((confirmed) => {
     if (confirmed) {
       Repository.remove(itemId);
-      if (selectedItemId === itemId) selectedItemId = null;
+      if (selectedItemId === itemId) setSelectedItemId(null);
       if (editingItemId === itemId) editingItemId = null;
       ToastService.show('Deleted permanently.', 'info');
     }
@@ -257,7 +276,7 @@ function deleteItem(itemId) {
 
 function startEditing(itemId) {
   editingItemId = itemId;
-  selectedItemId = itemId;
+  setSelectedItemId(itemId);
   renderView();
 }
 
@@ -268,6 +287,7 @@ function handleEditKeyDown(event, itemId) {
   } else if (event.key === 'Escape') {
     event.preventDefault();
     editingItemId = null;
+    setSelectedItemId(null);
     renderView();
   }
 }
@@ -304,7 +324,7 @@ function handleGlobalKeydown(event) {
   if (!selectedItemId || editingItemId) {
     if (event.key === 'ArrowDown' && items.length > 0) {
       event.preventDefault();
-      selectedItemId = items[0].id;
+      setSelectedItemId(items[0].id);
       renderView();
     }
     return;
@@ -317,17 +337,17 @@ function handleGlobalKeydown(event) {
     case 'ArrowDown':
       event.preventDefault();
       if (idx < items.length - 1) {
-        selectedItemId = items[idx + 1].id;
+        setSelectedItemId(items[idx + 1].id);
         renderView();
       }
       break;
     case 'ArrowUp':
       event.preventDefault();
       if (idx > 0) {
-        selectedItemId = items[idx - 1].id;
+        setSelectedItemId(items[idx - 1].id);
         renderView();
       } else {
-        selectedItemId = null;
+        setSelectedItemId(null);
         renderView();
       }
       break;
@@ -337,7 +357,7 @@ function handleGlobalKeydown(event) {
       break;
     case 'Escape':
       event.preventDefault();
-      selectedItemId = null;
+      setSelectedItemId(null);
       renderView();
       break;
     case 'Delete':

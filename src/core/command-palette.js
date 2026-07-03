@@ -125,8 +125,18 @@ function updateResults(query) {
   );
 
   const filteredItems = items.filter(item => 
-    item.title.toLowerCase().includes(normalizedQuery)
+    item.title.toLowerCase().includes(normalizedQuery) ||
+    (item.notes && item.notes.toLowerCase().includes(normalizedQuery))
   );
+
+  // Rank title matches higher than note-only matches
+  filteredItems.sort((a, b) => {
+    const aTitleMatch = a.title.toLowerCase().includes(normalizedQuery);
+    const bTitleMatch = b.title.toLowerCase().includes(normalizedQuery);
+    if (aTitleMatch && !bTitleMatch) return -1;
+    if (!aTitleMatch && bTitleMatch) return 1;
+    return 0;
+  });
 
   visibleItems = [];
 
@@ -367,26 +377,38 @@ function triggerStartFresh() {
  * Action: Navigate and select a specific task
  */
 function triggerSelectTask(taskId) {
-  import('../modules/focus-view.js').then((module) => {
-    module.focusAndSelectTask(taskId);
+  import('./view-manager.js').then((vm) => {
+    vm.navigateTo('focus');
+    import('../modules/focus-view.js').then((module) => {
+      module.focusAndSelectTask(taskId);
+    });
   });
 }
 
 function triggerSelectCapture(itemId) {
-  import('./view-manager.js').then((module) => {
-    module.navigateTo('capture');
+  import('./view-manager.js').then((vm) => {
+    vm.navigateTo('capture');
+    import('../modules/capture-view.js').then((module) => {
+      module.focusAndSelectCaptureTask(itemId);
+    });
   });
 }
 
 function triggerSelectParked(itemId) {
-  import('../modules/parking-lot-view.js').then((module) => {
-    module.focusAndSelectParkedTask(itemId);
+  import('./view-manager.js').then((vm) => {
+    vm.navigateTo('parking-lot');
+    import('../modules/parking-lot-view.js').then((module) => {
+      module.focusAndSelectParkedTask(itemId);
+    });
   });
 }
 
 function triggerSelectArchived(itemId) {
-  import('../modules/archive-view.js').then((module) => {
-    module.focusAndSelectArchivedTask(itemId);
+  import('./view-manager.js').then((vm) => {
+    vm.navigateTo('archive');
+    import('../modules/archive-view.js').then((module) => {
+      module.focusAndSelectArchivedTask(itemId);
+    });
   });
 }
 

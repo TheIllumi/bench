@@ -2,6 +2,9 @@ import { initializeViewManager } from './core/view-manager.js';
 import { initializeShortcuts, registerShortcut } from './core/shortcuts.js';
 import { CommandPalette } from './core/command-palette.js';
 import { QuickCapture } from './core/quick-capture.js';
+import { Inspector } from './ui/inspector.js';
+import { Repository } from './core/repository.js';
+import { EventBus } from './core/event-bus.js';
 
 function toggleSidebar() {
   const sidebar = document.querySelector('.sidebar');
@@ -123,6 +126,27 @@ window.addEventListener('DOMContentLoaded', () => {
   registerShortcut('ctrl+n', () => QuickCapture.open());
   registerShortcut('meta+n', () => QuickCapture.open());
   registerShortcut('c', () => QuickCapture.open());
+
+  // Wire Area resolver for the Inspector to decouple it from storage
+  Inspector.resolveAreaName = (areaId) => {
+    const areas = Repository.getAreas();
+    const area = areas.find(a => a.id === areaId);
+    return area ? area.name : null;
+  };
+
+  // Initialize Inspector panel
+  Inspector.init();
+
+  // Application-layer persistence bridge:
+  // Inspector emits inspectorUpdate events, this listener calls Repository
+  EventBus.on('inspectorUpdate', ({ id, field, value }) => {
+    Repository.update(id, { [field]: value });
+  });
+
+  // Flush pending Inspector saves on window close / tab close
+  window.addEventListener('beforeunload', () => {
+    Inspector.flushPendingSaves();
+  });
 
   console.log('Bench application shell successfully initialized.');
 });

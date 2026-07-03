@@ -12,8 +12,16 @@ let selectedItemId = null;
  * Mount the Archive view.
  */
 export function renderArchiveView(container) {
-  containerEl = container;
+  container.innerHTML = '';
+  containerEl = document.createElement('div');
+  containerEl.className = 'archive-view';
+  container.appendChild(containerEl);
+
   items = Repository.getByModule('archive').sort((a, b) => b.updatedAt - a.updatedAt);
+
+  if (selectedItemId && !items.find(i => i.id === selectedItemId)) {
+    setSelectedItemId(null);
+  }
 
   renderView();
 
@@ -41,7 +49,7 @@ export function renderArchiveView(container) {
  * Called by the Command Palette.
  */
 export function focusAndSelectArchivedTask(itemId) {
-  selectedItemId = itemId;
+  setSelectedItemId(itemId);
   const activeContainer = document.getElementById('active-view');
   if (activeContainer) renderArchiveView(activeContainer);
 }
@@ -49,6 +57,16 @@ export function focusAndSelectArchivedTask(itemId) {
 function handleItemChange() {
   items = Repository.getByModule('archive').sort((a, b) => b.updatedAt - a.updatedAt);
   renderView();
+}
+
+function setSelectedItemId(id) {
+  selectedItemId = id;
+  if (id) {
+    const item = items.find(i => i.id === id);
+    EventBus.emit('itemSelected', item || null);
+  } else {
+    EventBus.emit('itemSelected', null);
+  }
 }
 
 function cleanupEventBus() {
@@ -61,6 +79,7 @@ function cleanupEventBus() {
 function cleanupListeners() {
   cleanupEventBus();
   window.removeEventListener('keydown', handleGlobalKeydown);
+  setSelectedItemId(null);
 }
 
 // --- Rendering ---
@@ -166,7 +185,7 @@ function buildArchiveRow(item) {
   row.appendChild(actions);
 
   row.addEventListener('click', () => {
-    selectedItemId = item.id;
+    setSelectedItemId(item.id);
     renderView();
   });
 
@@ -229,7 +248,7 @@ function restoreItem(item, destination) {
   }
 
   Repository.move(item.id, destination);
-  if (selectedItemId === item.id) selectedItemId = null;
+  if (selectedItemId === item.id) setSelectedItemId(null);
   ToastService.show(`Restored to ${destination === 'parking-lot' ? 'Parking Lot' : destination.charAt(0).toUpperCase() + destination.slice(1)}.`, 'success');
 }
 
@@ -243,7 +262,7 @@ function deleteItem(itemId) {
   }).then((confirmed) => {
     if (confirmed) {
       Repository.remove(itemId);
-      if (selectedItemId === itemId) selectedItemId = null;
+      if (selectedItemId === itemId) setSelectedItemId(null);
       ToastService.show('Deleted permanently.', 'info');
     }
   });
@@ -269,7 +288,7 @@ function handleGlobalKeydown(event) {
   if (!selectedItemId) {
     if (event.key === 'ArrowDown' && items.length > 0) {
       event.preventDefault();
-      selectedItemId = items[0].id;
+      setSelectedItemId(items[0].id);
       renderView();
     }
     return;
@@ -284,17 +303,17 @@ function handleGlobalKeydown(event) {
     case 'ArrowDown':
       event.preventDefault();
       if (idx < items.length - 1) {
-        selectedItemId = items[idx + 1].id;
+        setSelectedItemId(items[idx + 1].id);
         renderView();
       }
       break;
     case 'ArrowUp':
       event.preventDefault();
       if (idx > 0) {
-        selectedItemId = items[idx - 1].id;
+        setSelectedItemId(items[idx - 1].id);
         renderView();
       } else {
-        selectedItemId = null;
+        setSelectedItemId(null);
         renderView();
       }
       break;
@@ -313,7 +332,7 @@ function handleGlobalKeydown(event) {
       break;
     case 'Escape':
       event.preventDefault();
-      selectedItemId = null;
+      setSelectedItemId(null);
       renderView();
       break;
     case 'Delete':

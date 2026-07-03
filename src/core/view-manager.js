@@ -4,6 +4,8 @@ import { renderAreasView } from '../modules/areas-view.js';
 import { renderParkingLotView } from '../modules/parking-lot-view.js';
 import { renderArchiveView } from '../modules/archive-view.js';
 import { renderSettingsView } from '../modules/settings-view.js';
+import { Inspector } from '../ui/inspector.js';
+import { EventBus } from './event-bus.js';
 
 // Mapping of module names to their titles and render functions
 const viewMap = {
@@ -37,6 +39,10 @@ export function initializeViewManager() {
     }
 
     activeModule = moduleId;
+
+    // Flush pending Inspector saves and close it before switching views
+    Inspector.flushPendingSaves();
+    EventBus.emit('itemSelected', null);
 
     // Update title
     viewTitleEl.textContent = targetView.title;

@@ -21,7 +21,11 @@ const TRASH_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="1
  * Mount the Focus view into the given container.
  */
 export function renderFocusView(container) {
-  containerEl = container;
+  container.innerHTML = '';
+  containerEl = document.createElement('div');
+  containerEl.className = 'focus-view';
+  container.appendChild(containerEl);
+
   tasks = Repository.getByModule('focus');
 
   if (!selectedTaskId) editingTaskId = null;
@@ -42,6 +46,15 @@ export function renderFocusView(container) {
 
   window.removeEventListener('keydown', handleGlobalKeydown);
   window.addEventListener('keydown', handleGlobalKeydown);
+
+  // Monitor element removal to cleanup event handlers
+  const observer = new MutationObserver(() => {
+    if (!document.body.contains(containerEl)) {
+      cleanupListeners();
+      observer.disconnect();
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
 }
 
 /**
@@ -49,13 +62,23 @@ export function renderFocusView(container) {
  * Called by the Command Palette search.
  */
 export function focusAndSelectTask(taskId) {
-  selectedTaskId = taskId;
+  setSelectedTaskId(taskId);
   editingTaskId = taskId;
   const activeContainer = document.getElementById('active-view');
   if (activeContainer) renderFocusView(activeContainer);
 }
 
 // --- Event Handlers & Cleanup ---
+
+function setSelectedTaskId(id) {
+  selectedTaskId = id;
+  if (id) {
+    const task = tasks.find(t => t.id === id) || Repository.getAll().find(t => t.id === id);
+    EventBus.emit('itemSelected', task || null);
+  } else {
+    EventBus.emit('itemSelected', null);
+  }
+}
 
 function handleItemChange() {
   tasks = Repository.getByModule('focus');
@@ -75,6 +98,7 @@ function cleanupEventBus() {
 function cleanupListeners() {
   cleanupEventBus();
   window.removeEventListener('keydown', handleGlobalKeydown);
+  setSelectedTaskId(null);
 }
 
 // --- Rendering ---
@@ -278,7 +302,7 @@ function buildTaskRow(task) {
   // Click to select (active, non-editing only)
   if (!isCompleted && !isEditing) {
     row.addEventListener('click', () => {
-      selectedTaskId = task.id;
+      setSelectedTaskId(task.id);
       isCreating = false;
       renderView();
     });
@@ -313,7 +337,7 @@ function toggleCompletion(taskId) {
 
   const nextStatus = task.status === 'completed' ? 'active' : 'completed';
   if (nextStatus === 'completed' && selectedTaskId === taskId) {
-    selectedTaskId = null;
+    setSelectedTaskId(null);
   }
   
   Repository.update(taskId, { status: nextStatus });
@@ -322,7 +346,7 @@ function toggleCompletion(taskId) {
 
 function startEditing(taskId) {
   editingTaskId = taskId;
-  selectedTaskId = taskId;
+  setSelectedTaskId(taskId);
   isCreating = false;
   renderView();
 }
@@ -334,7 +358,7 @@ function handleEditKeyDown(event, taskId) {
   } else if (event.key === 'Escape') {
     event.preventDefault();
     editingTaskId = null;
-    selectedTaskId = null;
+    setSelectedTaskId(null);
     renderView();
   }
 }
@@ -348,7 +372,7 @@ function commitEdit(taskId, newTitle) {
   }
 
   editingTaskId = null;
-  selectedTaskId = null;
+  setSelectedTaskId(null);
   renderView();
 }
 
@@ -361,7 +385,7 @@ function deleteTask(taskId) {
 
   Repository.remove(taskId);
   
-  if (selectedTaskId === taskId) selectedTaskId = null;
+  if (selectedTaskId === taskId) setSelectedTaskId(null);
   if (editingTaskId === taskId) editingTaskId = null;
 
   ToastService.show('Task removed.', 'info', 5000, {
@@ -374,13 +398,13 @@ function deleteTask(taskId) {
 
 function parkTask(taskId) {
   Repository.move(taskId, 'parking-lot');
-  if (selectedTaskId === taskId) selectedTaskId = null;
+  if (selectedTaskId === taskId) setSelectedTaskId(null);
   ToastService.show('Parked.', 'success');
 }
 
 function archiveTask(taskId) {
   Repository.move(taskId, 'archive');
-  if (selectedTaskId === taskId) selectedTaskId = null;
+  if (selectedTaskId === taskId) setSelectedTaskId(null);
   ToastService.show('Archived.', 'success');
 }
 
@@ -408,7 +432,7 @@ function handleGlobalKeydown(event) {
     if (active.length < 3) {
       event.preventDefault();
       isCreating = true;
-      selectedTaskId = null;
+      setSelectedTaskId(null);
       renderView();
     } else {
       ToastService.show("Focus is full. Complete a task first.", "info");
@@ -431,7 +455,7 @@ function handleGlobalKeydown(event) {
     // If no task selected, pressing ArrowDown selects first active task
     if (event.key === 'ArrowDown' && active.length > 0) {
       event.preventDefault();
-      selectedTaskId = active[0].id;
+      setSelectedTaskId(active[0].id);
       renderView();
     }
     return;
@@ -444,17 +468,17 @@ function handleGlobalKeydown(event) {
     case 'ArrowDown':
       event.preventDefault();
       if (idx < active.length - 1) {
-        selectedTaskId = active[idx + 1].id;
+        setSelectedTaskId(active[idx + 1].id);
         renderView();
       }
       break;
     case 'ArrowUp':
       event.preventDefault();
       if (idx > 0) {
-        selectedTaskId = active[idx - 1].id;
+        setSelectedTaskId(active[idx - 1].id);
         renderView();
       } else {
-        selectedTaskId = null;
+        setSelectedTaskId(null);
         renderView();
       }
       break;
@@ -466,7 +490,7 @@ function handleGlobalKeydown(event) {
       break;
     case 'Escape':
       event.preventDefault();
-      selectedTaskId = null;
+      setSelectedTaskId(null);
       renderView();
       break;
     case ' ':
