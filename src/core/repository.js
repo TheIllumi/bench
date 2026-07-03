@@ -109,8 +109,17 @@ export const Repository = {
     const idx = items.findIndex(i => i.id === id);
     if (idx === -1) return null;
 
+    const item = items[idx];
+    if (item.type === 'area') {
+      const merged = { ...item, ...updates };
+      const name = (merged.name || '').trim();
+      if (!name || name.length > 50) return null;
+      const duplicate = items.some(i => i.type === 'area' && i.id !== id && i.name.toLowerCase() === name.toLowerCase());
+      if (duplicate) return null;
+    }
+
     const updatedItem = {
-      ...items[idx],
+      ...item,
       ...updates,
       updatedAt: Date.now()
     };
@@ -118,7 +127,11 @@ export const Repository = {
     items[idx] = updatedItem;
     this._saveRaw(items);
 
-    EventBus.emit('itemUpdated', updatedItem);
+    if (updatedItem.type === 'area') {
+      EventBus.emit('areaUpdated', updatedItem);
+    } else {
+      EventBus.emit('itemUpdated', updatedItem);
+    }
     return updatedItem;
   },
 
@@ -211,13 +224,27 @@ export const Repository = {
   saveArea(area) {
     const items = this.getAll();
     const now = Date.now();
+    const name = (area.name || '').trim();
+
+    if (!name || name.length > 50) {
+      return null;
+    }
+
+    const duplicate = items.some(i => i.type === 'area' && i.id !== area.id && i.name.toLowerCase() === name.toLowerCase());
+    if (duplicate) {
+      return null;
+    }
+
     const newArea = {
       id: area.id || crypto.randomUUID(),
       type: 'area',
-      name: area.name || '',
+      name,
+      description: area.description || '',
+      icon: area.icon || '',
       color: area.color || '',
       createdAt: area.createdAt || now,
-      updatedAt: now
+      updatedAt: now,
+      archived: area.archived !== undefined ? area.archived : false
     };
 
     const idx = items.findIndex(i => i.id === newArea.id && i.type === 'area');

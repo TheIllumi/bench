@@ -55,15 +55,44 @@ export const Inspector = {
       }
     });
 
+    EventBus.on('itemCreated', () => {
+      if (currentItem && currentItem.type === 'area') {
+        syncFields();
+      }
+    });
+
     EventBus.on('itemUpdated', (updatedItem) => {
-      if (!currentItem || updatedItem.id !== currentItem.id) return;
+      if (!currentItem) return;
+      if (currentItem.type === 'area') {
+        syncFields();
+        return;
+      }
+      if (updatedItem.id !== currentItem.id) return;
       currentItem = { ...currentItem, ...updatedItem };
       syncFields();
       showSaveState('Saved');
     });
 
     EventBus.on('itemDeleted', (deletedItem) => {
-      if (currentItem && deletedItem.id === currentItem.id) {
+      if (!currentItem) return;
+      if (currentItem.type === 'area') {
+        syncFields();
+        return;
+      }
+      if (deletedItem.id === currentItem.id) {
+        this.close();
+      }
+    });
+
+    EventBus.on('areaUpdated', (updatedArea) => {
+      if (!currentItem || updatedArea.id !== currentItem.id) return;
+      currentItem = { ...currentItem, ...updatedArea };
+      syncFields();
+      showSaveState('Saved');
+    });
+
+    EventBus.on('areaDeleted', (deletedArea) => {
+      if (currentItem && deletedArea.id === currentItem.id) {
         this.close();
       }
     });
@@ -161,8 +190,85 @@ function renderEmpty() {
 function renderItem() {
   if (!panelEl || !currentItem) return;
 
-  const areaName = getAreaName(currentItem.areaId);
-  const moduleLabel = formatModule(currentItem.module);
+  const isArea = currentItem.type === 'area';
+  let fieldsHtml = '';
+  let notesLabel = 'notes';
+  let notesPlaceholder = 'write notes here…';
+  let notesValue = currentItem.notes || '';
+  let titlePlaceholder = 'title';
+  let titleValue = currentItem.title || '';
+
+  if (isArea) {
+    titlePlaceholder = 'name';
+    titleValue = currentItem.name || '';
+    notesLabel = 'description';
+    notesPlaceholder = 'write description here…';
+    notesValue = currentItem.description || '';
+
+    const activeCount = typeof Inspector.resolveActiveCount === 'function' ? Inspector.resolveActiveCount(currentItem.id) : 0;
+
+    fieldsHtml = `
+      <div class="inspector-field">
+        <label class="inspector-label">name</label>
+        <textarea class="inspector-title-input" id="inspector-title-input"
+                  placeholder="${titlePlaceholder}" spellcheck="false" rows="1">${escapeHtml(titleValue)}</textarea>
+      </div>
+      <div class="inspector-field">
+        <label class="inspector-label">active items</label>
+        <span class="inspector-value" id="inspector-active-items-value">${activeCount}</span>
+      </div>
+      <div class="inspector-field">
+        <label class="inspector-label">archived</label>
+        <span class="inspector-value" id="inspector-archived-value">${currentItem.archived ? 'yes' : 'no'}</span>
+      </div>
+      <div class="inspector-field">
+        <label class="inspector-label">created</label>
+        <span class="inspector-value" id="inspector-created-value">${getRelativeTime(currentItem.createdAt)}</span>
+      </div>
+      <div class="inspector-field">
+        <label class="inspector-label">updated</label>
+        <span class="inspector-value" id="inspector-updated-value">${getRelativeTime(currentItem.updatedAt)}</span>
+      </div>
+    `;
+  } else {
+    const moduleLabel = formatModule(currentItem.module);
+    const activeAreas = typeof Inspector.resolveAreas === 'function' ? Inspector.resolveAreas() : [];
+    
+    let selectOptionsHtml = `<option value="">—</option>`;
+    activeAreas.forEach(a => {
+      selectOptionsHtml += `<option value="${a.id}" ${currentItem.areaId === a.id ? 'selected' : ''}>${escapeHtml(a.name)}</option>`;
+    });
+
+    const areaSelectorHtml = `
+      <select class="inspector-select" id="inspector-area-select">
+        ${selectOptionsHtml}
+      </select>
+    `;
+
+    fieldsHtml = `
+      <div class="inspector-field">
+        <label class="inspector-label">title</label>
+        <textarea class="inspector-title-input" id="inspector-title-input"
+                  placeholder="${titlePlaceholder}" spellcheck="false" rows="1">${escapeHtml(titleValue)}</textarea>
+      </div>
+      <div class="inspector-field">
+        <label class="inspector-label">area</label>
+        <span class="inspector-value" style="width: 100%;">${areaSelectorHtml}</span>
+      </div>
+      <div class="inspector-field">
+        <label class="inspector-label">module</label>
+        <span class="inspector-value" id="inspector-module-value">${moduleLabel}</span>
+      </div>
+      <div class="inspector-field">
+        <label class="inspector-label">created</label>
+        <span class="inspector-value" id="inspector-created-value">${getRelativeTime(currentItem.createdAt)}</span>
+      </div>
+      <div class="inspector-field">
+        <label class="inspector-label">updated</label>
+        <span class="inspector-value" id="inspector-updated-value">${getRelativeTime(currentItem.updatedAt)}</span>
+      </div>
+    `;
+  }
 
   panelEl.innerHTML = `
     <div class="inspector-resize-handle" id="inspector-resize-handle"></div>
@@ -175,33 +281,13 @@ function renderItem() {
         </div>
       </div>
       <div class="inspector-fields">
-        <div class="inspector-field">
-          <label class="inspector-label">title</label>
-          <textarea class="inspector-title-input" id="inspector-title-input"
-                    placeholder="title" spellcheck="false" rows="1">${escapeHtml(currentItem.title || '')}</textarea>
-        </div>
-        <div class="inspector-field">
-          <label class="inspector-label">area</label>
-          <span class="inspector-value" id="inspector-area-value">${areaName || '—'}</span>
-        </div>
-        <div class="inspector-field">
-          <label class="inspector-label">module</label>
-          <span class="inspector-value" id="inspector-module-value">${moduleLabel}</span>
-        </div>
-        <div class="inspector-field">
-          <label class="inspector-label">created</label>
-          <span class="inspector-value" id="inspector-created-value">${getRelativeTime(currentItem.createdAt)}</span>
-        </div>
-        <div class="inspector-field">
-          <label class="inspector-label">updated</label>
-          <span class="inspector-value" id="inspector-updated-value">${getRelativeTime(currentItem.updatedAt)}</span>
-        </div>
+        ${fieldsHtml}
       </div>
       <div class="inspector-section future-metadata"></div>
       <div class="inspector-notes-section">
-        <label class="inspector-label">notes</label>
+        <label class="inspector-label">${notesLabel}</label>
         <textarea class="inspector-notes-editor" id="inspector-notes-editor"
-                  placeholder="write notes here…" spellcheck="false">${escapeHtml(currentItem.notes || '')}</textarea>
+                  placeholder="${notesPlaceholder}" spellcheck="false">${escapeHtml(notesValue)}</textarea>
       </div>
     </div>
   `;
@@ -210,7 +296,6 @@ function renderItem() {
   titleInput = document.getElementById('inspector-title-input');
   notesTextarea = document.getElementById('inspector-notes-editor');
   saveIndicator = document.getElementById('inspector-save-indicator');
-  areaField = document.getElementById('inspector-area-value');
   moduleField = document.getElementById('inspector-module-value');
   createdField = document.getElementById('inspector-created-value');
   updatedField = document.getElementById('inspector-updated-value');
@@ -226,6 +311,22 @@ function renderItem() {
   notesTextarea.addEventListener('blur', handleNotesBlur);
   notesTextarea.addEventListener('keydown', handleNotesKeydown);
   autoGrowTextarea(notesTextarea);
+
+  // Bind Area dropdown Select change if not an Area item
+  if (!isArea) {
+    const areaSelect = document.getElementById('inspector-area-select');
+    if (areaSelect) {
+      areaSelect.addEventListener('change', (e) => {
+        const val = e.target.value || null;
+        EventBus.emit('inspectorUpdate', {
+          id: currentItem.id,
+          field: 'areaId',
+          value: val
+        });
+        showSaveState('Saving…');
+      });
+    }
+  }
 
   // Bind close button
   const closeBtn = document.getElementById('inspector-close-btn');
@@ -249,20 +350,37 @@ function renderItem() {
 function syncFields() {
   if (!currentItem) return;
 
+  const isArea = currentItem.type === 'area';
+
   // Only update title if the user is not actively editing it
   if (titleInput && document.activeElement !== titleInput) {
-    titleInput.value = currentItem.title;
+    titleInput.value = isArea ? currentItem.name : currentItem.title;
     autoGrowTextarea(titleInput);
   }
 
   // Only update notes if the user is not actively editing them
   if (notesTextarea && document.activeElement !== notesTextarea) {
-    notesTextarea.value = currentItem.notes || '';
+    notesTextarea.value = isArea ? (currentItem.description || '') : (currentItem.notes || '');
     autoGrowTextarea(notesTextarea);
   }
 
-  if (areaField) areaField.textContent = getAreaName(currentItem.areaId) || '—';
-  if (moduleField) moduleField.textContent = formatModule(currentItem.module);
+  if (isArea) {
+    const activeItemsEl = document.getElementById('inspector-active-items-value');
+    if (activeItemsEl && typeof Inspector.resolveActiveCount === 'function') {
+      activeItemsEl.textContent = Inspector.resolveActiveCount(currentItem.id);
+    }
+    const archivedEl = document.getElementById('inspector-archived-value');
+    if (archivedEl) {
+      archivedEl.textContent = currentItem.archived ? 'yes' : 'no';
+    }
+  } else {
+    const areaSelect = document.getElementById('inspector-area-select');
+    if (areaSelect && document.activeElement !== areaSelect) {
+      areaSelect.value = currentItem.areaId || '';
+    }
+    if (moduleField) moduleField.textContent = formatModule(currentItem.module);
+  }
+
   if (createdField) createdField.textContent = getRelativeTime(currentItem.createdAt);
   if (updatedField) updatedField.textContent = getRelativeTime(currentItem.updatedAt);
 }
@@ -276,10 +394,12 @@ function handleTitleInput() {
 function handleTitleBlur() {
   if (!currentItem || !titleInput) return;
   const newTitle = titleInput.value.trim();
-  if (newTitle && newTitle !== currentItem.title) {
+  const currentVal = currentItem.type === 'area' ? currentItem.name : currentItem.title;
+  if (newTitle && newTitle !== currentVal) {
+    const fieldName = currentItem.type === 'area' ? 'name' : 'title';
     EventBus.emit('inspectorUpdate', {
       id: currentItem.id,
-      field: 'title',
+      field: fieldName,
       value: newTitle
     });
     showSaveState('Saving…');
@@ -304,7 +424,7 @@ function handleNotesInput() {
   autoGrowTextarea(notesTextarea);
 
   const value = notesTextarea.value;
-  pendingField = 'notes';
+  pendingField = currentItem.type === 'area' ? 'description' : 'notes';
   pendingValue = value;
 
   showSaveState('Saving…');
@@ -314,7 +434,7 @@ function handleNotesInput() {
     debounceTimer = null;
     EventBus.emit('inspectorUpdate', {
       id: currentItem.id,
-      field: 'notes',
+      field: pendingField,
       value: pendingValue
     });
     pendingField = null;

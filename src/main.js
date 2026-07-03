@@ -5,6 +5,7 @@ import { QuickCapture } from './core/quick-capture.js';
 import { Inspector } from './ui/inspector.js';
 import { Repository } from './core/repository.js';
 import { EventBus } from './core/event-bus.js';
+import { ToastService } from './ui/toast.js';
 
 function toggleSidebar() {
   const sidebar = document.querySelector('.sidebar');
@@ -170,12 +171,47 @@ window.addEventListener('DOMContentLoaded', () => {
     return area ? area.name : null;
   };
 
+  Inspector.resolveAreas = () => {
+    return Repository.getAreas().filter(a => !a.archived);
+  };
+
+  Inspector.resolveActiveCount = (areaId) => {
+    return Repository.getAll().filter(item => 
+      item.type !== 'area' && 
+      item.areaId === areaId && 
+      item.module !== 'archive'
+    ).length;
+  };
+
   // Initialize Inspector panel
   Inspector.init();
 
   // Application-layer persistence bridge:
   // Inspector emits inspectorUpdate events, this listener calls Repository
   EventBus.on('inspectorUpdate', ({ id, field, value }) => {
+    const items = Repository.getAll();
+    const item = items.find(i => i.id === id);
+    if (item && item.type === 'area') {
+      if (field === 'name') {
+        const name = value.trim();
+        if (!name) {
+          ToastService.show('Area name is required.', 'error');
+          EventBus.emit('itemSelected', item);
+          return;
+        }
+        if (name.length > 50) {
+          ToastService.show('Area name must be 50 characters or less.', 'error');
+          EventBus.emit('itemSelected', item);
+          return;
+        }
+        const duplicate = items.some(i => i.type === 'area' && i.id !== id && i.name.toLowerCase() === name.toLowerCase());
+        if (duplicate) {
+          ToastService.show('An Area with this name already exists.', 'error');
+          EventBus.emit('itemSelected', item);
+          return;
+        }
+      }
+    }
     Repository.update(id, { [field]: value });
   });
 

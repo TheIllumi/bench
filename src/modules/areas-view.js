@@ -20,7 +20,7 @@ export function renderAreasView(container) {
   containerEl.className = 'areas-view';
   container.appendChild(containerEl);
 
-  areas = Repository.getAreas();
+  areas = Repository.getAreas().filter(a => !a.archived);
 
   if (!selectedAreaId) editingAreaId = null;
 
@@ -30,6 +30,9 @@ export function renderAreasView(container) {
   EventBus.on('areaCreated', handleAreaChange);
   EventBus.on('areaUpdated', handleAreaChange);
   EventBus.on('areaDeleted', handleAreaChange);
+  EventBus.on('itemCreated', handleAreaChange);
+  EventBus.on('itemUpdated', handleAreaChange);
+  EventBus.on('itemDeleted', handleAreaChange);
 
   window.removeEventListener('keydown', handleGlobalKeydown);
   window.addEventListener('keydown', handleGlobalKeydown);
@@ -45,7 +48,7 @@ export function renderAreasView(container) {
 }
 
 function handleAreaChange() {
-  areas = Repository.getAreas();
+  areas = Repository.getAreas().filter(a => !a.archived);
   renderView();
 }
 
@@ -53,12 +56,25 @@ function cleanupEventBus() {
   EventBus.off('areaCreated', handleAreaChange);
   EventBus.off('areaUpdated', handleAreaChange);
   EventBus.off('areaDeleted', handleAreaChange);
+  EventBus.off('itemCreated', handleAreaChange);
+  EventBus.off('itemUpdated', handleAreaChange);
+  EventBus.off('itemDeleted', handleAreaChange);
 }
 
 function cleanupListeners() {
   cleanupEventBus();
   window.removeEventListener('keydown', handleGlobalKeydown);
-  selectedAreaId = null;
+  setSelectedAreaId(null);
+}
+
+function setSelectedAreaId(id) {
+  selectedAreaId = id;
+  if (id) {
+    const area = areas.find(a => a.id === id) || Repository.getAreas().find(a => a.id === id);
+    EventBus.emit('itemSelected', area || null);
+  } else {
+    EventBus.emit('itemSelected', null);
+  }
 }
 
 // --- Rendering ---
@@ -172,11 +188,48 @@ function buildAreaRow(area) {
     row.appendChild(input);
     requestAnimationFrame(() => { input.focus(); input.select(); });
   } else {
+    const content = document.createElement('div');
+    content.className = 'area-row-content';
+    content.style.display = 'flex';
+    content.style.flexDirection = 'column';
+    content.style.gap = '2px';
+    content.style.flex = '1';
+    content.style.minWidth = '0';
+
     const nameSpan = document.createElement('span');
     nameSpan.className = 'task-title';
-    nameSpan.textContent = `[${area.name}]`;
-    nameSpan.style.color = 'var(--color-accent-blue)';
-    row.appendChild(nameSpan);
+    nameSpan.textContent = area.name;
+    content.appendChild(nameSpan);
+
+    if (area.description) {
+      const descSpan = document.createElement('span');
+      descSpan.className = 'area-desc';
+      descSpan.textContent = area.description;
+      descSpan.style.fontSize = 'var(--font-size-xs)';
+      descSpan.style.color = 'var(--color-text-secondary)';
+      descSpan.style.whiteSpace = 'nowrap';
+      descSpan.style.overflow = 'hidden';
+      descSpan.style.textOverflow = 'ellipsis';
+      content.appendChild(descSpan);
+    }
+
+    row.appendChild(content);
+
+    // Compute active task count
+    const activeCount = Repository.getAll().filter(item => 
+      item.type !== 'area' && 
+      item.areaId === area.id && 
+      item.module !== 'archive'
+    ).length;
+
+    const countBadge = document.createElement('span');
+    countBadge.className = 'area-count-badge';
+    countBadge.textContent = `${activeCount} active item${activeCount === 1 ? '' : 's'}`;
+    countBadge.style.fontSize = 'var(--font-size-xs)';
+    countBadge.style.color = 'var(--color-text-muted)';
+    countBadge.style.marginLeft = 'var(--space-sm)';
+    countBadge.style.flexShrink = '0';
+    row.appendChild(countBadge);
   }
 
   // TUI plain text hover actions
@@ -196,7 +249,7 @@ function buildAreaRow(area) {
 
   const delBtn = document.createElement('button');
   delBtn.className = 'action-btn';
-  delBtn.textContent = 'del';
+  delBtn.textContent = 'archive'; // Plain TUI style label matches specifications
   delBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     deleteArea(area.id);
@@ -207,7 +260,7 @@ function buildAreaRow(area) {
 
   if (!isEditing) {
     row.addEventListener('click', () => {
-      selectedAreaId = area.id;
+      setSelectedAreaId(area.id);
       isCreating = false;
       renderView();
     });
@@ -223,10 +276,28 @@ function buildAreaRow(area) {
 function handleCreateKeyDown(event) {
   if (event.key === 'Enter') {
     const name = event.target.value.trim();
-    if (!name) return;
+    if (!name) {
+      ToastService.show('Area name is required.', 'error');
+      return;
+    }
+    if (name.length > 50) {
+      ToastService.show('Area name must be 50 characters or less.', 'error');
+      return;
+    }
 
-    Repository.saveArea({ name });
+    const duplicate = areas.some(a => a.name.toLowerCase() === name.toLowerCase());
+    if (duplicate) {
+      ToastService.show('An Area with this name already exists.', 'error');
+      return;
+    }
+
+    const saved = Repository.saveArea({ name });
     isCreating = false;
+    if (saved) {
+      setSelectedAreaId(saved.id);
+    } else {
+      renderView();
+    }
   } else if (event.key === 'Escape') {
     isCreating = false;
     renderView();
@@ -235,7 +306,7 @@ function handleCreateKeyDown(event) {
 
 function startEditing(areaId) {
   editingAreaId = areaId;
-  selectedAreaId = areaId;
+  setSelectedAreaId(areaId);
   isCreating = false;
   renderView();
 }
@@ -247,7 +318,7 @@ function handleEditKeyDown(event, areaId) {
   } else if (event.key === 'Escape') {
     event.preventDefault();
     editingAreaId = null;
-    selectedAreaId = null;
+    setSelectedAreaId(null);
     renderView();
   }
 }
@@ -256,12 +327,32 @@ function commitEdit(areaId, newName) {
   const area = areas.find(a => a.id === areaId);
   const name = newName.trim();
 
-  if (area && name && area.name !== name) {
+  if (!name) {
+    ToastService.show('Area name is required.', 'error');
+    editingAreaId = null;
+    renderView();
+    return;
+  }
+  if (name.length > 50) {
+    ToastService.show('Area name must be 50 characters or less.', 'error');
+    editingAreaId = null;
+    renderView();
+    return;
+  }
+
+  if (area && area.name !== name) {
+    const duplicate = areas.some(a => a.id !== areaId && a.name.toLowerCase() === name.toLowerCase());
+    if (duplicate) {
+      ToastService.show('An Area with this name already exists.', 'error');
+      editingAreaId = null;
+      renderView();
+      return;
+    }
     Repository.saveArea({ ...area, name });
   }
 
   editingAreaId = null;
-  selectedAreaId = null;
+  setSelectedAreaId(areaId);
   renderView();
 }
 
@@ -270,21 +361,18 @@ function deleteArea(areaId) {
   if (!area) return;
 
   DialogService.confirm({
-    title: 'Delete Area',
-    message: `Are you sure you want to permanently delete the Area [${area.name}]?`,
-    confirmText: 'Delete',
+    title: 'Archive Area',
+    message: `Are you sure you want to archive the Area [${area.name}]?`,
+    confirmText: 'Archive',
     cancelText: 'Cancel',
     variant: 'danger'
   }).then((confirmed) => {
     if (confirmed) {
-      const deleted = Repository.deleteArea(areaId);
-      if (!deleted) {
-        ToastService.show('Cannot delete Area: it is referenced by active or completed tasks.', 'error');
-        return;
-      }
-      if (selectedAreaId === areaId) selectedAreaId = null;
+      Repository.update(areaId, { archived: true });
+      if (selectedAreaId === areaId) setSelectedAreaId(null);
       if (editingAreaId === areaId) editingAreaId = null;
-      ToastService.show('Area deleted.', 'info');
+      ToastService.show('Area archived.', 'info');
+      EventBus.emit('itemSelected', null);
     }
   });
 }
@@ -308,7 +396,7 @@ function handleGlobalKeydown(event) {
   if (event.key.toLowerCase() === 'a') {
     event.preventDefault();
     isCreating = true;
-    selectedAreaId = null;
+    setSelectedAreaId(null);
     renderView();
     return;
   }
@@ -316,7 +404,7 @@ function handleGlobalKeydown(event) {
   if (!selectedAreaId || editingAreaId) {
     if (event.key === 'ArrowDown' && areas.length > 0) {
       event.preventDefault();
-      selectedAreaId = areas[0].id;
+      setSelectedAreaId(areas[0].id);
       renderView();
     }
     return;
@@ -329,17 +417,17 @@ function handleGlobalKeydown(event) {
     case 'ArrowDown':
       event.preventDefault();
       if (idx < areas.length - 1) {
-        selectedAreaId = areas[idx + 1].id;
+        setSelectedAreaId(areas[idx + 1].id);
         renderView();
       }
       break;
     case 'ArrowUp':
       event.preventDefault();
       if (idx > 0) {
-        selectedAreaId = areas[idx - 1].id;
+        setSelectedAreaId(areas[idx - 1].id);
         renderView();
       } else {
-        selectedAreaId = null;
+        setSelectedAreaId(null);
         renderView();
       }
       break;
@@ -349,7 +437,7 @@ function handleGlobalKeydown(event) {
       break;
     case 'Escape':
       event.preventDefault();
-      selectedAreaId = null;
+      setSelectedAreaId(null);
       renderView();
       break;
     case 'Delete':

@@ -1141,6 +1141,23 @@ body {
   color: var(--color-text-secondary);
 }
 
+.inspector-select {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  outline: none;
+  padding: 0;
+  cursor: pointer;
+  width: 100%;
+}
+
+.inspector-select option {
+  background-color: var(--color-bg-workspace);
+  color: var(--color-text-primary);
+}
+
 .inspector-title-input {
   background: transparent;
   border: none;
