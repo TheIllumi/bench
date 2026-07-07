@@ -5,6 +5,7 @@ import { DialogService } from '../ui/dialog.js';
 import { createInput } from '../ui/input.js';
 import { crossfade } from '../ui/utils.js';
 import { createSearchInput } from '../ui/search.js';
+import { showAreaDeleteDialog } from '../ui/area-delete-dialog.js';
 
 const FOLDER_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="area-folder-icon" style="color: var(--color-text-muted); flex-shrink: 0; margin-top: 2px;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg>`;
 
@@ -85,6 +86,9 @@ export function focusAndSelectArea(areaId) {
 
 function handleAreaChange() {
   loadAndSortAreas();
+  if (selectedAreaId && !areas.find(a => a.id === selectedAreaId)) {
+    setSelectedAreaId(null);
+  }
   renderView();
 }
 
@@ -499,16 +503,25 @@ function buildAreaRow(area) {
       startEditing(area.id);
     });
     actions.appendChild(editBtn);
-  }
 
-  const delBtn = document.createElement('button');
-  delBtn.className = 'action-btn';
-  delBtn.textContent = 'archive';
-  delBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    deleteArea(area.id);
-  });
-  actions.appendChild(delBtn);
+    const archiveBtn = document.createElement('button');
+    archiveBtn.className = 'action-btn';
+    archiveBtn.textContent = 'archive';
+    archiveBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      archiveArea(area.id);
+    });
+    actions.appendChild(archiveBtn);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'action-btn';
+    delBtn.textContent = 'del';
+    delBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteAreaWorkflow(area.id);
+    });
+    actions.appendChild(delBtn);
+  }
 
   row.appendChild(actions);
 
@@ -606,20 +619,9 @@ function commitEdit(areaId, newName) {
   renderView();
 }
 
-function deleteArea(areaId) {
+function archiveArea(areaId) {
   const area = areas.find(a => a.id === areaId);
   if (!area) return;
-
-  const allTasks = Repository.getAll().filter(item => 
-    item.type !== 'area' && 
-    item.areaId === area.id && 
-    item.module !== 'archive'
-  );
-
-  if (allTasks.length > 0) {
-    ToastService.show(`Area contains ${allTasks.length} task${allTasks.length === 1 ? '' : 's'}. Move them first or archive them too.`, 'error');
-    return;
-  }
 
   DialogService.confirm({
     title: 'Archive Area',
@@ -633,6 +635,18 @@ function deleteArea(areaId) {
       if (selectedAreaId === areaId) setSelectedAreaId(null);
       if (editingAreaId === areaId) editingAreaId = null;
       ToastService.show('Area archived.', 'info');
+    }
+  });
+}
+
+function deleteAreaWorkflow(areaId) {
+  const area = areas.find(a => a.id === areaId);
+  if (!area) return;
+
+  showAreaDeleteDialog(area).then((deleted) => {
+    if (deleted) {
+      if (selectedAreaId === areaId) setSelectedAreaId(null);
+      if (editingAreaId === areaId) editingAreaId = null;
     }
   });
 }
@@ -725,7 +739,7 @@ function handleGlobalKeydown(event) {
     case 'd':
     case 'D':
       event.preventDefault();
-      deleteArea(selectedAreaId);
+      deleteAreaWorkflow(selectedAreaId);
       break;
   }
 }
