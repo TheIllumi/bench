@@ -207,8 +207,12 @@ function renderAreasList() {
 
   // Restore keyboard focus to selected area
   if (selectedAreaId && !editingAreaId && !isCreating) {
-    const el = listEl.querySelector(`[data-id="${selectedAreaId}"]`);
-    if (el) requestAnimationFrame(() => el.focus());
+    const activeEl = document.activeElement;
+    const isEditingInInspector = activeEl && activeEl.closest('#inspector-panel');
+    if (!isEditingInInspector) {
+      const el = listEl.querySelector(`[data-id="${selectedAreaId}"]`);
+      if (el) requestAnimationFrame(() => el.focus());
+    }
   }
 }
 
@@ -565,6 +569,11 @@ function handleGlobalKeydown(event) {
         setSelectedAreaId(selectedAreaId);
         renderView();
       }
+      break;
+    case 'e':
+    case 'E':
+      event.preventDefault();
+      startEditing(selectedAreaId);
       break;
     case 'Escape':
       event.preventDefault();
