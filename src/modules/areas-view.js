@@ -399,6 +399,7 @@ function buildAreaRow(area) {
     iconSpan.style.display = 'flex';
     iconSpan.style.alignItems = 'center';
     iconSpan.style.flexShrink = '0';
+    iconSpan.style.marginRight = '10px';
     row.appendChild(iconSpan);
 
     // Content container for name & optional description
