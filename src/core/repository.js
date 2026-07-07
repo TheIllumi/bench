@@ -286,6 +286,40 @@ export const Repository = {
   },
 
   /**
+   * Delete an Area entity and either reassign its tasks to another area or remove their assignment.
+   * Fires event `itemUpdated` for each affected task and `areaDeleted` for the deleted Area.
+   * @param {string} id
+   * @param {string|null} reassignAreaId
+   * @returns {boolean} True if deleted, false if not found
+   */
+  deleteAreaForce(id, reassignAreaId = null) {
+    const items = this.getAll();
+    const updated = items.map(item => {
+      if (item.areaId === id) {
+        return { ...item, areaId: reassignAreaId, updatedAt: Date.now() };
+      }
+      return item;
+    });
+
+    const area = updated.find(i => i.id === id && i.type === 'area');
+    if (!area) return false;
+
+    const filtered = updated.filter(i => i.id !== id);
+    this._saveRaw(filtered);
+
+    // Emit updates for affected tasks
+    items.forEach(item => {
+      if (item.areaId === id) {
+        const updatedItem = { ...item, areaId: reassignAreaId, updatedAt: Date.now() };
+        EventBus.emit('itemUpdated', updatedItem);
+      }
+    });
+
+    EventBus.emit('areaDeleted', area);
+    return true;
+  },
+
+  /**
    * Internal wrapper to write items array directly to localStorage.
    */
   _saveRaw(items) {
