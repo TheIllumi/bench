@@ -495,7 +495,6 @@ function deleteArea(areaId) {
       if (selectedAreaId === areaId) setSelectedAreaId(null);
       if (editingAreaId === areaId) editingAreaId = null;
       ToastService.show('Area archived.', 'info');
-      EventBus.emit('itemSelected', null);
     }
   });
 }
