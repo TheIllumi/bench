@@ -259,12 +259,18 @@ function buildAreaRow(area) {
     rightContainer.style.marginLeft = 'auto';
     rightContainer.style.flexShrink = '0';
 
-    // Statistics placeholder
+    // Compute active, completed, parked, archived counts for the Area
+    const allItems = Repository.getAll().filter(item => item.type !== 'area' && item.areaId === area.id);
+    const activeCount = allItems.filter(item => (item.module === 'focus' || item.module === 'capture') && item.status !== 'completed').length;
+    const completedCount = allItems.filter(item => item.status === 'completed' && item.module !== 'archive').length;
+    const parkedCount = allItems.filter(item => item.module === 'parking-lot' && item.status !== 'completed').length;
+    const archivedCount = allItems.filter(item => item.module === 'archive').length;
+
     const statsSpan = document.createElement('span');
-    statsSpan.className = 'area-stats-placeholder';
+    statsSpan.className = 'area-stats';
     statsSpan.style.fontSize = 'var(--font-size-xs)';
     statsSpan.style.color = 'var(--color-text-muted)';
-    statsSpan.textContent = '0 active • 0 completed';
+    statsSpan.textContent = `${activeCount} active • ${completedCount} completed • ${parkedCount} parked • ${archivedCount} archived`;
     rightContainer.appendChild(statsSpan);
 
     // "Updated Xh ago"
