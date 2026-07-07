@@ -344,7 +344,14 @@ function renderAreaDetail(areaId) {
 
   const listEl = document.getElementById('area-tasks-list');
   if (allTasks.length === 0) {
-    listEl.innerHTML = `<div class="placeholder-view" style="height: auto; padding: var(--space-md) 0;"><p style="color: var(--color-text-muted); margin: 0;">No tasks in this Area.</p></div>`;
+    listEl.innerHTML = `
+      <div class="placeholder-view" style="height: auto; padding: var(--space-lg) 0;">
+        <span style="color: var(--color-text-muted); display: block; margin-bottom: var(--space-sm);">${FOLDER_ICON}</span>
+        <p style="color: var(--color-text-primary); font-weight: 500; margin: 0 0 4px 0;">No tasks in this Area.</p>
+        <p style="color: var(--color-text-secondary); margin: 0 0 var(--space-xs) 0; font-size: var(--font-size-xs);">Assign an existing task or create a new one.</p>
+        <p style="color: var(--color-text-muted); margin: 0; font-size: var(--font-size-xs);">Press <span style="color: var(--color-accent-blue)">N</span> to create a task.</p>
+      </div>
+    `;
   } else {
     allTasks.forEach(task => {
       const taskRow = buildAreaTaskRow(task);
