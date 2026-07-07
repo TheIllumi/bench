@@ -4,6 +4,7 @@ import { ToastService } from '../ui/toast.js';
 import { crossfade, getRelativeTime } from '../ui/utils.js';
 import { createSearchInput } from '../ui/search.js';
 import { openAreaPicker } from '../ui/area-picker.js';
+import { QuickCapture } from '../core/quick-capture.js';
 
 let containerEl = null;
 let items = [];
@@ -121,12 +122,20 @@ function renderView() {
           </select>
         </div>
         <div id="view-search-portal"></div>
+        <button id="add-capture-btn-list" class="action-btn" style="text-decoration:none;" title="New Capture (C)">+ New Capture</button>
       </div>
       <div id="view-content-area"></div>
     </div>
   `;
 
   renderAreaFilter();
+
+  const addBtn = containerEl.querySelector('#add-capture-btn-list');
+  if (addBtn) {
+    addBtn.addEventListener('click', () => {
+      QuickCapture.open(filterAreaId || undefined);
+    });
+  }
 
   const searchPortal = containerEl.querySelector('#view-search-portal');
   if (searchPortal) {
