@@ -3,11 +3,13 @@ import { EventBus } from '../core/event-bus.js';
 import { ToastService } from '../ui/toast.js';
 import { DialogService } from '../ui/dialog.js';
 import { crossfade, getRelativeTime } from '../ui/utils.js';
+import { createSearchInput } from '../ui/search.js';
 
 let containerEl = null;
 let items = [];
 let selectedItemId = null;
 let filterAreaId = '';
+let searchQuery = '';
 
 /**
  * Mount the Archive view.
@@ -19,6 +21,7 @@ export function renderArchiveView(container) {
   container.appendChild(containerEl);
 
   items = Repository.getByModule('archive').sort((a, b) => b.updatedAt - a.updatedAt);
+  searchQuery = '';
 
   if (selectedItemId && !items.find(i => i.id === selectedItemId)) {
     setSelectedItemId(null);
@@ -84,23 +87,62 @@ function cleanupListeners() {
 }
 
 // --- Rendering ---
+function handleSearch(query) {
+  searchQuery = query;
+  const contentArea = document.getElementById('view-content-area');
+  if (!contentArea) return;
+
+  let filteredItems = filterAreaId ? items.filter(t => t.areaId === filterAreaId) : items;
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filteredItems = filteredItems.filter(t => (t.title || '').toLowerCase().includes(q));
+  }
+
+  if (items.length === 0) {
+    renderEmpty(contentArea);
+  } else if (filteredItems.length === 0) {
+    contentArea.innerHTML = `
+      <div class="placeholder-view" style="height: auto; padding: var(--space-md) 0;">
+        <p style="color: var(--color-text-muted);">${searchQuery ? 'No matching tasks found.' : 'No tasks match the selected Area filter.'}</p>
+      </div>
+    `;
+  } else {
+    renderArchiveList(contentArea, filteredItems);
+  }
+}
+
 function renderView() {
   if (!containerEl) return;
 
-  const filteredItems = filterAreaId ? items.filter(t => t.areaId === filterAreaId) : items;
+  let filteredItems = filterAreaId ? items.filter(t => t.areaId === filterAreaId) : items;
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filteredItems = filteredItems.filter(t => (t.title || '').toLowerCase().includes(q));
+  }
 
   containerEl.innerHTML = `
     <div class="focus-container">
-      <div class="view-filter-bar" style="margin-bottom: var(--space-sm); display: flex; align-items: center; gap: var(--space-xs); font-family: var(--font-mono); font-size: var(--font-size-xs);">
-        <span style="color: var(--color-text-muted);">area</span>
-        <select id="area-filter-select" class="inspector-select" style="width: auto; min-width: 80px; padding: 2px 4px; border: 1px solid var(--color-border);">
-        </select>
+      <div class="view-filter-bar">
+        <div class="view-filter-group">
+          <span style="color: var(--color-text-muted);">area</span>
+          <select id="area-filter-select" class="inspector-select" style="width: auto; min-width: 80px; padding: 2px 4px; border: 1px solid var(--color-border);">
+          </select>
+        </div>
+        <div id="view-search-portal"></div>
       </div>
       <div id="view-content-area"></div>
     </div>
   `;
 
   renderAreaFilter();
+
+  const searchPortal = containerEl.querySelector('#view-search-portal');
+  if (searchPortal) {
+    searchPortal.appendChild(createSearchInput({
+      value: searchQuery,
+      onInput: handleSearch
+    }));
+  }
 
   const contentArea = document.getElementById('view-content-area');
 
@@ -109,7 +151,7 @@ function renderView() {
   } else if (filteredItems.length === 0) {
     contentArea.innerHTML = `
       <div class="placeholder-view" style="height: auto; padding: var(--space-md) 0;">
-        <p style="color: var(--color-text-muted);">No tasks match the selected Area filter.</p>
+        <p style="color: var(--color-text-muted);">${searchQuery ? 'No matching tasks found.' : 'No tasks match the selected Area filter.'}</p>
       </div>
     `;
   } else {
@@ -333,32 +375,38 @@ function handleGlobalKeydown(event) {
   );
   if (editing) return;
 
+  let filtered = filterAreaId ? items.filter(t => t.areaId === filterAreaId) : items;
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filtered = filtered.filter(t => (t.title || '').toLowerCase().includes(q));
+  }
+
   if (!selectedItemId) {
-    if (event.key === 'ArrowDown' && items.length > 0) {
+    if (event.key === 'ArrowDown' && filtered.length > 0) {
       event.preventDefault();
-      setSelectedItemId(items[0].id);
+      setSelectedItemId(filtered[0].id);
       renderView();
     }
     return;
   }
 
-  const idx = items.findIndex(i => i.id === selectedItemId);
+  const idx = filtered.findIndex(i => i.id === selectedItemId);
   if (idx === -1) return;
 
-  const currentItem = items[idx];
+  const currentItem = filtered[idx];
 
   switch (event.key) {
     case 'ArrowDown':
       event.preventDefault();
-      if (idx < items.length - 1) {
-        setSelectedItemId(items[idx + 1].id);
+      if (idx < filtered.length - 1) {
+        setSelectedItemId(filtered[idx + 1].id);
         renderView();
       }
       break;
     case 'ArrowUp':
       event.preventDefault();
       if (idx > 0) {
-        setSelectedItemId(items[idx - 1].id);
+        setSelectedItemId(filtered[idx - 1].id);
         renderView();
       } else {
         setSelectedItemId(null);
