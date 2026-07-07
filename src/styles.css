@@ -835,6 +835,32 @@ body {
   color: var(--color-text-primary);
 }
 
+.command-palette-item.success {
+  color: var(--color-success);
+}
+.command-palette-item.success svg {
+  color: var(--color-success);
+}
+.command-palette-item.selected.success {
+  color: var(--color-success);
+}
+.command-palette-item.selected.success svg {
+  color: var(--color-success);
+}
+
+.command-palette-item.danger {
+  color: var(--color-danger);
+}
+.command-palette-item.danger svg {
+  color: var(--color-danger);
+}
+.command-palette-item.selected.danger {
+  color: var(--color-danger);
+}
+.command-palette-item.selected.danger svg {
+  color: var(--color-danger);
+}
+
 .command-palette-item-shortcut {
   margin-left: auto;
   font-size: var(--font-size-xs);
