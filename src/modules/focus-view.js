@@ -6,6 +6,7 @@ import { createButton } from '../ui/button.js';
 import { createInput } from '../ui/input.js';
 import { createCheckbox } from '../ui/checkbox.js';
 import { crossfade } from '../ui/utils.js';
+import { createSearchInput } from '../ui/search.js';
 
 let tasks = [];
 let editingTaskId = null;
@@ -13,6 +14,7 @@ let selectedTaskId = null;
 let containerEl = null;
 let isCreating = false;
 let filterAreaId = '';
+let searchQuery = '';
 
 const GRIP_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>`;
 const EDIT_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
@@ -28,6 +30,7 @@ export function renderFocusView(container) {
   container.appendChild(containerEl);
 
   tasks = Repository.getByModule('focus');
+  searchQuery = '';
 
   if (!selectedTaskId) editingTaskId = null;
 
@@ -104,27 +107,76 @@ function cleanupListeners() {
 
 // --- Rendering ---
 
+function handleSearch(query) {
+  searchQuery = query;
+  const contentArea = document.getElementById('view-content-area');
+  if (!contentArea) return;
+
+  const active = tasks.filter(t => t.status === 'active');
+  const completed = tasks.filter(t => t.status === 'completed');
+
+  let filteredActive = filterAreaId ? active.filter(t => t.areaId === filterAreaId) : active;
+  let filteredCompleted = filterAreaId ? completed.filter(t => t.areaId === filterAreaId) : completed;
+
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filteredActive = filteredActive.filter(t => (t.title || '').toLowerCase().includes(q));
+    filteredCompleted = filteredCompleted.filter(t => (t.title || '').toLowerCase().includes(q));
+  }
+
+  if (tasks.length === 0 && !isCreating) {
+    renderEmpty(contentArea);
+  } else if (filteredActive.length === 0 && filteredCompleted.length === 0 && !isCreating) {
+    contentArea.innerHTML = `
+      <div class="placeholder-view" style="height: auto; padding: var(--space-md) 0;">
+        <p style="color: var(--color-text-muted);">${searchQuery ? 'No matching tasks found.' : 'No tasks match the selected Area filter.'}</p>
+      </div>
+    `;
+  } else if (filteredActive.length === 0 && tasks.length > 0 && !isCreating) {
+    renderAllComplete(contentArea);
+  } else {
+    renderTaskList(contentArea, filteredActive, filteredCompleted);
+  }
+}
+
 function renderView() {
   if (!containerEl) return;
 
   const active = tasks.filter(t => t.status === 'active');
   const completed = tasks.filter(t => t.status === 'completed');
 
-  const filteredActive = filterAreaId ? active.filter(t => t.areaId === filterAreaId) : active;
-  const filteredCompleted = filterAreaId ? completed.filter(t => t.areaId === filterAreaId) : completed;
+  let filteredActive = filterAreaId ? active.filter(t => t.areaId === filterAreaId) : active;
+  let filteredCompleted = filterAreaId ? completed.filter(t => t.areaId === filterAreaId) : completed;
+
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filteredActive = filteredActive.filter(t => (t.title || '').toLowerCase().includes(q));
+    filteredCompleted = filteredCompleted.filter(t => (t.title || '').toLowerCase().includes(q));
+  }
 
   containerEl.innerHTML = `
     <div class="focus-container">
-      <div class="view-filter-bar" style="margin-bottom: var(--space-sm); display: flex; align-items: center; gap: var(--space-xs); font-family: var(--font-mono); font-size: var(--font-size-xs);">
-        <span style="color: var(--color-text-muted);">area</span>
-        <select id="area-filter-select" class="inspector-select" style="width: auto; min-width: 80px; padding: 2px 4px; border: 1px solid var(--color-border);">
-        </select>
+      <div class="view-filter-bar">
+        <div class="view-filter-group">
+          <span style="color: var(--color-text-muted);">area</span>
+          <select id="area-filter-select" class="inspector-select" style="width: auto; min-width: 80px; padding: 2px 4px; border: 1px solid var(--color-border);">
+          </select>
+        </div>
+        <div id="view-search-portal"></div>
       </div>
       <div id="view-content-area"></div>
     </div>
   `;
 
   renderAreaFilter();
+
+  const searchPortal = containerEl.querySelector('#view-search-portal');
+  if (searchPortal) {
+    searchPortal.appendChild(createSearchInput({
+      value: searchQuery,
+      onInput: handleSearch
+    }));
+  }
 
   const contentArea = document.getElementById('view-content-area');
 
@@ -133,7 +185,7 @@ function renderView() {
   } else if (filteredActive.length === 0 && filteredCompleted.length === 0 && !isCreating) {
     contentArea.innerHTML = `
       <div class="placeholder-view" style="height: auto; padding: var(--space-md) 0;">
-        <p style="color: var(--color-text-muted);">No tasks match the selected Area filter.</p>
+        <p style="color: var(--color-text-muted);">${searchQuery ? 'No matching tasks found.' : 'No tasks match the selected Area filter.'}</p>
       </div>
     `;
   } else if (filteredActive.length === 0 && tasks.length > 0 && !isCreating) {
@@ -477,6 +529,11 @@ function handleGlobalKeydown(event) {
   if (editing) return;
 
   const active = tasks.filter(t => t.status === 'active');
+  let filteredActive = filterAreaId ? active.filter(t => t.areaId === filterAreaId) : active;
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filteredActive = filteredActive.filter(t => (t.title || '').toLowerCase().includes(q));
+  }
 
   // Global Keys (when not typing)
   if (event.key.toLowerCase() === 'a') {
@@ -504,29 +561,29 @@ function handleGlobalKeydown(event) {
 
   if (!selectedTaskId || editingTaskId) {
     // If no task selected, pressing ArrowDown selects first active task
-    if (event.key === 'ArrowDown' && active.length > 0) {
+    if (event.key === 'ArrowDown' && filteredActive.length > 0) {
       event.preventDefault();
-      setSelectedTaskId(active[0].id);
+      setSelectedTaskId(filteredActive[0].id);
       renderView();
     }
     return;
   }
 
-  const idx = active.findIndex(t => t.id === selectedTaskId);
+  const idx = filteredActive.findIndex(t => t.id === selectedTaskId);
   if (idx === -1) return;
 
   switch (event.key) {
     case 'ArrowDown':
       event.preventDefault();
-      if (idx < active.length - 1) {
-        setSelectedTaskId(active[idx + 1].id);
+      if (idx < filteredActive.length - 1) {
+        setSelectedTaskId(filteredActive[idx + 1].id);
         renderView();
       }
       break;
     case 'ArrowUp':
       event.preventDefault();
       if (idx > 0) {
-        setSelectedTaskId(active[idx - 1].id);
+        setSelectedTaskId(filteredActive[idx - 1].id);
         renderView();
       } else {
         setSelectedTaskId(null);
