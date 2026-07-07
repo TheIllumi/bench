@@ -5,6 +5,8 @@ import { DialogService } from '../ui/dialog.js';
 import { createInput } from '../ui/input.js';
 import { crossfade } from '../ui/utils.js';
 
+const FOLDER_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="area-folder-icon" style="color: var(--color-text-muted); flex-shrink: 0; margin-top: 2px;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg>`;
+
 let areas = [];
 let selectedAreaId = null;
 let editingAreaId = null;
@@ -176,6 +178,18 @@ function renderAreasList() {
   }
 }
 
+function formatTimeAgo(timestamp) {
+  if (!timestamp) return 'updated long ago';
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  if (seconds < 60) return 'updated just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `updated ${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `updated ${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `updated ${days}d ago`;
+}
+
 function buildAreaRow(area) {
   const row = document.createElement('div');
   row.className = 'task-item';
@@ -200,6 +214,15 @@ function buildAreaRow(area) {
     row.appendChild(input);
     requestAnimationFrame(() => { input.focus(); input.select(); });
   } else {
+    // Add folder icon on the left
+    const iconSpan = document.createElement('span');
+    iconSpan.innerHTML = FOLDER_ICON;
+    iconSpan.style.display = 'flex';
+    iconSpan.style.alignItems = 'center';
+    iconSpan.style.flexShrink = '0';
+    row.appendChild(iconSpan);
+
+    // Content container for name & optional description
     const content = document.createElement('div');
     content.className = 'area-row-content';
     content.style.display = 'flex';
@@ -224,29 +247,36 @@ function buildAreaRow(area) {
       descSpan.style.textOverflow = 'ellipsis';
       content.appendChild(descSpan);
     }
-
-    // Compute active, completed, parked counts
-    const allItems = Repository.getAll().filter(item => item.type !== 'area' && item.areaId === area.id);
-    const activeCount = allItems.filter(item => (item.module === 'focus' || item.module === 'capture') && item.status !== 'completed').length;
-    const completedCount = allItems.filter(item => item.status === 'completed' && item.module !== 'archive').length;
-    const parkedCount = allItems.filter(item => item.module === 'parking-lot' && item.status !== 'completed').length;
-
-    const statsDiv = document.createElement('div');
-    statsDiv.className = 'area-stats';
-    statsDiv.style.display = 'flex';
-    statsDiv.style.gap = 'var(--space-sm)';
-    statsDiv.style.fontSize = 'var(--font-size-xs)';
-    statsDiv.style.color = 'var(--color-text-muted)';
-    statsDiv.style.marginTop = '2px';
-
-    statsDiv.innerHTML = `
-      <span>${activeCount} active</span>
-      <span>${completedCount} completed</span>
-      <span>${parkedCount} parked</span>
-    `;
-
-    content.appendChild(statsDiv);
     row.appendChild(content);
+
+    // Right-aligned container for statistics & time-ago
+    const rightContainer = document.createElement('div');
+    rightContainer.className = 'area-row-right';
+    rightContainer.style.display = 'flex';
+    rightContainer.style.flexDirection = 'column';
+    rightContainer.style.alignItems = 'flex-end';
+    rightContainer.style.gap = '2px';
+    rightContainer.style.marginLeft = 'auto';
+    rightContainer.style.flexShrink = '0';
+
+    // Statistics placeholder
+    const statsSpan = document.createElement('span');
+    statsSpan.className = 'area-stats-placeholder';
+    statsSpan.style.fontSize = 'var(--font-size-xs)';
+    statsSpan.style.color = 'var(--color-text-muted)';
+    statsSpan.textContent = '0 active • 0 completed';
+    rightContainer.appendChild(statsSpan);
+
+    // "Updated Xh ago"
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'area-updated-time';
+    timeSpan.style.fontSize = '10px';
+    timeSpan.style.color = 'var(--color-text-muted)';
+    timeSpan.style.fontFamily = 'var(--font-mono)';
+    timeSpan.textContent = formatTimeAgo(area.updatedAt);
+    rightContainer.appendChild(timeSpan);
+
+    row.appendChild(rightContainer);
   }
 
   // TUI plain text hover actions
