@@ -5,6 +5,7 @@ import { DialogService } from '../ui/dialog.js';
 import { createInput } from '../ui/input.js';
 import { crossfade, getRelativeTime } from '../ui/utils.js';
 import { createSearchInput } from '../ui/search.js';
+import { openAreaPicker } from '../ui/area-picker.js';
 
 let containerEl = null;
 let items = [];
@@ -38,6 +39,9 @@ export function renderParkingLotView(container) {
   EventBus.on('itemUpdated', handleItemChange);
   EventBus.on('itemDeleted', handleItemChange);
   EventBus.on('itemMoved', handleItemChange);
+  EventBus.on('areaCreated', handleItemChange);
+  EventBus.on('areaUpdated', handleItemChange);
+  EventBus.on('areaDeleted', handleItemChange);
 
   window.removeEventListener('keydown', handleGlobalKeydown);
   window.addEventListener('keydown', handleGlobalKeydown);
@@ -82,6 +86,9 @@ function cleanupEventBus() {
   EventBus.off('itemUpdated', handleItemChange);
   EventBus.off('itemDeleted', handleItemChange);
   EventBus.off('itemMoved', handleItemChange);
+  EventBus.off('areaCreated', handleItemChange);
+  EventBus.off('areaUpdated', handleItemChange);
+  EventBus.off('areaDeleted', handleItemChange);
 }
 
 function cleanupListeners() {
@@ -279,6 +286,18 @@ function buildParkRow(item) {
     moveToFocus(item.id);
   });
 
+  const assignBtn = document.createElement('button');
+  assignBtn.className = 'action-btn';
+  assignBtn.textContent = 'area';
+  assignBtn.setAttribute('aria-label', 'Assign Area');
+  assignBtn.setAttribute('tabindex', '-1');
+  assignBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openAreaPicker(e, item, (areaId) => {
+      Repository.update(item.id, { areaId });
+    });
+  });
+
   const captureBtn = document.createElement('button');
   captureBtn.className = 'action-btn';
   captureBtn.textContent = 'capture';
@@ -304,6 +323,7 @@ function buildParkRow(item) {
   });
 
   actions.appendChild(focusBtn);
+  actions.appendChild(assignBtn);
   actions.appendChild(captureBtn);
   actions.appendChild(archiveBtn);
   actions.appendChild(delBtn);
