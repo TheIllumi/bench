@@ -101,31 +101,6 @@ function cleanupListeners() {
   setSelectedItemId(null);
 }
 
-// --- Rendering ---
-function handleSearch(query) {
-  searchQuery = query;
-  const contentArea = document.getElementById('view-content-area');
-  if (!contentArea) return;
-
-  let filteredItems = filterAreaId ? items.filter(t => t.areaId === filterAreaId) : items;
-  if (searchQuery) {
-    const q = searchQuery.toLowerCase();
-    filteredItems = filteredItems.filter(t => (t.title || '').toLowerCase().includes(q));
-  }
-
-  if (items.length === 0) {
-    renderEmpty(contentArea);
-  } else if (filteredItems.length === 0) {
-    contentArea.innerHTML = `
-      <div class="placeholder-view" style="height: auto; padding: var(--space-md) 0;">
-        <p style="color: var(--color-text-muted);">${searchQuery ? 'No matching tasks found.' : 'No tasks match the selected Area filter.'}</p>
-      </div>
-    `;
-  } else {
-    renderArchiveList(contentArea, filteredItems);
-  }
-}
-
 function handleSearch(query) {
   searchQuery = query;
   const contentArea = document.getElementById('view-content-area');
@@ -138,8 +113,8 @@ function handleSearch(query) {
   }
 
   const archivedAreas = Repository.getAreas().filter(a => a.archived);
-  let filteredAreas = archivedAreas;
-  if (searchQuery) {
+  let filteredAreas = filterAreaId ? [] : archivedAreas;
+  if (searchQuery && !filterAreaId) {
     const q = searchQuery.toLowerCase();
     filteredAreas = archivedAreas.filter(a => 
       (a.name || '').toLowerCase().includes(q) || 
@@ -164,8 +139,8 @@ function renderView() {
   }
 
   const archivedAreas = Repository.getAreas().filter(a => a.archived);
-  let filteredAreas = archivedAreas;
-  if (searchQuery) {
+  let filteredAreas = filterAreaId ? [] : archivedAreas;
+  if (searchQuery && !filterAreaId) {
     const q = searchQuery.toLowerCase();
     filteredAreas = archivedAreas.filter(a => 
       (a.name || '').toLowerCase().includes(q) || 
@@ -204,7 +179,6 @@ function renderView() {
   } else {
     renderArchiveContent(contentArea, filteredItems, filteredAreas);
   }
-}
 }
 
 function renderAreaFilter() {
