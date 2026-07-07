@@ -93,8 +93,8 @@ window.addEventListener('DOMContentLoaded', () => {
   // Initialize global and navigation keyboard shortcuts
   initializeShortcuts();
 
-  // Toggle Command Palette via titlebar button
-  const paletteBtn = document.getElementById('titlebar-shortcut-btn');
+  // Toggle Command Palette via sidebar button
+  const paletteBtn = document.getElementById('sidebar-palette-btn');
   if (paletteBtn) {
     paletteBtn.addEventListener('click', () => {
       CommandPalette.toggle();

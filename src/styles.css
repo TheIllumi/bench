@@ -84,26 +84,7 @@ body {
   pointer-events: none;
 }
 
-.titlebar-shortcut-btn {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  background: transparent;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
-  font-family: inherit;
-  font-size: 10px;
-  padding: 2px 8px;
-  cursor: pointer;
-  transition: all var(--duration-fast) var(--ease-standard);
-  outline: none;
-  pointer-events: auto;
-}
 
-.titlebar-shortcut-btn:hover {
-  border-color: var(--color-text-secondary);
-  color: var(--color-text-primary);
-}
 
 .titlebar-controls {
   display: flex;
