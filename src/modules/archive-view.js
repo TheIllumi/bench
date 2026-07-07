@@ -4,6 +4,9 @@ import { ToastService } from '../ui/toast.js';
 import { DialogService } from '../ui/dialog.js';
 import { crossfade, getRelativeTime } from '../ui/utils.js';
 import { createSearchInput } from '../ui/search.js';
+import { showAreaDeleteDialog } from '../ui/area-delete-dialog.js';
+
+const FOLDER_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="area-folder-icon" style="color: var(--color-text-muted); flex-shrink: 0; margin-top: 2px;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg>`;
 
 let containerEl = null;
 let items = [];
@@ -33,6 +36,9 @@ export function renderArchiveView(container) {
   EventBus.on('itemCreated', handleItemChange);
   EventBus.on('itemUpdated', handleItemChange);
   EventBus.on('itemDeleted', handleItemChange);
+  EventBus.on('areaCreated', handleItemChange);
+  EventBus.on('areaUpdated', handleItemChange);
+  EventBus.on('areaDeleted', handleItemChange);
   EventBus.on('itemMoved', handleItemChange);
 
   window.removeEventListener('keydown', handleGlobalKeydown);
@@ -60,13 +66,19 @@ export function focusAndSelectArchivedTask(itemId) {
 
 function handleItemChange() {
   items = Repository.getByModule('archive').sort((a, b) => b.updatedAt - a.updatedAt);
+  if (selectedItemId) {
+    const allSelectable = [...items, ...Repository.getAreas().filter(a => a.archived)];
+    if (!allSelectable.find(i => i.id === selectedItemId)) {
+      setSelectedItemId(null);
+    }
+  }
   renderView();
 }
 
 function setSelectedItemId(id) {
   selectedItemId = id;
   if (id) {
-    const item = items.find(i => i.id === id);
+    const item = items.find(i => i.id === id) || Repository.getAreas().find(a => a.id === id && a.archived);
     EventBus.emit('itemSelected', item || null);
   } else {
     EventBus.emit('itemSelected', null);
@@ -77,7 +89,9 @@ function cleanupEventBus() {
   EventBus.off('itemCreated', handleItemChange);
   EventBus.off('itemUpdated', handleItemChange);
   EventBus.off('itemDeleted', handleItemChange);
-  EventBus.off('itemMoved', handleItemChange);
+  EventBus.off('areaCreated', handleItemChange);
+  EventBus.off('areaUpdated', handleItemChange);
+  EventBus.off('areaDeleted', handleItemChange);
 }
 
 function cleanupListeners() {
@@ -111,6 +125,34 @@ function handleSearch(query) {
   }
 }
 
+function handleSearch(query) {
+  searchQuery = query;
+  const contentArea = document.getElementById('view-content-area');
+  if (!contentArea) return;
+
+  let filteredItems = filterAreaId ? items.filter(t => t.areaId === filterAreaId) : items;
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filteredItems = filteredItems.filter(t => (t.title || '').toLowerCase().includes(q));
+  }
+
+  const archivedAreas = Repository.getAreas().filter(a => a.archived);
+  let filteredAreas = archivedAreas;
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filteredAreas = archivedAreas.filter(a => 
+      (a.name || '').toLowerCase().includes(q) || 
+      (a.description || '').toLowerCase().includes(q)
+    );
+  }
+
+  if (items.length === 0 && archivedAreas.length === 0) {
+    renderEmpty(contentArea);
+  } else {
+    renderArchiveContent(contentArea, filteredItems, filteredAreas);
+  }
+}
+
 function renderView() {
   if (!containerEl) return;
 
@@ -118,6 +160,16 @@ function renderView() {
   if (searchQuery) {
     const q = searchQuery.toLowerCase();
     filteredItems = filteredItems.filter(t => (t.title || '').toLowerCase().includes(q));
+  }
+
+  const archivedAreas = Repository.getAreas().filter(a => a.archived);
+  let filteredAreas = archivedAreas;
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filteredAreas = archivedAreas.filter(a => 
+      (a.name || '').toLowerCase().includes(q) || 
+      (a.description || '').toLowerCase().includes(q)
+    );
   }
 
   containerEl.innerHTML = `
@@ -146,17 +198,12 @@ function renderView() {
 
   const contentArea = document.getElementById('view-content-area');
 
-  if (items.length === 0) {
+  if (items.length === 0 && archivedAreas.length === 0) {
     renderEmpty(contentArea);
-  } else if (filteredItems.length === 0) {
-    contentArea.innerHTML = `
-      <div class="placeholder-view" style="height: auto; padding: var(--space-md) 0;">
-        <p style="color: var(--color-text-muted);">${searchQuery ? 'No matching tasks found.' : 'No tasks match the selected Area filter.'}</p>
-      </div>
-    `;
   } else {
-    renderArchiveList(contentArea, filteredItems);
+    renderArchiveContent(contentArea, filteredItems, filteredAreas);
   }
+}
 }
 
 function renderAreaFilter() {
@@ -194,26 +241,133 @@ function renderEmpty(targetEl) {
   `;
 }
 
-function renderArchiveList(targetEl, listItems) {
+function renderArchiveContent(targetEl, listItems, listAreas) {
   targetEl.innerHTML = `
-    <div class="completed-header" style="margin-bottom: var(--space-sm);">Permanent record</div>
-    <div class="tasks-list-active" id="archive-items-list" role="listbox" aria-label="Archived items"></div>
+    <div class="archive-split-container" style="display: flex; flex-direction: column; gap: var(--space-md);">
+      <div class="archive-section-tasks">
+        <div class="completed-header" style="margin-bottom: var(--space-sm);">archived tasks</div>
+        <div class="tasks-list-active" id="archive-tasks-list" role="listbox" aria-label="Archived tasks"></div>
+      </div>
+      <div class="archive-section-areas" style="margin-top: var(--space-sm);">
+        <div class="completed-header" style="margin-bottom: var(--space-sm);">archived areas</div>
+        <div class="tasks-list-active" id="archive-areas-list" role="listbox" aria-label="Archived areas"></div>
+      </div>
+    </div>
   `;
 
-  const listEl = document.getElementById('archive-items-list');
-  listItems.forEach(item => {
-    listEl.appendChild(buildArchiveRow(item));
-  });
+  const tasksListEl = document.getElementById('archive-tasks-list');
+  const areasListEl = document.getElementById('archive-areas-list');
 
-  // Restore keyboard focus (only if user is not editing in the Inspector)
+  if (listItems.length === 0) {
+    tasksListEl.innerHTML = `
+      <div class="placeholder-view" style="height: auto; padding: var(--space-sm) 0;">
+        <p style="color: var(--color-text-muted);">${searchQuery ? 'No matching tasks found.' : 'No archived tasks.'}</p>
+      </div>
+    `;
+  } else {
+    listItems.forEach(item => {
+      tasksListEl.appendChild(buildArchiveRow(item));
+    });
+  }
+
+  if (listAreas.length === 0) {
+    areasListEl.innerHTML = `
+      <div class="placeholder-view" style="height: auto; padding: var(--space-sm) 0;">
+        <p style="color: var(--color-text-muted);">${searchQuery ? 'No matching areas found.' : 'No archived areas.'}</p>
+      </div>
+    `;
+  } else {
+    listAreas.forEach(area => {
+      areasListEl.appendChild(buildArchivedAreaRow(area));
+    });
+  }
+
+  // Restore keyboard focus
   if (selectedItemId) {
     const activeEl = document.activeElement;
     const isEditingInInspector = activeEl && activeEl.closest('#inspector-panel');
     if (!isEditingInInspector) {
-      const el = listEl.querySelector(`[data-id="${selectedItemId}"]`);
+      const el = document.querySelector(`[data-id="${selectedItemId}"]`);
       if (el) requestAnimationFrame(() => el.focus());
     }
   }
+}
+
+function buildArchivedAreaRow(area) {
+  const row = document.createElement('div');
+  row.className = 'task-item completed'; // Render muted/completed style
+  row.style.opacity = '0.6';
+  row.setAttribute('data-id', area.id);
+  row.setAttribute('role', 'option');
+  row.setAttribute('aria-selected', area.id === selectedItemId ? 'true' : 'false');
+  row.setAttribute('tabindex', '0');
+
+  if (area.id === selectedItemId) {
+    row.classList.add('selected');
+    row.style.opacity = '0.95';
+  }
+
+  // Folder icon + Name
+  const title = document.createElement('span');
+  title.className = 'task-title';
+  title.style.display = 'flex';
+  title.style.alignItems = 'center';
+  title.style.gap = '8px';
+  title.innerHTML = `${FOLDER_ICON} ${escapeHtml(area.name)}`;
+  row.appendChild(title);
+
+  // Archived time badge
+  const archivedTime = document.createElement('span');
+  archivedTime.className = 'capture-time-badge';
+  archivedTime.textContent = `archived ${getRelativeTime(area.updatedAt)}`;
+  row.appendChild(archivedTime);
+
+  // TUI plain text hover actions
+  const actions = document.createElement('div');
+  actions.className = 'task-actions';
+
+  const restoreBtn = document.createElement('button');
+  restoreBtn.className = 'action-btn';
+  restoreBtn.textContent = 'restore';
+  restoreBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    restoreArea(area);
+  });
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'action-btn';
+  delBtn.textContent = 'del';
+  delBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    deleteItem(area.id);
+  });
+
+  actions.appendChild(restoreBtn);
+  actions.appendChild(delBtn);
+  row.appendChild(actions);
+
+  row.addEventListener('click', () => {
+    setSelectedItemId(area.id);
+    renderView();
+  });
+
+  return row;
+}
+
+function restoreArea(area) {
+  Repository.update(area.id, { archived: false });
+  if (selectedItemId === area.id) setSelectedItemId(null);
+  ToastService.show('Area restored.', 'success');
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 function buildArchiveRow(item) {
@@ -288,6 +442,11 @@ function buildArchiveRow(item) {
 function openRestorePicker(e, item) {
   e.stopPropagation();
 
+  if (item.type === 'area') {
+    restoreArea(item);
+    return;
+  }
+
   // Remove existing dropdowns
   const existing = document.querySelector('.restore-picker-dropdown');
   if (existing) existing.remove();
@@ -344,6 +503,16 @@ function restoreItem(item, destination) {
 }
 
 function deleteItem(itemId) {
+  const area = Repository.getAreas().find(a => a.id === itemId);
+  if (area) {
+    showAreaDeleteDialog(area).then((deleted) => {
+      if (deleted) {
+        if (selectedItemId === itemId) setSelectedItemId(null);
+      }
+    });
+    return;
+  }
+
   DialogService.confirm({
     title: 'Delete Archived Item',
     message: 'Are you sure you want to permanently delete this archived item from your history?',
@@ -381,32 +550,44 @@ function handleGlobalKeydown(event) {
     filtered = filtered.filter(t => (t.title || '').toLowerCase().includes(q));
   }
 
+  const archivedAreas = Repository.getAreas().filter(a => a.archived);
+  let filteredAreas = archivedAreas;
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filteredAreas = archivedAreas.filter(a => 
+      (a.name || '').toLowerCase().includes(q) || 
+      (a.description || '').toLowerCase().includes(q)
+    );
+  }
+
+  const allSelectable = [...filtered, ...filteredAreas];
+
   if (!selectedItemId) {
-    if (event.key === 'ArrowDown' && filtered.length > 0) {
+    if (event.key === 'ArrowDown' && allSelectable.length > 0) {
       event.preventDefault();
-      setSelectedItemId(filtered[0].id);
+      setSelectedItemId(allSelectable[0].id);
       renderView();
     }
     return;
   }
 
-  const idx = filtered.findIndex(i => i.id === selectedItemId);
+  const idx = allSelectable.findIndex(i => i.id === selectedItemId);
   if (idx === -1) return;
 
-  const currentItem = filtered[idx];
+  const currentItem = allSelectable[idx];
 
   switch (event.key) {
     case 'ArrowDown':
       event.preventDefault();
-      if (idx < filtered.length - 1) {
-        setSelectedItemId(filtered[idx + 1].id);
+      if (idx < allSelectable.length - 1) {
+        setSelectedItemId(allSelectable[idx + 1].id);
         renderView();
       }
       break;
     case 'ArrowUp':
       event.preventDefault();
       if (idx > 0) {
-        setSelectedItemId(filtered[idx - 1].id);
+        setSelectedItemId(allSelectable[idx - 1].id);
         renderView();
       } else {
         setSelectedItemId(null);
@@ -417,12 +598,16 @@ function handleGlobalKeydown(event) {
     case 'r':
     case 'R':
       event.preventDefault();
-      // Locate the restore button element in DOM to position picker
-      const row = containerEl.querySelector(`[data-id="${selectedItemId}"]`);
-      if (row) {
-        const restoreBtn = [...row.querySelectorAll('.action-btn')].find(b => b.textContent === 'restore');
-        if (restoreBtn) {
-          openRestorePicker({ stopPropagation: () => {}, target: restoreBtn }, currentItem);
+      if (currentItem.type === 'area') {
+        restoreArea(currentItem);
+      } else {
+        // Locate the restore button element in DOM to position picker
+        const row = containerEl.querySelector(`[data-id="${selectedItemId}"]`);
+        if (row) {
+          const restoreBtn = [...row.querySelectorAll('.action-btn')].find(b => b.textContent === 'restore');
+          if (restoreBtn) {
+            openRestorePicker({ stopPropagation: () => {}, target: restoreBtn }, currentItem);
+          }
         }
       }
       break;
