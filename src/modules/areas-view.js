@@ -254,11 +254,17 @@ function buildAreaRow(area) {
     row.appendChild(input);
     requestAnimationFrame(() => { input.focus(); input.select(); });
   } else {
-    // We want the row itself to be a vertical flex column
-    row.style.display = 'flex';
-    row.style.flexDirection = 'column';
-    row.style.gap = '2px';
-    row.style.width = '100%';
+    // Add area-task-item to row to override vertical alignment of selection indicator
+    row.classList.add('area-task-item');
+
+    // Create a container body for the two vertical rows (Line 1 and Line 2)
+    const body = document.createElement('div');
+    body.className = 'area-row-body';
+    body.style.display = 'flex';
+    body.style.flexDirection = 'column';
+    body.style.gap = '2px';
+    body.style.width = '100%';
+    body.style.minWidth = '0';
 
     // Line 1: Top row (Folder icon + Name/Description + Updated Time)
     const line1 = document.createElement('div');
@@ -319,7 +325,7 @@ function buildAreaRow(area) {
     timeSpan.textContent = formatTimeAgo(area.updatedAt);
     line1.appendChild(timeSpan);
 
-    row.appendChild(line1);
+    body.appendChild(line1);
 
     // Line 2: Bottom row (Statistics left-aligned under the content)
     const line2 = document.createElement('div');
@@ -343,7 +349,8 @@ function buildAreaRow(area) {
     statsSpan.textContent = `${activeCount} active • ${completedCount} completed • ${parkedCount} parked • ${archivedCount} archived`;
     line2.appendChild(statsSpan);
 
-    row.appendChild(line2);
+    body.appendChild(line2);
+    row.appendChild(body);
   }
 
   // TUI plain text hover actions

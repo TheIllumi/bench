@@ -494,6 +494,14 @@ body {
   content: '> ';
 }
 
+.task-item.area-task-item {
+  align-items: flex-start;
+}
+
+.task-item.area-task-item::before {
+  margin-top: 2px;
+}
+
 .task-item:hover {
   background-color: var(--color-accent-focus);
 }
