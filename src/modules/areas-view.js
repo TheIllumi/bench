@@ -131,12 +131,13 @@ function renderView() {
 
 function renderEmpty() {
   containerEl.innerHTML = `
-    <div class="placeholder-view" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; height: 100%; padding: var(--space-lg) 0;">
-      <span style="color: var(--color-text-muted); display: block; margin-bottom: var(--space-sm);">${FOLDER_ICON}</span>
-      <p style="color: var(--color-text-primary); font-weight: 500; margin: 0 0 4px 0;">No Areas yet.</p>
-      <p style="color: var(--color-text-secondary); margin: 0 0 var(--space-xs) 0; font-size: var(--font-size-xs);">Areas help organize related work.</p>
-      <p style="color: var(--color-text-muted); margin: 0 0 var(--space-md) 0; font-size: var(--font-size-xs);">Press <span style="color: var(--color-accent-blue)">N</span> to create your first Area.</p>
-      <div>
+    <div class="placeholder-view" style="align-items: center; text-align: center; height: auto; padding: var(--space-lg) 0; margin: 0 auto;">
+      <span style="color: var(--color-text-muted); display: block; margin-bottom: var(--space-md);">${FOLDER_ICON}</span>
+      <h2>areas</h2>
+      <p style="margin-bottom: 2px;">No Areas yet.</p>
+      <p style="color: var(--color-text-secondary); margin: 0; font-size: var(--font-size-xs);">Areas help organize related work.</p>
+      <p style="color: var(--color-text-muted); margin-top: var(--space-xs);">Press <span style="color: var(--color-accent-blue)">N</span> to create your first Area.</p>
+      <div style="margin-top: var(--space-md);">
         <button id="add-area-btn-empty" class="action-btn" style="border: 1px solid var(--color-border); padding: var(--space-xs) var(--space-sm); border-radius: 2px;">+ New Area</button>
       </div>
     </div>
