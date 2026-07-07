@@ -100,6 +100,41 @@ function cleanupListeners() {
   setSelectedAreaId(null);
 }
 
+function updateSelection(id) {
+  const prevId = selectedAreaId;
+  setSelectedAreaId(id);
+  isCreating = false;
+
+  if (!containerEl) return;
+  const listEl = document.getElementById('areas-items-list');
+  if (!listEl) return;
+
+  // Remove selection from previous
+  if (prevId && prevId !== id) {
+    const prevRow = listEl.querySelector(`[data-id="${prevId}"]`);
+    if (prevRow) {
+      prevRow.classList.remove('selected');
+      prevRow.setAttribute('aria-selected', 'false');
+    }
+  }
+
+  // Add selection to new
+  if (id) {
+    const newRow = listEl.querySelector(`[data-id="${id}"]`);
+    if (newRow) {
+      newRow.classList.add('selected');
+      newRow.setAttribute('aria-selected', 'true');
+      
+      // Focus if appropriate
+      const activeEl = document.activeElement;
+      const isEditingInInspector = activeEl && activeEl.closest('#inspector-panel');
+      if (!isEditingInInspector) {
+        newRow.focus();
+      }
+    }
+  }
+}
+
 function setSelectedAreaId(id) {
   selectedAreaId = id;
   if (id) {
@@ -115,10 +150,22 @@ function setSelectedAreaId(id) {
 function renderView() {
   if (!containerEl) return;
 
-  if (areas.length === 0 && !isCreating) {
-    crossfade(containerEl, () => renderEmpty());
+  const hasList = containerEl.querySelector('.focus-container');
+  const hasEmpty = containerEl.querySelector('.placeholder-view');
+  const isEmpty = areas.length === 0 && !isCreating;
+
+  if (isEmpty) {
+    if (hasList) {
+      crossfade(containerEl, () => renderEmpty());
+    } else {
+      renderEmpty();
+    }
   } else {
-    crossfade(containerEl, () => renderAreasList());
+    if (hasEmpty) {
+      crossfade(containerEl, () => renderAreasList());
+    } else {
+      renderAreasList();
+    }
   }
 }
 
@@ -381,9 +428,7 @@ function buildAreaRow(area) {
 
   if (!isEditing) {
     row.addEventListener('click', () => {
-      setSelectedAreaId(area.id);
-      isCreating = false;
-      renderView();
+      updateSelection(area.id);
     });
   }
 
@@ -535,8 +580,7 @@ function handleGlobalKeydown(event) {
   if (!selectedAreaId || editingAreaId) {
     if (event.key === 'ArrowDown' && areas.length > 0) {
       event.preventDefault();
-      setSelectedAreaId(areas[0].id);
-      renderView();
+      updateSelection(areas[0].id);
     }
     return;
   }
@@ -548,18 +592,15 @@ function handleGlobalKeydown(event) {
     case 'ArrowDown':
       event.preventDefault();
       if (idx < areas.length - 1) {
-        setSelectedAreaId(areas[idx + 1].id);
-        renderView();
+        updateSelection(areas[idx + 1].id);
       }
       break;
     case 'ArrowUp':
       event.preventDefault();
       if (idx > 0) {
-        setSelectedAreaId(areas[idx - 1].id);
-        renderView();
+        updateSelection(areas[idx - 1].id);
       } else {
-        setSelectedAreaId(null);
-        renderView();
+        updateSelection(null);
       }
       break;
     case 'Enter':
@@ -572,8 +613,7 @@ function handleGlobalKeydown(event) {
           titleInput.select();
         }
       } else {
-        setSelectedAreaId(selectedAreaId);
-        renderView();
+        updateSelection(selectedAreaId);
       }
       break;
     case 'e':
@@ -583,8 +623,7 @@ function handleGlobalKeydown(event) {
       break;
     case 'Escape':
       event.preventDefault();
-      setSelectedAreaId(null);
-      renderView();
+      updateSelection(null);
       break;
     case 'Delete':
     case 'Backspace':
