@@ -4,6 +4,7 @@ import { ToastService } from '../ui/toast.js';
 import { DialogService } from '../ui/dialog.js';
 import { createInput } from '../ui/input.js';
 import { crossfade } from '../ui/utils.js';
+import { createSearchInput } from '../ui/search.js';
 
 const FOLDER_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="area-folder-icon" style="color: var(--color-text-muted); flex-shrink: 0; margin-top: 2px;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg>`;
 
@@ -13,6 +14,7 @@ let editingAreaId = null;
 let containerEl = null;
 let isCreating = false;
 let sortBy = 'updated';
+let searchQuery = '';
 
 function loadAndSortAreas() {
   const rawAreas = Repository.getAreas().filter(a => !a.archived);
@@ -46,6 +48,7 @@ export function renderAreasView(container) {
   container.appendChild(containerEl);
 
   loadAndSortAreas();
+  searchQuery = '';
 
   if (!selectedAreaId) editingAreaId = null;
 
@@ -192,11 +195,77 @@ function renderEmpty() {
   }
 }
 
+function handleSearch(query) {
+  searchQuery = query;
+  const listEl = document.getElementById('areas-items-list');
+  if (!listEl) return;
+
+  listEl.innerHTML = '';
+
+  // Input row if creating
+  if (isCreating) {
+    const inputRow = document.createElement('div');
+    inputRow.className = 'task-item selected';
+    const input = createInput({
+      placeholder: 'New Area name\u2026',
+      onKeyDown: handleCreateKeyDown,
+      onBlur: () => {
+        isCreating = false;
+        renderView();
+      },
+      id: 'new-area-input'
+    });
+    inputRow.appendChild(input);
+    listEl.appendChild(inputRow);
+    requestAnimationFrame(() => input.focus());
+  }
+
+  let filteredAreas = areas;
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filteredAreas = areas.filter(a => 
+      (a.name || '').toLowerCase().includes(q) || 
+      (a.description || '').toLowerCase().includes(q)
+    );
+  }
+
+  if (filteredAreas.length === 0 && !isCreating) {
+    listEl.innerHTML = `
+      <div class="placeholder-view" style="height: auto; padding: var(--space-md) 0;">
+        <p style="color: var(--color-text-muted);">No matching Areas found.</p>
+      </div>
+    `;
+  } else {
+    filteredAreas.forEach(area => {
+      listEl.appendChild(buildAreaRow(area));
+    });
+  }
+
+  // Restore keyboard focus to selected area
+  if (selectedAreaId && !editingAreaId && !isCreating) {
+    const activeEl = document.activeElement;
+    const isEditingInInspector = activeEl && activeEl.closest('#inspector-panel');
+    if (!isEditingInInspector) {
+      const el = listEl.querySelector(`[data-id="${selectedAreaId}"]`);
+      if (el) requestAnimationFrame(() => el.focus());
+    }
+  }
+}
+
 function renderAreasList() {
+  let filteredAreas = areas;
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filteredAreas = areas.filter(a => 
+      (a.name || '').toLowerCase().includes(q) || 
+      (a.description || '').toLowerCase().includes(q)
+    );
+  }
+
   containerEl.innerHTML = `
     <div class="focus-container">
-      <div class="view-filter-bar" style="margin-bottom: var(--space-sm); display: flex; align-items: center; justify-content: space-between; font-family: var(--font-mono); font-size: var(--font-size-xs);">
-        <div style="display: flex; align-items: center; gap: var(--space-xs);">
+      <div class="view-filter-bar">
+        <div class="view-filter-group">
           <span style="color: var(--color-text-muted);">sort</span>
           <select id="area-sort-select" class="inspector-select" style="width: auto; padding: 2px 4px; border: 1px solid var(--color-border);">
             <option value="updated" ${sortBy === 'updated' ? 'selected' : ''}>Recently Updated</option>
@@ -205,6 +274,7 @@ function renderAreasList() {
             <option value="active" ${sortBy === 'active' ? 'selected' : ''}>Most Active</option>
           </select>
         </div>
+        <div id="view-search-portal"></div>
         <button id="add-area-btn-list" class="action-btn" style="text-decoration:none;">+ New Area</button>
       </div>
       <div class="tasks-list-active" id="areas-items-list" role="listbox" aria-label="Areas list"></div>
@@ -212,6 +282,14 @@ function renderAreasList() {
   `;
 
   const listEl = document.getElementById('areas-items-list');
+
+  const searchPortal = containerEl.querySelector('#view-search-portal');
+  if (searchPortal) {
+    searchPortal.appendChild(createSearchInput({
+      value: searchQuery,
+      onInput: handleSearch
+    }));
+  }
 
   const sortSelect = document.getElementById('area-sort-select');
   if (sortSelect) {
@@ -240,9 +318,17 @@ function renderAreasList() {
     requestAnimationFrame(() => input.focus());
   }
 
-  areas.forEach(area => {
-    listEl.appendChild(buildAreaRow(area));
-  });
+  if (filteredAreas.length === 0 && !isCreating) {
+    listEl.innerHTML = `
+      <div class="placeholder-view" style="height: auto; padding: var(--space-md) 0;">
+        <p style="color: var(--color-text-muted);">No matching Areas found.</p>
+      </div>
+    `;
+  } else {
+    filteredAreas.forEach(area => {
+      listEl.appendChild(buildAreaRow(area));
+    });
+  }
 
   const btn = document.getElementById('add-area-btn-list');
   if (btn) {
@@ -577,28 +663,37 @@ function handleGlobalKeydown(event) {
     return;
   }
 
+  let filtered = areas;
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filtered = areas.filter(a => 
+      (a.name || '').toLowerCase().includes(q) || 
+      (a.description || '').toLowerCase().includes(q)
+    );
+  }
+
   if (!selectedAreaId || editingAreaId) {
-    if (event.key === 'ArrowDown' && areas.length > 0) {
+    if (event.key === 'ArrowDown' && filtered.length > 0) {
       event.preventDefault();
-      updateSelection(areas[0].id);
+      updateSelection(filtered[0].id);
     }
     return;
   }
 
-  const idx = areas.findIndex(a => a.id === selectedAreaId);
+  const idx = filtered.findIndex(a => a.id === selectedAreaId);
   if (idx === -1) return;
 
   switch (event.key) {
     case 'ArrowDown':
       event.preventDefault();
-      if (idx < areas.length - 1) {
-        updateSelection(areas[idx + 1].id);
+      if (idx < filtered.length - 1) {
+        updateSelection(filtered[idx + 1].id);
       }
       break;
     case 'ArrowUp':
       event.preventDefault();
       if (idx > 0) {
-        updateSelection(areas[idx - 1].id);
+        updateSelection(filtered[idx - 1].id);
       } else {
         updateSelection(null);
       }
