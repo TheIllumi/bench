@@ -68,6 +68,9 @@ export function focusAndSelectParkedTask(itemId) {
 
 function handleItemChange() {
   items = Repository.getByModule('parking-lot').sort((a, b) => b.updatedAt - a.updatedAt);
+  if (filterAreaId && !Repository.getAreas().find(a => a.id === filterAreaId && !a.archived)) {
+    filterAreaId = '';
+  }
   renderView();
 }
 

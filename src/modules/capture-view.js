@@ -51,6 +51,9 @@ export function renderCaptureView(container) {
 
 function handleItemChange() {
   items = Repository.getByModule('capture').sort((a, b) => b.createdAt - a.createdAt);
+  if (filterAreaId && !Repository.getAreas().find(a => a.id === filterAreaId && !a.archived)) {
+    filterAreaId = '';
+  }
   renderView();
 }
 

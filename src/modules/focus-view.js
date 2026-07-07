@@ -87,6 +87,9 @@ function setSelectedTaskId(id) {
 
 function handleItemChange() {
   tasks = Repository.getByModule('focus');
+  if (filterAreaId && !Repository.getAreas().find(a => a.id === filterAreaId && !a.archived)) {
+    filterAreaId = '';
+  }
   renderView();
 }
 
