@@ -393,27 +393,44 @@ function buildAreaRow(area) {
     row.appendChild(input);
     requestAnimationFrame(() => { input.focus(); input.select(); });
   } else {
-    // Add folder icon on the left
+    // We want the row itself to be a vertical flex column
+    row.style.display = 'flex';
+    row.style.flexDirection = 'column';
+    row.style.gap = '2px';
+    row.style.width = '100%';
+
+    // Line 1: Top row (Folder icon + Name/Description + Updated Time)
+    const line1 = document.createElement('div');
+    line1.style.display = 'flex';
+    line1.style.alignItems = 'center';
+    line1.style.width = '100%';
+    line1.style.minWidth = '0';
+
+    // Add folder icon on the left of Line 1
     const iconSpan = document.createElement('span');
     iconSpan.innerHTML = FOLDER_ICON;
     iconSpan.style.display = 'flex';
     iconSpan.style.alignItems = 'center';
     iconSpan.style.flexShrink = '0';
     iconSpan.style.marginRight = '10px';
-    row.appendChild(iconSpan);
+    line1.appendChild(iconSpan);
 
     // Content container for name & optional description
     const content = document.createElement('div');
     content.className = 'area-row-content';
     content.style.display = 'flex';
-    content.style.flexDirection = 'column';
-    content.style.gap = '2px';
+    content.style.flexDirection = 'row';
+    content.style.alignItems = 'baseline';
+    content.style.gap = 'var(--space-sm)';
     content.style.flex = '1';
     content.style.minWidth = '0';
 
     const nameSpan = document.createElement('span');
     nameSpan.className = 'task-title';
     nameSpan.textContent = area.name;
+    nameSpan.style.whiteSpace = 'nowrap';
+    nameSpan.style.overflow = 'hidden';
+    nameSpan.style.textOverflow = 'ellipsis';
     content.appendChild(nameSpan);
 
     if (area.description) {
@@ -425,19 +442,31 @@ function buildAreaRow(area) {
       descSpan.style.whiteSpace = 'nowrap';
       descSpan.style.overflow = 'hidden';
       descSpan.style.textOverflow = 'ellipsis';
+      descSpan.style.flex = '1'; // Let the description shrink first
       content.appendChild(descSpan);
     }
-    row.appendChild(content);
+    line1.appendChild(content);
 
-    // Right-aligned container for statistics & time-ago
-    const rightContainer = document.createElement('div');
-    rightContainer.className = 'area-row-right';
-    rightContainer.style.display = 'flex';
-    rightContainer.style.flexDirection = 'column';
-    rightContainer.style.alignItems = 'flex-end';
-    rightContainer.style.gap = '2px';
-    rightContainer.style.marginLeft = 'auto';
-    rightContainer.style.flexShrink = '0';
+    // "Updated Xh ago" on the right of Line 1
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'area-updated-time';
+    timeSpan.style.fontSize = '10px';
+    timeSpan.style.color = 'var(--color-text-muted)';
+    timeSpan.style.fontFamily = 'var(--font-mono)';
+    timeSpan.style.marginLeft = 'auto';
+    timeSpan.style.flexShrink = '0';
+    timeSpan.textContent = formatTimeAgo(area.updatedAt);
+    line1.appendChild(timeSpan);
+
+    row.appendChild(line1);
+
+    // Line 2: Bottom row (Statistics left-aligned under the content)
+    const line2 = document.createElement('div');
+    line2.style.display = 'flex';
+    line2.style.alignItems = 'center';
+    line2.style.width = '100%';
+    line2.style.paddingLeft = '24px'; // 14px icon + 10px marginRight = 24px to align under content
+    line2.style.boxSizing = 'border-box';
 
     // Compute active, completed, parked, archived counts for the Area
     const allItems = Repository.getAll().filter(item => item.type !== 'area' && item.areaId === area.id);
@@ -451,18 +480,9 @@ function buildAreaRow(area) {
     statsSpan.style.fontSize = 'var(--font-size-xs)';
     statsSpan.style.color = 'var(--color-text-muted)';
     statsSpan.textContent = `${activeCount} active • ${completedCount} completed • ${parkedCount} parked • ${archivedCount} archived`;
-    rightContainer.appendChild(statsSpan);
+    line2.appendChild(statsSpan);
 
-    // "Updated Xh ago"
-    const timeSpan = document.createElement('span');
-    timeSpan.className = 'area-updated-time';
-    timeSpan.style.fontSize = '10px';
-    timeSpan.style.color = 'var(--color-text-muted)';
-    timeSpan.style.fontFamily = 'var(--font-mono)';
-    timeSpan.textContent = formatTimeAgo(area.updatedAt);
-    rightContainer.appendChild(timeSpan);
-
-    row.appendChild(rightContainer);
+    row.appendChild(line2);
   }
 
   // TUI plain text hover actions
