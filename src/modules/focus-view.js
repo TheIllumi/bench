@@ -7,6 +7,7 @@ import { createInput } from '../ui/input.js';
 import { createCheckbox } from '../ui/checkbox.js';
 import { crossfade } from '../ui/utils.js';
 import { createSearchInput } from '../ui/search.js';
+import { openAreaPicker } from '../ui/area-picker.js';
 
 let tasks = [];
 let editingTaskId = null;
@@ -372,7 +373,12 @@ function buildTaskRow(task) {
     assignBtn.setAttribute('aria-label', 'Assign Area');
     assignBtn.setAttribute('tabindex', '-1');
     assignBtn.textContent = 'area';
-    assignBtn.addEventListener('click', (e) => { e.stopPropagation(); openAreaPicker(e, task); });
+    assignBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openAreaPicker(e, task, (areaId) => {
+        Repository.update(task.id, { areaId });
+      });
+    });
     actions.appendChild(assignBtn);
 
     const parkBtn = document.createElement('button');
@@ -686,65 +692,4 @@ function startDrag(event, row) {
   handle.addEventListener('pointercancel', onUp);
 }
 
-/**
- * Open floating Area picker dropdown next to active task element.
- */
-function openAreaPicker(e, task) {
-  e.stopPropagation();
 
-  // Remove existing dropdowns
-  const existing = document.querySelector('.area-picker-dropdown');
-  if (existing) existing.remove();
-
-  const rect = e.target.getBoundingClientRect();
-  const picker = document.createElement('div');
-  picker.className = 'area-picker-dropdown';
-  
-  // Align picker below the action button
-  picker.style.top = `${rect.bottom + window.scrollY}px`;
-  picker.style.left = `${rect.left + window.scrollX}px`;
-
-  const areasList = Repository.getAreas();
-
-  if (areasList.length === 0) {
-    const disabledItem = document.createElement('div');
-    disabledItem.className = 'area-picker-item disabled';
-    disabledItem.textContent = 'No Areas created';
-    picker.appendChild(disabledItem);
-  } else {
-    // [None] selection to un-assign the area
-    const noneItem = document.createElement('div');
-    noneItem.className = 'area-picker-item';
-    noneItem.textContent = '[None]';
-    noneItem.addEventListener('click', () => {
-      Repository.update(task.id, { areaId: null });
-      picker.remove();
-    });
-    picker.appendChild(noneItem);
-
-    areasList.forEach(area => {
-      const item = document.createElement('div');
-      item.className = 'area-picker-item';
-      item.textContent = `[${area.name}]`;
-      if (task.areaId === area.id) {
-        item.classList.add('active');
-      }
-      item.addEventListener('click', () => {
-        Repository.update(task.id, { areaId: area.id });
-        picker.remove();
-      });
-      picker.appendChild(item);
-    });
-  }
-
-  document.body.appendChild(picker);
-
-  // Close dropdown on click outside
-  const closePicker = (event) => {
-    if (!picker.contains(event.target) && event.target !== e.target) {
-      picker.remove();
-      document.removeEventListener('mousedown', closePicker);
-    }
-  };
-  document.addEventListener('mousedown', closePicker);
-}
