@@ -12,6 +12,7 @@ const SAVED_FADE_MS = 2000;
 
 let panelEl = null;
 let currentItem = null;
+let previousItem = null;
 let debounceTimer = null;
 let pendingField = null;
 let pendingValue = null;
@@ -116,6 +117,9 @@ export const Inspector = {
       return;
     }
     this.flushPendingSaves();
+    if (currentItem && currentItem.id !== item.id) {
+      previousItem = { ...currentItem };
+    }
     currentItem = { ...item };
     panelEl.classList.add('open');
     renderItem();
@@ -128,6 +132,7 @@ export const Inspector = {
     if (!panelEl) return;
     this.flushPendingSaves();
     currentItem = null;
+    previousItem = null;
     panelEl.classList.remove('open');
     clearDomRefs();
     renderEmpty();
@@ -276,7 +281,9 @@ function renderItem() {
     <div class="inspector-resize-handle" id="inspector-resize-handle"></div>
     <div class="inspector-content">
       <div class="inspector-header">
-        <span class="inspector-title-label">details</span>
+        <span class="inspector-title-label">
+          ${(!isArea && previousItem && previousItem.type === 'area' && currentItem.areaId === previousItem.id) ? `<span class="inspector-breadcrumb-link" style="cursor: pointer; color: var(--color-text-muted); text-decoration: underline;" data-area-id="${previousItem.id}">${escapeHtml(previousItem.name)}</span> &gt; ` : ''}details
+        </span>
         <div class="inspector-header-right">
           <span class="inspector-save-indicator" id="inspector-save-indicator"></span>
           <button class="inspector-close-btn" id="inspector-close-btn" aria-label="Close inspector">[&times;]</button>
@@ -369,6 +376,19 @@ function renderItem() {
         }
       });
     }
+  }
+
+  // Bind breadcrumb links
+  const breadcrumb = panelEl.querySelector('.inspector-breadcrumb-link');
+  if (breadcrumb) {
+    breadcrumb.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const areaId = breadcrumb.getAttribute('data-area-id');
+      const area = Repository.getAreas().find(a => a.id === areaId);
+      if (area) {
+        EventBus.emit('itemSelected', area);
+      }
+    });
   }
 
   // Bind close button
@@ -583,9 +603,10 @@ function handleNotesKeydown(e) {
     e.preventDefault();
     if (debounceTimer) clearTimeout(debounceTimer);
     debounceTimer = null;
+    const fieldName = currentItem.type === 'area' ? 'description' : 'notes';
     EventBus.emit('inspectorUpdate', {
       id: currentItem.id,
-      field: 'notes',
+      field: fieldName,
       value: notesTextarea.value
     });
     pendingField = null;
@@ -604,10 +625,17 @@ function handleNotesKeydown(e) {
 // --- Panel Keyboard Handler ---
 
 function handlePanelKeydown(e) {
-  // Escape closes the Inspector
+  // Escape closes the Inspector (or returns to Area if viewing an Area Task)
   if (e.key === 'Escape') {
     e.preventDefault();
     e.stopPropagation();
+    if (currentItem && currentItem.type !== 'area' && previousItem && previousItem.type === 'area' && currentItem.areaId === previousItem.id) {
+      const area = Repository.getAreas().find(a => a.id === previousItem.id);
+      if (area) {
+        EventBus.emit('itemSelected', area);
+        return;
+      }
+    }
     Inspector.close();
     EventBus.emit('itemSelected', null);
     return;
