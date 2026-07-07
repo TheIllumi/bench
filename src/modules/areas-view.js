@@ -131,8 +131,8 @@ function renderView() {
 
 function renderEmpty() {
   containerEl.innerHTML = `
-    <div class="placeholder-view" style="align-items: center; text-align: center; height: auto; padding: var(--space-lg) 0; margin: 0 auto;">
-      <span style="color: var(--color-text-muted); display: block; margin-bottom: var(--space-md);">${FOLDER_ICON}</span>
+    <div class="placeholder-view" style="height: auto; padding: var(--space-lg) 0; margin: 0 auto;">
+      <span style="color: var(--color-text-muted); display: block; margin-bottom: var(--space-sm);">${FOLDER_ICON}</span>
       <h2>areas</h2>
       <p style="margin-bottom: 2px;">No Areas yet.</p>
       <p style="color: var(--color-text-secondary); margin: 0; font-size: var(--font-size-xs);">Areas help organize related work.</p>
