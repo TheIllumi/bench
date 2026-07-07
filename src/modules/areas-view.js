@@ -3,14 +3,12 @@ import { EventBus } from '../core/event-bus.js';
 import { ToastService } from '../ui/toast.js';
 import { DialogService } from '../ui/dialog.js';
 import { createInput } from '../ui/input.js';
-import { createCheckbox } from '../ui/checkbox.js';
 import { crossfade } from '../ui/utils.js';
 
 const FOLDER_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="area-folder-icon" style="color: var(--color-text-muted); flex-shrink: 0; margin-top: 2px;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg>`;
 
 let areas = [];
 let selectedAreaId = null;
-let selectedTaskId = null;
 let editingAreaId = null;
 let containerEl = null;
 let isCreating = false;
@@ -107,22 +105,17 @@ function setSelectedAreaId(id) {
   if (id) {
     const area = areas.find(a => a.id === id) || Repository.getAreas().find(a => a.id === id);
     EventBus.emit('itemSelected', area || null);
-    if (area) {
-      EventBus.emit('viewTitleChanged', { title: 'Areas', breadcrumb: area.name });
-    }
   } else {
     EventBus.emit('itemSelected', null);
-    EventBus.emit('viewTitleChanged', { title: 'Areas', breadcrumb: null });
   }
+  EventBus.emit('viewTitleChanged', { title: 'Areas', breadcrumb: null });
 }
 
 // --- Rendering ---
 function renderView() {
   if (!containerEl) return;
 
-  if (selectedAreaId) {
-    crossfade(containerEl, () => renderAreaDetail(selectedAreaId));
-  } else if (areas.length === 0 && !isCreating) {
+  if (areas.length === 0 && !isCreating) {
     crossfade(containerEl, () => renderEmpty());
   } else {
     crossfade(containerEl, () => renderAreasList());
@@ -219,144 +212,7 @@ function renderAreasList() {
   }
 }
 
-function escapeHtml(str) {
-  if (!str) return '';
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
 
-function buildAreaTaskRow(task) {
-  const row = document.createElement('div');
-  row.className = 'task-item';
-  row.setAttribute('data-task-id', task.id);
-  row.setAttribute('role', 'option');
-  row.setAttribute('tabindex', '0');
-  
-  if (task.status === 'completed') {
-    row.classList.add('completed');
-  }
-
-  // Checkbox
-  row.appendChild(createCheckbox({
-    checked: task.status === 'completed',
-    onChange: () => {
-      const nextStatus = task.status === 'completed' ? 'active' : 'completed';
-      Repository.update(task.id, { status: nextStatus });
-    }
-  }));
-
-  // Title
-  const title = document.createElement('span');
-  title.className = 'task-title';
-  title.textContent = task.title;
-  row.appendChild(title);
-
-  // Module badge
-  const badge = document.createElement('span');
-  badge.className = `task-badge badge-${task.module}`;
-  badge.textContent = task.module;
-  badge.style.marginLeft = 'auto';
-  badge.style.fontSize = '10px';
-  badge.style.fontFamily = 'var(--font-mono)';
-  badge.style.color = 'var(--color-text-muted)';
-  badge.style.border = '1px solid var(--color-border)';
-  badge.style.borderRadius = '2px';
-  badge.style.padding = '1px 4px';
-  row.appendChild(badge);
-
-  // Click handler
-  row.addEventListener('click', (e) => {
-    e.stopPropagation();
-    selectedTaskId = task.id;
-    updateAreaDetailHighlights();
-    EventBus.emit('itemSelected', task);
-  });
-
-  return row;
-}
-
-function updateAreaDetailHighlights() {
-  const listEl = document.getElementById('area-tasks-list');
-  if (!listEl) return;
-  listEl.querySelectorAll('.task-item').forEach(el => {
-    const taskId = el.getAttribute('data-task-id');
-    if (taskId === selectedTaskId) {
-      el.classList.add('selected');
-      el.setAttribute('aria-selected', 'true');
-      el.focus();
-    } else {
-      el.classList.remove('selected');
-      el.setAttribute('aria-selected', 'false');
-    }
-  });
-}
-
-function renderAreaDetail(areaId) {
-  const area = areas.find(a => a.id === areaId) || Repository.getAreas().find(a => a.id === areaId);
-  if (!area) {
-    setSelectedAreaId(null);
-    renderView();
-    return;
-  }
-
-  const allTasks = Repository.getAll().filter(item => 
-    item.type !== 'area' && 
-    item.areaId === areaId && 
-    item.module !== 'archive'
-  );
-
-  containerEl.innerHTML = `
-    <div class="focus-container">
-      <div class="area-breadcrumbs" style="font-family: var(--font-mono); font-size: var(--font-size-xs); color: var(--color-text-muted); margin-bottom: var(--space-sm); user-select: none;">
-        <span id="breadcrumb-areas" style="color: var(--color-accent-blue); text-decoration: underline; cursor: pointer;">Areas</span>
-        <span> &gt; </span>
-        <span>${escapeHtml(area.name)}</span>
-      </div>
-
-      <div class="area-workspace-header" style="margin-bottom: var(--space-md);">
-        <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--color-text-primary); margin-bottom: var(--space-2xs);">${escapeHtml(area.name)}</h2>
-        ${area.description ? `<p style="color: var(--color-text-secondary); font-size: var(--font-size-sm); margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHtml(area.description)}</p>` : `<p style="color: var(--color-text-muted); font-size: var(--font-size-sm); font-style: italic; margin: 0;">No description provided.</p>`}
-      </div>
-
-      <div class="tasks-section">
-        <h3 style="font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: var(--space-sm); border-bottom: 1px solid var(--color-border); padding-bottom: var(--space-2xs);">Tasks</h3>
-        <div class="tasks-list-active" id="area-tasks-list" role="listbox" aria-label="Tasks in ${escapeHtml(area.name)}"></div>
-      </div>
-    </div>
-  `;
-
-  // Bind breadcrumb click
-  const breadcrumbAreas = document.getElementById('breadcrumb-areas');
-  if (breadcrumbAreas) {
-    breadcrumbAreas.addEventListener('click', () => {
-      setSelectedAreaId(null);
-      selectedTaskId = null;
-      renderView();
-    });
-  }
-
-  const listEl = document.getElementById('area-tasks-list');
-  if (allTasks.length === 0) {
-    listEl.innerHTML = `
-      <div class="placeholder-view" style="height: auto; padding: var(--space-lg) 0;">
-        <span style="color: var(--color-text-muted); display: block; margin-bottom: var(--space-sm);">${FOLDER_ICON}</span>
-        <p style="color: var(--color-text-primary); font-weight: 500; margin: 0 0 4px 0;">No tasks in this Area.</p>
-        <p style="color: var(--color-text-secondary); margin: 0 0 var(--space-xs) 0; font-size: var(--font-size-xs);">Assign an existing task or create a new one.</p>
-        <p style="color: var(--color-text-muted); margin: 0; font-size: var(--font-size-xs);">Press <span style="color: var(--color-accent-blue)">N</span> to create a task.</p>
-      </div>
-    `;
-  } else {
-    allTasks.forEach(task => {
-      const taskRow = buildAreaTaskRow(task);
-      listEl.appendChild(taskRow);
-    });
-    updateAreaDetailHighlights();
-  }
-}
 
 function formatTimeAgo(timestamp) {
   if (!timestamp) return 'updated long ago';
@@ -518,10 +374,6 @@ function buildAreaRow(area) {
       isCreating = false;
       renderView();
     });
-    row.addEventListener('dblclick', () => {
-      setSelectedAreaId(area.id);
-      renderView();
-    });
   }
 
   return row;
@@ -550,6 +402,7 @@ function handleCreateKeyDown(event) {
     isCreating = false;
     if (saved) {
       setSelectedAreaId(saved.id);
+      renderView();
     } else {
       renderView();
     }
@@ -658,37 +511,7 @@ function handleGlobalKeydown(event) {
   );
   if (editing) return;
 
-  if (selectedAreaId) {
-    const areaTasks = Repository.getAll().filter(item => 
-      item.type !== 'area' && 
-      item.areaId === selectedAreaId && 
-      item.module !== 'archive'
-    );
 
-    if (event.key === 'ArrowDown' && areaTasks.length > 0) {
-      event.preventDefault();
-      const currentIdx = areaTasks.findIndex(t => t.id === selectedTaskId);
-      let nextIdx = currentIdx + 1;
-      if (nextIdx >= areaTasks.length) nextIdx = areaTasks.length - 1;
-      selectedTaskId = areaTasks[nextIdx].id;
-      EventBus.emit('itemSelected', areaTasks[nextIdx]);
-      updateAreaDetailHighlights();
-    } else if (event.key === 'ArrowUp' && areaTasks.length > 0) {
-      event.preventDefault();
-      const currentIdx = areaTasks.findIndex(t => t.id === selectedTaskId);
-      let prevIdx = currentIdx - 1;
-      if (prevIdx < 0) prevIdx = 0;
-      selectedTaskId = areaTasks[prevIdx].id;
-      EventBus.emit('itemSelected', areaTasks[prevIdx]);
-      updateAreaDetailHighlights();
-    } else if (event.key === 'Escape') {
-      event.preventDefault();
-      setSelectedAreaId(null);
-      selectedTaskId = null;
-      renderView();
-    }
-    return;
-  }
 
   // Press N to create an Area (or press A)
   if (event.key.toLowerCase() === 'n' || event.key.toLowerCase() === 'a') {
