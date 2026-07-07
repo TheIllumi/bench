@@ -12,6 +12,29 @@ let selectedAreaId = null;
 let editingAreaId = null;
 let containerEl = null;
 let isCreating = false;
+let sortBy = 'updated';
+
+function loadAndSortAreas() {
+  const rawAreas = Repository.getAreas().filter(a => !a.archived);
+  
+  if (sortBy === 'alphabetical') {
+    areas = rawAreas.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  } else if (sortBy === 'created') {
+    areas = rawAreas.sort((a, b) => b.createdAt - a.createdAt);
+  } else if (sortBy === 'active') {
+    areas = rawAreas.sort((a, b) => {
+      const allItems = Repository.getAll();
+      const activeA = allItems.filter(item => item.type !== 'area' && item.areaId === a.id && (item.module === 'focus' || item.module === 'capture') && item.status !== 'completed').length;
+      const activeB = allItems.filter(item => item.type !== 'area' && item.areaId === b.id && (item.module === 'focus' || item.module === 'capture') && item.status !== 'completed').length;
+      if (activeA !== activeB) {
+        return activeB - activeA;
+      }
+      return (a.name || '').localeCompare(b.name || '');
+    });
+  } else {
+    areas = rawAreas.sort((a, b) => b.updatedAt - a.updatedAt);
+  }
+}
 
 /**
  * Mount the Areas view.
@@ -22,7 +45,7 @@ export function renderAreasView(container) {
   containerEl.className = 'areas-view';
   container.appendChild(containerEl);
 
-  areas = Repository.getAreas().filter(a => !a.archived);
+  loadAndSortAreas();
 
   if (!selectedAreaId) editingAreaId = null;
 
@@ -58,7 +81,7 @@ export function focusAndSelectArea(areaId) {
 }
 
 function handleAreaChange() {
-  areas = Repository.getAreas().filter(a => !a.archived);
+  loadAndSortAreas();
   renderView();
 }
 
@@ -131,8 +154,16 @@ function renderEmpty() {
 function renderAreasList() {
   containerEl.innerHTML = `
     <div class="focus-container">
-      <div class="completed-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: var(--space-sm);">
-        <span>Responsibilities</span>
+      <div class="view-filter-bar" style="margin-bottom: var(--space-sm); display: flex; align-items: center; justify-content: space-between; font-family: var(--font-mono); font-size: var(--font-size-xs);">
+        <div style="display: flex; align-items: center; gap: var(--space-xs);">
+          <span style="color: var(--color-text-muted);">sort</span>
+          <select id="area-sort-select" class="inspector-select" style="width: auto; padding: 2px 4px; border: 1px solid var(--color-border);">
+            <option value="updated" ${sortBy === 'updated' ? 'selected' : ''}>Recently Updated</option>
+            <option value="alphabetical" ${sortBy === 'alphabetical' ? 'selected' : ''}>Alphabetical</option>
+            <option value="created" ${sortBy === 'created' ? 'selected' : ''}>Recently Created</option>
+            <option value="active" ${sortBy === 'active' ? 'selected' : ''}>Most Active</option>
+          </select>
+        </div>
         <button id="add-area-btn-list" class="action-btn" style="text-decoration:none;">+ New Area</button>
       </div>
       <div class="tasks-list-active" id="areas-items-list" role="listbox" aria-label="Areas list"></div>
@@ -140,6 +171,15 @@ function renderAreasList() {
   `;
 
   const listEl = document.getElementById('areas-items-list');
+
+  const sortSelect = document.getElementById('area-sort-select');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', (e) => {
+      sortBy = e.target.value;
+      loadAndSortAreas();
+      renderView();
+    });
+  }
 
   // Input row if creating
   if (isCreating) {
