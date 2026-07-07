@@ -21,7 +21,7 @@ export function openAreaPicker(e, item, onSelect) {
   picker.style.top = `${rect.bottom + window.scrollY}px`;
   picker.style.left = `${rect.left + window.scrollX}px`;
 
-  const areasList = Repository.getAreas();
+  const areasList = Repository.getAreas().filter(a => !a.archived);
 
   if (areasList.length === 0) {
     const disabledItem = document.createElement('div');
