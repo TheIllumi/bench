@@ -89,6 +89,7 @@ function cleanupEventBus() {
   EventBus.off('itemCreated', handleItemChange);
   EventBus.off('itemUpdated', handleItemChange);
   EventBus.off('itemDeleted', handleItemChange);
+  EventBus.off('itemMoved', handleItemChange);
   EventBus.off('areaCreated', handleItemChange);
   EventBus.off('areaUpdated', handleItemChange);
   EventBus.off('areaDeleted', handleItemChange);
