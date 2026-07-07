@@ -3,6 +3,7 @@ import { EventBus } from '../core/event-bus.js';
 import { ToastService } from '../ui/toast.js';
 import { crossfade, getRelativeTime } from '../ui/utils.js';
 import { createSearchInput } from '../ui/search.js';
+import { openAreaPicker } from '../ui/area-picker.js';
 
 let containerEl = null;
 let items = [];
@@ -30,6 +31,9 @@ export function renderCaptureView(container) {
   EventBus.on('itemCreated', handleItemChange);
   EventBus.on('itemUpdated', handleItemChange);
   EventBus.on('itemDeleted', handleItemChange);
+  EventBus.on('areaCreated', handleItemChange);
+  EventBus.on('areaUpdated', handleItemChange);
+  EventBus.on('areaDeleted', handleItemChange);
 
   window.removeEventListener('keydown', handleGlobalKeydown);
   window.addEventListener('keydown', handleGlobalKeydown);
@@ -63,6 +67,9 @@ function cleanupEventBus() {
   EventBus.off('itemCreated', handleItemChange);
   EventBus.off('itemUpdated', handleItemChange);
   EventBus.off('itemDeleted', handleItemChange);
+  EventBus.off('areaCreated', handleItemChange);
+  EventBus.off('areaUpdated', handleItemChange);
+  EventBus.off('areaDeleted', handleItemChange);
 }
 
 function cleanupListeners() {
@@ -213,7 +220,17 @@ function buildCaptureRow(item) {
   // Left Title
   const title = document.createElement('span');
   title.className = 'task-title';
-  title.textContent = item.title;
+
+  const area = item.areaId ? Repository.getAreas().find(a => a.id === item.areaId) : null;
+  if (area) {
+    const areaLabel = document.createElement('span');
+    areaLabel.className = 'task-area-label';
+    areaLabel.textContent = `[${area.name}] `;
+    title.appendChild(areaLabel);
+  }
+
+  const textNode = document.createTextNode(item.title);
+  title.appendChild(textNode);
   row.appendChild(title);
 
   // Middle Relative Time
@@ -233,6 +250,18 @@ function buildCaptureRow(item) {
   focusBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     moveToFocus(item.id);
+  });
+
+  const assignBtn = document.createElement('button');
+  assignBtn.className = 'action-btn';
+  assignBtn.textContent = 'area';
+  assignBtn.setAttribute('aria-label', 'Assign Area');
+  assignBtn.setAttribute('tabindex', '-1');
+  assignBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openAreaPicker(e, item, (areaId) => {
+      Repository.update(item.id, { areaId });
+    });
   });
 
   const parkBtn = document.createElement('button');
@@ -263,6 +292,7 @@ function buildCaptureRow(item) {
   });
 
   actions.appendChild(focusBtn);
+  actions.appendChild(assignBtn);
   actions.appendChild(parkBtn);
   actions.appendChild(archiveBtn);
   actions.appendChild(delBtn);
