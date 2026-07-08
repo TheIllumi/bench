@@ -226,6 +226,7 @@ function buildCaptureRow(item) {
   row.setAttribute('tabindex', '0');
 
   const isCompleted = item.status === 'completed';
+  const isFocused = item.focused && item.status === 'active';
 
   if (selectedItemId === item.id) {
     row.classList.add('selected');
@@ -234,6 +235,10 @@ function buildCaptureRow(item) {
 
   if (isCompleted) {
     row.classList.add('completed');
+  }
+
+  if (isFocused) {
+    row.classList.add('focused');
   }
 
   // Checkbox

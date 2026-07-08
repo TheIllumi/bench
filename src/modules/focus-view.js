@@ -315,6 +315,10 @@ function buildTaskRow(task) {
     if (task.id === selectedTaskId) row.classList.add('selected');
   }
 
+  if (task.focused && task.status === 'active') {
+    row.classList.add('focused');
+  }
+
   const isEditing = task.id === editingTaskId && !isCompleted;
 
   // Drag handle (active tasks only)

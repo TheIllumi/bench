@@ -242,6 +242,10 @@ function buildParkRow(item) {
     row.classList.add('selected');
   }
 
+  if (item.focused && item.status === 'active') {
+    row.classList.add('focused');
+  }
+
   const isEditing = item.id === editingItemId;
 
   if (isEditing) {

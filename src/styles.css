@@ -587,6 +587,10 @@ body {
   color: var(--color-text-secondary);
 }
 
+.task-item.focused .task-title {
+  color: var(--color-accent-blue);
+}
+
 .task-edit-input {
   flex-grow: 1;
   background: transparent;
