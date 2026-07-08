@@ -1,4 +1,8 @@
+import { SettingsStore } from '../core/settings-store.js';
+
 export function renderSettingsView(container) {
+  const settings = SettingsStore.load();
+
   container.innerHTML = `
     <div class="focus-container settings-view">
       <div style="display: flex; flex-direction: column; gap: var(--space-md);">
@@ -7,14 +11,42 @@ export function renderSettingsView(container) {
         <div>
           <div class="completed-header">General</div>
           <div class="settings-list">
+            
             <div class="settings-item">
-              <span class="settings-label">Appearance</span>
-              <span class="settings-value">Dark Mode</span>
+              <span class="settings-label">Theme</span>
+              <select id="settings-theme" class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);">
+                <option value="system" ${settings.theme === 'system' ? 'selected' : ''}>System</option>
+                <option value="dark" ${settings.theme === 'dark' ? 'selected' : ''}>Dark</option>
+                <option value="light" ${settings.theme === 'light' ? 'selected' : ''}>Light</option>
+              </select>
             </div>
+
             <div class="settings-item">
-              <span class="settings-label">Behavior</span>
-              <span class="settings-value">Default</span>
+              <span class="settings-label">Accent Color</span>
+              <select id="settings-accent" class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);" disabled>
+                <option value="blue">Blue (Default)</option>
+              </select>
             </div>
+
+            <div class="settings-item">
+              <span class="settings-label">Compact Mode</span>
+              <input type="checkbox" id="settings-compact" style="cursor: pointer;" ${settings.compactMode ? 'checked' : ''}>
+            </div>
+
+            <div class="settings-item">
+              <span class="settings-label">Font Size</span>
+              <select id="settings-font-size" class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);">
+                <option value="small" ${settings.fontSize === 'small' ? 'selected' : ''}>Small</option>
+                <option value="medium" ${settings.fontSize === 'medium' ? 'selected' : ''}>Medium</option>
+                <option value="large" ${settings.fontSize === 'large' ? 'selected' : ''}>Large</option>
+              </select>
+            </div>
+
+            <div class="settings-item">
+              <span class="settings-label">Reduce Animations</span>
+              <input type="checkbox" id="settings-reduce-animations" style="cursor: pointer;" ${settings.reduceAnimations ? 'checked' : ''}>
+            </div>
+
           </div>
         </div>
 
@@ -97,4 +129,26 @@ export function renderSettingsView(container) {
       </div>
     </div>
   `;
+
+  // Bind change events to save configuration state
+  const themeSelect = container.querySelector('#settings-theme');
+  const compactCheck = container.querySelector('#settings-compact');
+  const fontSizeSelect = container.querySelector('#settings-font-size');
+  const reduceAnimCheck = container.querySelector('#settings-reduce-animations');
+
+  function updateSettings() {
+    const nextSettings = {
+      theme: themeSelect.value,
+      accentColor: 'blue',
+      compactMode: compactCheck.checked,
+      fontSize: fontSizeSelect.value,
+      reduceAnimations: reduceAnimCheck.checked
+    };
+    SettingsStore.save(nextSettings);
+  }
+
+  themeSelect.addEventListener('change', updateSettings);
+  compactCheck.addEventListener('change', updateSettings);
+  fontSizeSelect.addEventListener('change', updateSettings);
+  reduceAnimCheck.addEventListener('change', updateSettings);
 }

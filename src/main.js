@@ -6,6 +6,7 @@ import { Inspector } from './ui/inspector.js';
 import { Repository } from './core/repository.js';
 import { EventBus } from './core/event-bus.js';
 import { ToastService } from './ui/toast.js';
+import { SettingsStore } from './core/settings-store.js';
 
 function toggleSidebar() {
   const sidebar = document.querySelector('.sidebar');
@@ -84,6 +85,9 @@ function initializeWindowControls() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  // Initialize settings storage & apply configuration rules
+  SettingsStore.initialize();
+
   // Initialize custom window titlebar controls
   initializeWindowControls();
 
