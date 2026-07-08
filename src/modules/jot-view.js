@@ -1,4 +1,5 @@
 import { JotStore } from '../core/jot-store.js';
+import { ToastService } from '../ui/toast.js';
 
 /**
  * Jot View Module
@@ -21,6 +22,14 @@ export function renderJotView(container) {
   // Auto-save on input
   textarea.addEventListener('input', () => {
     JotStore.saveJot(textarea.value);
+  });
+
+  // Support Ctrl+S / Cmd+S manual save confirmation
+  textarea.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      ToastService.show('Saved.', 'success');
+    }
   });
 
   wrapper.appendChild(textarea);
