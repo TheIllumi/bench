@@ -97,6 +97,7 @@ function handleSearch(query) {
 
   const active = filteredItems.filter(t => t.status === 'active');
   const completed = filteredItems.filter(t => t.status === 'completed');
+  const { ordered: orderedActive } = getOrderedActiveTasks(active);
 
   if (items.length === 0) {
     renderEmpty(contentArea);
@@ -107,7 +108,7 @@ function handleSearch(query) {
       </div>
     `;
   } else {
-    renderCaptureList(contentArea, active, completed);
+    renderCaptureList(contentArea, orderedActive, completed);
   }
 }
 
@@ -156,6 +157,7 @@ function renderView() {
 
   const active = filteredItems.filter(t => t.status === 'active');
   const completed = filteredItems.filter(t => t.status === 'completed');
+  const { ordered: orderedActive } = getOrderedActiveTasks(active);
 
   if (items.length === 0) {
     renderEmpty(contentArea);
@@ -166,7 +168,7 @@ function renderView() {
       </div>
     `;
   } else {
-    renderCaptureList(contentArea, active, completed);
+    renderCaptureList(contentArea, orderedActive, completed);
   }
 }
 
@@ -215,10 +217,30 @@ function renderCaptureList(targetEl, active, completed) {
   `;
 
   const listEl = document.getElementById('capture-items-list');
-  active.forEach(item => {
+  const { noAreaTasks, activeAreas, areaTasksMap } = getOrderedActiveTasks(active);
+
+  // 1. Render default section (no area)
+  noAreaTasks.forEach(item => {
     listEl.appendChild(buildCaptureRow(item));
   });
 
+  // 2. Render each Area section with its header
+  activeAreas.forEach(area => {
+    const tasksInArea = areaTasksMap[area.id] || [];
+    if (tasksInArea.length > 0) {
+      const header = document.createElement('div');
+      header.className = 'completed-header';
+      header.style.marginTop = 'var(--space-md)';
+      header.textContent = area.name;
+      listEl.appendChild(header);
+
+      tasksInArea.forEach(item => {
+        listEl.appendChild(buildCaptureRow(item));
+      });
+    }
+  });
+
+  // 3. Render completed section
   const completedListEl = document.getElementById('completed-tasks-completed-list');
   if (completedListEl) {
     completed.forEach(item => {
@@ -413,6 +435,28 @@ function deleteItem(itemId) {
   ToastService.show('Deleted.', 'info');
 }
 
+function getOrderedActiveTasks(activeTasks) {
+  const activeAreas = Repository.getAreas().filter(a => !a.archived).sort((a, b) => a.name.localeCompare(b.name));
+  const activeAreaIds = new Set(activeAreas.map(a => a.id));
+
+  const noAreaTasks = activeTasks.filter(t => !t.areaId || !activeAreaIds.has(t.areaId));
+  const areaTasksMap = {};
+  activeTasks.forEach(t => {
+    if (t.areaId && activeAreaIds.has(t.areaId)) {
+      if (!areaTasksMap[t.areaId]) areaTasksMap[t.areaId] = [];
+      areaTasksMap[t.areaId].push(t);
+    }
+  });
+
+  const ordered = [...noAreaTasks];
+  activeAreas.forEach(area => {
+    const tasksInArea = areaTasksMap[area.id] || [];
+    ordered.push(...tasksInArea);
+  });
+
+  return { ordered, activeAreas, areaTasksMap, noAreaTasks };
+}
+
 // --- Keyboard Navigation ---
 function handleGlobalKeydown(event) {
   if (!containerEl || !document.body.contains(containerEl)) {
@@ -429,7 +473,8 @@ function handleGlobalKeydown(event) {
   if (editing) return;
 
   const active = items.filter(t => t.status === 'active');
-  let filtered = filterAreaId ? active.filter(t => t.areaId === filterAreaId) : active;
+  const { ordered: orderedActive } = getOrderedActiveTasks(active);
+  let filtered = filterAreaId ? orderedActive.filter(t => t.areaId === filterAreaId) : orderedActive;
   if (searchQuery) {
     const q = searchQuery.toLowerCase();
     filtered = filtered.filter(t => (t.title || '').toLowerCase().includes(q));
