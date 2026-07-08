@@ -1451,10 +1451,6 @@ body {
   max-width: 560px;
   margin: 0 auto;
   padding-bottom: var(--space-xl);
-  height: 100%;
-  overflow-y: auto;
-  padding-right: var(--space-xs);
-  box-sizing: border-box;
 }
 
 .settings-list {

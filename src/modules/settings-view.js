@@ -4,7 +4,7 @@ export function renderSettingsView(container) {
   const settings = SettingsStore.load();
 
   container.innerHTML = `
-    <div class="focus-container settings-view">
+    <div class="settings-view">
       <div style="display: flex; flex-direction: column; gap: var(--space-md);">
         
         <!-- General -->
