@@ -399,7 +399,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  height: 100%;
+  min-height: 100%;
 }
 
 /* Task Input Field */
