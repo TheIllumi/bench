@@ -468,8 +468,7 @@ function syncAreaTasks() {
       <div class="inspector-area-tasks-empty" style="font-family: var(--font-mono); font-size: var(--font-size-xs); color: var(--color-text-muted); line-height: 1.6; padding-top: var(--space-xs);">
         No tasks yet.<br>
         Tasks assigned to this Area<br>
-        will appear here.<br><br>
-        Press <span style="color: var(--color-accent-blue)">n</span> to create one.
+        will appear here.
       </div>
     `;
   } else {
