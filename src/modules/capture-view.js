@@ -349,7 +349,10 @@ function toggleCompletion(itemId) {
     setSelectedItemId(null);
   }
 
-  Repository.update(itemId, { status: nextStatus });
+  const updated = Repository.update(itemId, { status: nextStatus });
+  if (nextStatus === 'active' && item.focused && updated && !updated.focused) {
+    return;
+  }
   ToastService.show(nextStatus === 'completed' ? 'Task completed.' : 'Task reopened.', nextStatus === 'completed' ? 'success' : 'info');
 }
 

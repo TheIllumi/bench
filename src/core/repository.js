@@ -158,6 +158,9 @@ export const Repository = {
       if (activeFocusCount >= 3) {
         // Clear focus state because Focus is full, and show toast
         updates.focused = false;
+        if (item.module === 'focus') {
+          updates.module = 'capture';
+        }
         ToastService.show("Focus is full. Task restored.", "info");
       } else {
         // Keep focused: true
