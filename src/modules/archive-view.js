@@ -5,6 +5,7 @@ import { DialogService } from '../ui/dialog.js';
 import { crossfade, getRelativeTime } from '../ui/utils.js';
 import { createSearchInput } from '../ui/search.js';
 import { showAreaDeleteDialog } from '../ui/area-delete-dialog.js';
+import { SettingsStore } from '../core/settings-store.js';
 
 const FOLDER_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="area-folder-icon" style="color: var(--color-text-muted); flex-shrink: 0; margin-top: 2px;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg>`;
 
@@ -489,19 +490,26 @@ function deleteItem(itemId) {
     return;
   }
 
-  DialogService.confirm({
-    title: 'Delete Archived Item',
-    message: 'Are you sure you want to permanently delete this archived item from your history?',
-    confirmText: 'Delete permanently',
-    cancelText: 'Cancel',
-    variant: 'danger'
-  }).then((confirmed) => {
-    if (confirmed) {
-      Repository.remove(itemId);
-      if (selectedItemId === itemId) setSelectedItemId(null);
-      ToastService.show('Deleted permanently.', 'info');
-    }
-  });
+  const performDelete = () => {
+    Repository.remove(itemId);
+    if (selectedItemId === itemId) setSelectedItemId(null);
+    ToastService.show('Deleted permanently.', 'info');
+  };
+
+  const settings = SettingsStore.load();
+  if (settings.confirmDelete) {
+    DialogService.confirm({
+      title: 'Delete Archived Item',
+      message: 'Are you sure you want to permanently delete this archived item from your history?',
+      confirmText: 'Delete permanently',
+      cancelText: 'Cancel',
+      variant: 'danger'
+    }).then((confirmed) => {
+      if (confirmed) performDelete();
+    });
+  } else {
+    performDelete();
+  }
 }
 
 // --- Keyboard Navigation ---

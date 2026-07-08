@@ -10,41 +10,75 @@ export function renderSettingsView(container) {
         <!-- General -->
         <div>
           <div class="completed-header">General</div>
-          <div class="settings-list">
+          <div class="settings-list-group">
             
-            <div class="settings-item">
-              <span class="settings-label">Theme</span>
-              <select id="settings-theme" class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);">
-                <option value="system" ${settings.theme === 'system' ? 'selected' : ''}>System</option>
-                <option value="dark" ${settings.theme === 'dark' ? 'selected' : ''}>Dark</option>
-                <option value="light" ${settings.theme === 'light' ? 'selected' : ''}>Light</option>
-              </select>
+            <div class="settings-subheader">Appearance</div>
+            <div class="settings-list">
+              <div class="settings-item">
+                <span class="settings-label">Theme</span>
+                <select id="settings-theme" class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);">
+                  <option value="system" ${settings.theme === 'system' ? 'selected' : ''}>System</option>
+                  <option value="dark" ${settings.theme === 'dark' ? 'selected' : ''}>Dark</option>
+                  <option value="light" ${settings.theme === 'light' ? 'selected' : ''}>Light</option>
+                </select>
+              </div>
+
+              <div class="settings-item">
+                <span class="settings-label">Accent Color</span>
+                <select id="settings-accent" class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);" disabled>
+                  <option value="blue">Blue (Default)</option>
+                </select>
+              </div>
+
+              <div class="settings-item">
+                <span class="settings-label">Compact Mode</span>
+                <input type="checkbox" id="settings-compact" style="cursor: pointer;" ${settings.compactMode ? 'checked' : ''}>
+              </div>
+
+              <div class="settings-item">
+                <span class="settings-label">Font Size</span>
+                <select id="settings-font-size" class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);">
+                  <option value="small" ${settings.fontSize === 'small' ? 'selected' : ''}>Small</option>
+                  <option value="medium" ${settings.fontSize === 'medium' ? 'selected' : ''}>Medium</option>
+                  <option value="large" ${settings.fontSize === 'large' ? 'selected' : ''}>Large</option>
+                </select>
+              </div>
+
+              <div class="settings-item">
+                <span class="settings-label">Reduce Animations</span>
+                <input type="checkbox" id="settings-reduce-animations" style="cursor: pointer;" ${settings.reduceAnimations ? 'checked' : ''}>
+              </div>
             </div>
 
-            <div class="settings-item">
-              <span class="settings-label">Accent Color</span>
-              <select id="settings-accent" class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);" disabled>
-                <option value="blue">Blue (Default)</option>
-              </select>
-            </div>
+            <div class="settings-subheader" style="margin-top: var(--space-md);">Behavior</div>
+            <div class="settings-list">
+              <div class="settings-item">
+                <span class="settings-label">Confirm before deleting</span>
+                <input type="checkbox" id="settings-confirm-delete" style="cursor: pointer;" ${settings.confirmDelete ? 'checked' : ''}>
+              </div>
 
-            <div class="settings-item">
-              <span class="settings-label">Compact Mode</span>
-              <input type="checkbox" id="settings-compact" style="cursor: pointer;" ${settings.compactMode ? 'checked' : ''}>
-            </div>
+              <div class="settings-item">
+                <span class="settings-label">Confirm before archiving</span>
+                <input type="checkbox" id="settings-confirm-archive" style="cursor: pointer;" ${settings.confirmArchive ? 'checked' : ''}>
+              </div>
 
-            <div class="settings-item">
-              <span class="settings-label">Font Size</span>
-              <select id="settings-font-size" class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);">
-                <option value="small" ${settings.fontSize === 'small' ? 'selected' : ''}>Small</option>
-                <option value="medium" ${settings.fontSize === 'medium' ? 'selected' : ''}>Medium</option>
-                <option value="large" ${settings.fontSize === 'large' ? 'selected' : ''}>Large</option>
-              </select>
-            </div>
+              <div class="settings-item">
+                <span class="settings-label">Default startup module</span>
+                <select id="settings-startup-module" class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);" ${settings.rememberLastModule ? 'disabled' : ''}>
+                  <option value="focus" ${settings.startupModule === 'focus' ? 'selected' : ''}>Focus</option>
+                  <option value="capture" ${settings.startupModule === 'capture' ? 'selected' : ''}>Capture</option>
+                  <option value="areas" ${settings.startupModule === 'areas' ? 'selected' : ''}>Areas</option>
+                  <option value="parking-lot" ${settings.startupModule === 'parking-lot' ? 'selected' : ''}>Parking Lot</option>
+                  <option value="archive" ${settings.startupModule === 'archive' ? 'selected' : ''}>Archive</option>
+                  <option value="jot" ${settings.startupModule === 'jot' ? 'selected' : ''}>Jot</option>
+                  <option value="settings" ${settings.startupModule === 'settings' ? 'selected' : ''}>Settings</option>
+                </select>
+              </div>
 
-            <div class="settings-item">
-              <span class="settings-label">Reduce Animations</span>
-              <input type="checkbox" id="settings-reduce-animations" style="cursor: pointer;" ${settings.reduceAnimations ? 'checked' : ''}>
+              <div class="settings-item">
+                <span class="settings-label">Remember last opened module</span>
+                <input type="checkbox" id="settings-remember-last-module" style="cursor: pointer;" ${settings.rememberLastModule ? 'checked' : ''}>
+              </div>
             </div>
 
           </div>
@@ -136,14 +170,27 @@ export function renderSettingsView(container) {
   const fontSizeSelect = container.querySelector('#settings-font-size');
   const reduceAnimCheck = container.querySelector('#settings-reduce-animations');
 
+  const confirmDeleteCheck = container.querySelector('#settings-confirm-delete');
+  const confirmArchiveCheck = container.querySelector('#settings-confirm-archive');
+  const startupModuleSelect = container.querySelector('#settings-startup-module');
+  const rememberLastModuleCheck = container.querySelector('#settings-remember-last-module');
+
   function updateSettings() {
     const nextSettings = {
       theme: themeSelect.value,
       accentColor: 'blue',
       compactMode: compactCheck.checked,
       fontSize: fontSizeSelect.value,
-      reduceAnimations: reduceAnimCheck.checked
+      reduceAnimations: reduceAnimCheck.checked,
+
+      confirmDelete: confirmDeleteCheck.checked,
+      confirmArchive: confirmArchiveCheck.checked,
+      startupModule: startupModuleSelect.value,
+      rememberLastModule: rememberLastModuleCheck.checked,
+      lastOpenedModule: settings.lastOpenedModule
     };
+
+    startupModuleSelect.disabled = rememberLastModuleCheck.checked;
     SettingsStore.save(nextSettings);
   }
 
@@ -151,4 +198,9 @@ export function renderSettingsView(container) {
   compactCheck.addEventListener('change', updateSettings);
   fontSizeSelect.addEventListener('change', updateSettings);
   reduceAnimCheck.addEventListener('change', updateSettings);
+
+  confirmDeleteCheck.addEventListener('change', updateSettings);
+  confirmArchiveCheck.addEventListener('change', updateSettings);
+  startupModuleSelect.addEventListener('change', updateSettings);
+  rememberLastModuleCheck.addEventListener('change', updateSettings);
 }

@@ -5,7 +5,14 @@ const DEFAULT_SETTINGS = {
   accentColor: 'blue',
   compactMode: false,
   fontSize: 'medium',
-  reduceAnimations: false
+  reduceAnimations: false,
+  
+  // Behavior
+  confirmDelete: true,
+  confirmArchive: false,
+  startupModule: 'focus',
+  rememberLastModule: false,
+  lastOpenedModule: 'focus'
 };
 
 export const SettingsStore = {

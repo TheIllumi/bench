@@ -7,6 +7,7 @@ import { renderSettingsView } from '../modules/settings-view.js';
 import { renderJotView } from '../modules/jot-view.js';
 import { Inspector } from '../ui/inspector.js';
 import { EventBus } from './event-bus.js';
+import { SettingsStore } from './settings-store.js';
 
 // Mapping of module names to their titles and render functions
 const viewMap = {
@@ -19,7 +20,10 @@ const viewMap = {
   'jot': { title: 'Jot', render: renderJotView }
 };
 
-let activeModule = 'focus';
+const initialSettings = SettingsStore.load();
+let activeModule = initialSettings.rememberLastModule 
+  ? (initialSettings.lastOpenedModule || 'focus') 
+  : (initialSettings.startupModule || 'focus');
 let switchViewFn = null;
 let viewTitleEl = null;
 
@@ -61,6 +65,13 @@ export function initializeViewManager() {
     }
 
     activeModule = moduleId;
+
+    // Persist last opened module state if enabled
+    const currentSettings = SettingsStore.load();
+    if (currentSettings.rememberLastModule) {
+      currentSettings.lastOpenedModule = moduleId;
+      SettingsStore.save(currentSettings);
+    }
 
     // Flush pending Inspector saves and close it before switching views
     Inspector.flushPendingSaves();

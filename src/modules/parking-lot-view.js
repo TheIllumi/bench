@@ -6,6 +6,7 @@ import { createInput } from '../ui/input.js';
 import { crossfade, getRelativeTime } from '../ui/utils.js';
 import { createSearchInput } from '../ui/search.js';
 import { openAreaPicker } from '../ui/area-picker.js';
+import { SettingsStore } from '../core/settings-store.js';
 
 let containerEl = null;
 let items = [];
@@ -378,26 +379,55 @@ function moveToCapture(itemId) {
 }
 
 function moveToArchive(itemId) {
-  Repository.move(itemId, 'archive');
-  if (selectedItemId === itemId) setSelectedItemId(null);
-  ToastService.show('Archived.', 'success');
+  const item = Repository.get(itemId);
+  if (!item) return;
+
+  const performArchive = () => {
+    Repository.move(itemId, 'archive');
+    if (selectedItemId === itemId) setSelectedItemId(null);
+    ToastService.show('Archived.', 'success');
+  };
+
+  const settings = SettingsStore.load();
+  if (settings.confirmArchive) {
+    DialogService.confirm({
+      title: 'Archive Item',
+      message: `Are you sure you want to archive "${item.title || 'Untitled'}"?`,
+      confirmText: 'Archive',
+      variant: 'primary'
+    }).then(confirmed => {
+      if (confirmed) performArchive();
+    });
+  } else {
+    performArchive();
+  }
 }
 
 function deleteItem(itemId) {
-  DialogService.confirm({
-    title: 'Delete Parked Item',
-    message: 'Are you sure you want to permanently delete this parked item?',
-    confirmText: 'Delete',
-    cancelText: 'Cancel',
-    variant: 'danger'
-  }).then((confirmed) => {
-    if (confirmed) {
-      Repository.remove(itemId);
-      if (selectedItemId === itemId) setSelectedItemId(null);
-      if (editingItemId === itemId) editingItemId = null;
-      ToastService.show('Deleted permanently.', 'info');
-    }
-  });
+  const item = Repository.get(itemId);
+  if (!item) return;
+
+  const performDelete = () => {
+    Repository.remove(itemId);
+    if (selectedItemId === itemId) setSelectedItemId(null);
+    if (editingItemId === itemId) editingItemId = null;
+    ToastService.show('Deleted permanently.', 'info');
+  };
+
+  const settings = SettingsStore.load();
+  if (settings.confirmDelete) {
+    DialogService.confirm({
+      title: 'Delete Parked Item',
+      message: `Are you sure you want to permanently delete this parked item?`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      variant: 'danger'
+    }).then((confirmed) => {
+      if (confirmed) performDelete();
+    });
+  } else {
+    performDelete();
+  }
 }
 
 function startEditing(itemId) {

@@ -1551,6 +1551,17 @@ html[data-reduce-animations="true"] {
   --duration-normal: 0ms;
 }
 
+.settings-subheader {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: var(--space-xs);
+  margin-bottom: var(--space-2xs);
+  font-weight: 600;
+}
+
+
 
 
 

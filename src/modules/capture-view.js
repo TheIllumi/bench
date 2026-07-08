@@ -6,6 +6,8 @@ import { createSearchInput } from '../ui/search.js';
 import { openAreaPicker } from '../ui/area-picker.js';
 import { QuickCapture } from '../core/quick-capture.js';
 import { createCheckbox } from '../ui/checkbox.js';
+import { SettingsStore } from '../core/settings-store.js';
+import { DialogService } from '../ui/dialog.js';
 
 let containerEl = null;
 let items = [];
@@ -424,15 +426,53 @@ function parkItem(itemId) {
 }
 
 function archiveItem(itemId) {
-  Repository.move(itemId, 'archive');
-  if (selectedItemId === itemId) setSelectedItemId(null);
-  ToastService.show('Archived.', 'success');
+  const item = Repository.get(itemId);
+  if (!item) return;
+
+  const performArchive = () => {
+    Repository.move(itemId, 'archive');
+    if (selectedItemId === itemId) setSelectedItemId(null);
+    ToastService.show('Archived.', 'success');
+  };
+
+  const settings = SettingsStore.load();
+  if (settings.confirmArchive) {
+    DialogService.confirm({
+      title: 'Archive Item',
+      message: `Are you sure you want to archive "${item.title || 'Untitled'}"?`,
+      confirmText: 'Archive',
+      variant: 'primary'
+    }).then(confirmed => {
+      if (confirmed) performArchive();
+    });
+  } else {
+    performArchive();
+  }
 }
 
 function deleteItem(itemId) {
-  Repository.remove(itemId);
-  if (selectedItemId === itemId) setSelectedItemId(null);
-  ToastService.show('Deleted.', 'info');
+  const item = Repository.get(itemId);
+  if (!item) return;
+
+  const performDelete = () => {
+    Repository.remove(itemId);
+    if (selectedItemId === itemId) setSelectedItemId(null);
+    ToastService.show('Deleted.', 'info');
+  };
+
+  const settings = SettingsStore.load();
+  if (settings.confirmDelete) {
+    DialogService.confirm({
+      title: 'Delete Item',
+      message: `Are you sure you want to delete "${item.title || 'Untitled'}"?`,
+      confirmText: 'Delete',
+      variant: 'danger'
+    }).then(confirmed => {
+      if (confirmed) performDelete();
+    });
+  } else {
+    performDelete();
+  }
 }
 
 function getOrderedActiveTasks(activeTasks) {

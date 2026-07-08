@@ -8,6 +8,8 @@ import { createCheckbox } from '../ui/checkbox.js';
 import { crossfade } from '../ui/utils.js';
 import { createSearchInput } from '../ui/search.js';
 import { openAreaPicker } from '../ui/area-picker.js';
+import { SettingsStore } from '../core/settings-store.js';
+import { DialogService } from '../ui/dialog.js';
 
 let tasks = [];
 let editingTaskId = null;
@@ -501,19 +503,33 @@ function deleteTask(taskId) {
   const deletedTask = allItems.find(t => t.id === taskId);
   if (!deletedTask) return;
   
-  const deletedIndex = allItems.indexOf(deletedTask);
+  const performDelete = () => {
+    const deletedIndex = allItems.indexOf(deletedTask);
+    Repository.remove(taskId);
+    if (selectedTaskId === taskId) setSelectedTaskId(null);
+    if (editingTaskId === taskId) editingTaskId = null;
 
-  Repository.remove(taskId);
-  
-  if (selectedTaskId === taskId) setSelectedTaskId(null);
-  if (editingTaskId === taskId) editingTaskId = null;
+    ToastService.show('Task removed.', 'info', 5000, {
+      label: 'Undo',
+      callback: () => {
+        Repository.save(deletedTask, deletedIndex);
+      }
+    });
+  };
 
-  ToastService.show('Task removed.', 'info', 5000, {
-    label: 'Undo',
-    callback: () => {
-      Repository.save(deletedTask, deletedIndex);
-    }
-  });
+  const settings = SettingsStore.load();
+  if (settings.confirmDelete) {
+    DialogService.confirm({
+      title: 'Delete Task',
+      message: `Are you sure you want to delete "${deletedTask.title || 'Untitled'}"?`,
+      confirmText: 'Delete',
+      variant: 'danger'
+    }).then(confirmed => {
+      if (confirmed) performDelete();
+    });
+  } else {
+    performDelete();
+  }
 }
 
 function parkTask(taskId) {
@@ -523,9 +539,28 @@ function parkTask(taskId) {
 }
 
 function archiveTask(taskId) {
-  Repository.move(taskId, 'archive');
-  if (selectedTaskId === taskId) setSelectedTaskId(null);
-  ToastService.show('Archived.', 'success');
+  const task = Repository.get(taskId);
+  if (!task) return;
+
+  const performArchive = () => {
+    Repository.move(taskId, 'archive');
+    if (selectedTaskId === taskId) setSelectedTaskId(null);
+    ToastService.show('Archived.', 'success');
+  };
+
+  const settings = SettingsStore.load();
+  if (settings.confirmArchive) {
+    DialogService.confirm({
+      title: 'Archive Task',
+      message: `Are you sure you want to archive "${task.title || 'Untitled'}"?`,
+      confirmText: 'Archive',
+      variant: 'primary'
+    }).then(confirmed => {
+      if (confirmed) performArchive();
+    });
+  } else {
+    performArchive();
+  }
 }
 
 // --- Keyboard Navigation ---
