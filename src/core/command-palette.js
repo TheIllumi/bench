@@ -174,10 +174,13 @@ function updateResults(query) {
   }
 
   // Partition items
-  const focusItems = filteredItems.filter(i => i.module === 'focus');
-  const captureItems = filteredItems.filter(i => i.module === 'capture');
-  const parkingItems = filteredItems.filter(i => i.module === 'parking-lot');
-  const archiveItems = filteredItems.filter(i => i.module === 'archive');
+  const focusItems = filteredItems.filter(i => 
+    (i.focused === true && i.status === 'active') || 
+    (i.module === 'focus' && i.status === 'completed')
+  );
+  const captureItems = filteredItems.filter(i => i.module === 'capture' && !i.focused);
+  const parkingItems = filteredItems.filter(i => i.module === 'parking-lot' && !i.focused);
+  const archiveItems = filteredItems.filter(i => i.module === 'archive' && !i.focused);
 
   // Focus
   if (focusItems.length > 0) {
@@ -430,7 +433,7 @@ function triggerClearWorkspace() {
  * Action: Clear completed tasks trigger
  */
 function triggerStartFresh() {
-  const tasks = Repository.getByModule('focus');
+  const tasks = Repository.getFocusedTasks();
   const completed = tasks.filter(t => t.status === 'completed');
 
   if (completed.length === 0) {

@@ -257,11 +257,14 @@ function buildCaptureRow(item) {
 
   const focusBtn = document.createElement('button');
   focusBtn.className = 'action-btn';
+  if (item.focused && item.status === 'active') {
+    focusBtn.classList.add('active');
+  }
   focusBtn.textContent = 'focus';
   focusBtn.setAttribute('tabindex', '-1');
   focusBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    moveToFocus(item.id);
+    toggleFocus(item.id);
   });
 
   const assignBtn = document.createElement('button');
@@ -319,17 +322,22 @@ function buildCaptureRow(item) {
 }
 
 // --- Capture Operations ---
-function moveToFocus(itemId) {
-  const activeFocus = Repository.getByModule('focus').filter(t => t.status === 'active');
-  
-  if (activeFocus.length >= 3) {
-    ToastService.show('Focus is full. Complete something first.', 'info');
-    return;
-  }
+function toggleFocus(itemId) {
+  const item = Repository.getAll().find(i => i.id === itemId);
+  if (!item) return;
 
-  Repository.move(itemId, 'focus');
-  if (selectedItemId === itemId) setSelectedItemId(null);
-  ToastService.show('Moved to Focus.', 'success');
+  if (item.focused) {
+    Repository.update(itemId, { focused: false });
+    ToastService.show('Removed from Focus.', 'info');
+  } else {
+    const activeFocus = Repository.getFocusedTasks().filter(t => t.status === 'active');
+    if (activeFocus.length >= 3) {
+      ToastService.show('Focus is full. Complete something first.', 'info');
+      return;
+    }
+    Repository.update(itemId, { focused: true });
+    ToastService.show('Added to Focus.', 'success');
+  }
 }
 
 function parkItem(itemId) {
@@ -409,7 +417,7 @@ function handleGlobalKeydown(event) {
     case 'f':
     case 'F':
       event.preventDefault();
-      moveToFocus(selectedItemId);
+      toggleFocus(selectedItemId);
       break;
     case 'p':
     case 'P':

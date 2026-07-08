@@ -465,14 +465,15 @@ function openRestorePicker(e, item) {
 
 function restoreItem(item, destination) {
   if (destination === 'focus') {
-    const activeFocus = Repository.getByModule('focus').filter(t => t.status === 'active');
+    const activeFocus = Repository.getFocusedTasks().filter(t => t.status === 'active');
     if (activeFocus.length >= 3) {
       ToastService.show('Focus is full. Complete something first.', 'info');
       return;
     }
+    Repository.update(item.id, { module: 'focus', focused: true });
+  } else {
+    Repository.move(item.id, destination);
   }
-
-  Repository.move(item.id, destination);
   if (selectedItemId === item.id) setSelectedItemId(null);
   ToastService.show(`Restored to ${destination === 'parking-lot' ? 'Parking Lot' : destination.charAt(0).toUpperCase() + destination.slice(1)}.`, 'success');
 }

@@ -693,6 +693,17 @@ body {
   border-color: var(--color-danger);
 }
 
+.action-btn.active {
+  color: var(--color-accent-blue);
+  border-color: var(--color-accent-blue);
+}
+
+.action-btn.active:hover {
+  background-color: rgba(122, 162, 247, 0.1);
+  color: var(--color-accent-blue);
+  border-color: var(--color-accent-blue);
+}
+
 /* Modals & Backdrop (Strict TUI Borders) */
 .modal-backdrop {
   position: fixed;

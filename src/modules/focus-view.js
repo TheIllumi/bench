@@ -30,7 +30,7 @@ export function renderFocusView(container) {
   containerEl.className = 'focus-view';
   container.appendChild(containerEl);
 
-  tasks = Repository.getByModule('focus');
+  tasks = Repository.getFocusedTasks();
   searchQuery = '';
 
   if (!selectedTaskId) editingTaskId = null;
@@ -86,7 +86,7 @@ function setSelectedTaskId(id) {
 }
 
 function handleItemChange() {
-  tasks = Repository.getByModule('focus');
+  tasks = Repository.getFocusedTasks();
   if (filterAreaId && !Repository.getAreas().find(a => a.id === filterAreaId && !a.archived)) {
     filterAreaId = '';
   }

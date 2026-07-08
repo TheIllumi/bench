@@ -1,4 +1,5 @@
 import { EventBus } from './event-bus.js';
+import { ToastService } from '../ui/toast.js';
 
 const STORAGE_KEY = 'bench_items';
 const OLD_STORAGE_KEY = 'bench_focus_tasks';
@@ -49,6 +50,18 @@ export const Repository = {
   },
 
   /**
+   * Retrieve all items currently in Focus (either active and focused, or completed in the focus module).
+   * @returns {Array<object>}
+   */
+  getFocusedTasks() {
+    return this.getAll().filter(item => 
+      item.type !== 'area' && 
+      ((item.focused === true && item.status === 'active') || 
+       (item.module === 'focus' && item.status === 'completed'))
+    );
+  },
+
+  /**
    * Retrieve all items belonging to a specific module.
    * @param {string} moduleName
    * @returns {Array<object>}
@@ -68,12 +81,23 @@ export const Repository = {
     const items = this.getAll();
     const now = Date.now();
 
+    let focused = item.focused;
+    if (focused === undefined) {
+      if (item.module === 'focus' && (item.status === 'active' || !item.status)) {
+        const activeFocusCount = items.filter(i => i.type !== 'area' && i.status === 'active' && i.focused === true).length;
+        focused = activeFocusCount < 3;
+      } else {
+        focused = false;
+      }
+    }
+
     const newItem = {
       id: item.id || crypto.randomUUID(),
       title: item.title || '',
       notes: item.notes || '',
       status: item.status || 'active',
       module: item.module || 'focus',
+      focused,
       areaId: item.areaId || undefined,
       createdAt: item.createdAt || now,
       updatedAt: now
@@ -116,6 +140,35 @@ export const Repository = {
       if (!name || name.length > 50) return null;
       const duplicate = items.some(i => i.type === 'area' && i.id !== id && i.name.toLowerCase() === name.toLowerCase());
       if (duplicate) return null;
+    }
+
+    // Handle toggle or direct focus changes:
+    if (updates.focused === true && updates.status !== 'completed' && item.status !== 'completed') {
+      const activeFocusCount = items.filter(i => i.id !== id && i.type !== 'area' && i.status === 'active' && i.focused === true).length;
+      if (activeFocusCount >= 3) {
+        updates.focused = false;
+        ToastService.show("Focus is full. Complete a task first.", "info");
+      }
+    }
+
+    // Handle completed / active transition:
+    // Reopening a task:
+    if (updates.status === 'active' && item.status === 'completed' && item.focused === true) {
+      const activeFocusCount = items.filter(i => i.id !== id && i.type !== 'area' && i.status === 'active' && i.focused === true).length;
+      if (activeFocusCount >= 3) {
+        // Clear focus state because Focus is full, and show toast
+        updates.focused = false;
+        ToastService.show("Focus is full. Task restored.", "info");
+      } else {
+        // Keep focused: true
+        updates.focused = true;
+      }
+    }
+
+    // Moving/Parking/Archiving:
+    if (updates.module && updates.module !== item.module && updates.module !== 'focus') {
+      // If task is moved to another module (like parking-lot or archive or capture), remove focus
+      updates.focused = false;
     }
 
     const updatedItem = {
@@ -172,8 +225,22 @@ export const Repository = {
    */
   reorder(moduleName, orderedIds) {
     const allItems = this.getAll();
-    const moduleItems = allItems.filter(item => item.module === moduleName);
-    const otherItems = allItems.filter(item => item.module !== moduleName);
+    let moduleItems, otherItems;
+    if (moduleName === 'focus') {
+      moduleItems = allItems.filter(item => 
+        item.type !== 'area' && 
+        ((item.focused === true && item.status === 'active') || 
+         (item.module === 'focus' && item.status === 'completed'))
+      );
+      otherItems = allItems.filter(item => 
+        item.type === 'area' || 
+        !(item.focused === true && item.status === 'active') && 
+        !(item.module === 'focus' && item.status === 'completed')
+      );
+    } else {
+      moduleItems = allItems.filter(item => item.module === moduleName && item.type !== 'area');
+      otherItems = allItems.filter(item => item.module !== moduleName || item.type === 'area');
+    }
 
     // Map according to the orderedIds list
     const sortedModuleItems = orderedIds
