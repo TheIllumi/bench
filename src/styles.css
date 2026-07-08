@@ -1415,4 +1415,36 @@ body {
   border-color: var(--color-text-secondary);
 }
 
+/* Jot Module UI */
+.jot-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: var(--space-md);
+  box-sizing: border-box;
+}
+
+.jot-editor {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  color: var(--color-text-primary);
+  border: none;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--font-size-md);
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+  padding: 0;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-muted) transparent;
+}
+
+.jot-editor::placeholder {
+  color: var(--color-text-muted);
+}
+
+
 
