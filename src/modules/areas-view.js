@@ -514,7 +514,7 @@ function buildAreaRow(area) {
     actions.appendChild(archiveBtn);
 
     const delBtn = document.createElement('button');
-    delBtn.className = 'action-btn';
+    delBtn.className = 'action-btn btn-danger';
     delBtn.textContent = 'del';
     delBtn.addEventListener('click', (e) => {
       e.stopPropagation();

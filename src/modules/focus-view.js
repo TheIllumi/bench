@@ -404,7 +404,7 @@ function buildTaskRow(task) {
   }
 
   const delBtn = document.createElement('button');
-  delBtn.className = 'action-btn';
+  delBtn.className = 'action-btn btn-danger';
   delBtn.setAttribute('aria-label', 'Delete task');
   delBtn.setAttribute('tabindex', '-1');
   delBtn.textContent = 'del';

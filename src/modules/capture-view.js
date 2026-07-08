@@ -295,7 +295,7 @@ function buildCaptureRow(item) {
   });
 
   const delBtn = document.createElement('button');
-  delBtn.className = 'action-btn';
+  delBtn.className = 'action-btn btn-danger';
   delBtn.textContent = 'del';
   delBtn.setAttribute('tabindex', '-1');
   delBtn.addEventListener('click', (e) => {

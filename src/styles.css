@@ -680,13 +680,17 @@ body {
   background-color: var(--color-accent-focus);
 }
 
-.btn-danger {
+.btn-danger,
+.action-btn.btn-danger {
   border-color: var(--color-danger);
   color: var(--color-danger);
 }
 
-.btn-danger:hover {
+.btn-danger:hover,
+.action-btn.btn-danger:hover {
   background-color: rgba(247, 118, 142, 0.1);
+  color: var(--color-danger);
+  border-color: var(--color-danger);
 }
 
 /* Modals & Backdrop (Strict TUI Borders) */
