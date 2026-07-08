@@ -5,6 +5,7 @@ import { crossfade, getRelativeTime } from '../ui/utils.js';
 import { createSearchInput } from '../ui/search.js';
 import { openAreaPicker } from '../ui/area-picker.js';
 import { QuickCapture } from '../core/quick-capture.js';
+import { createCheckbox } from '../ui/checkbox.js';
 
 let containerEl = null;
 let items = [];
@@ -224,10 +225,22 @@ function buildCaptureRow(item) {
   row.setAttribute('role', 'option');
   row.setAttribute('tabindex', '0');
 
+  const isCompleted = item.status === 'completed';
+
   if (selectedItemId === item.id) {
     row.classList.add('selected');
     row.setAttribute('aria-selected', 'true');
   }
+
+  if (isCompleted) {
+    row.classList.add('completed');
+  }
+
+  // Checkbox
+  row.appendChild(createCheckbox({
+    checked: isCompleted,
+    onChange: () => toggleCompletion(item.id)
+  }));
 
   // Left Title
   const title = document.createElement('span');
@@ -322,6 +335,19 @@ function buildCaptureRow(item) {
 }
 
 // --- Capture Operations ---
+function toggleCompletion(itemId) {
+  const item = items.find(i => i.id === itemId);
+  if (!item) return;
+
+  const nextStatus = item.status === 'completed' ? 'active' : 'completed';
+  if (nextStatus === 'completed' && selectedItemId === itemId) {
+    setSelectedItemId(null);
+  }
+
+  Repository.update(itemId, { status: nextStatus });
+  ToastService.show(nextStatus === 'completed' ? 'Task completed.' : 'Task reopened.', nextStatus === 'completed' ? 'success' : 'info');
+}
+
 function toggleFocus(itemId) {
   const item = Repository.getAll().find(i => i.id === itemId);
   if (!item) return;
@@ -413,6 +439,10 @@ function handleGlobalKeydown(event) {
       event.preventDefault();
       setSelectedItemId(null);
       renderView();
+      break;
+    case ' ':
+      event.preventDefault();
+      toggleCompletion(selectedItemId);
       break;
     case 'f':
     case 'F':
