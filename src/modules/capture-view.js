@@ -95,6 +95,9 @@ function handleSearch(query) {
     filteredItems = filteredItems.filter(t => (t.title || '').toLowerCase().includes(q));
   }
 
+  const active = filteredItems.filter(t => t.status === 'active');
+  const completed = filteredItems.filter(t => t.status === 'completed');
+
   if (items.length === 0) {
     renderEmpty(contentArea);
   } else if (filteredItems.length === 0) {
@@ -104,7 +107,7 @@ function handleSearch(query) {
       </div>
     `;
   } else {
-    renderCaptureList(contentArea, filteredItems);
+    renderCaptureList(contentArea, active, completed);
   }
 }
 
@@ -151,6 +154,9 @@ function renderView() {
 
   const contentArea = document.getElementById('view-content-area');
 
+  const active = filteredItems.filter(t => t.status === 'active');
+  const completed = filteredItems.filter(t => t.status === 'completed');
+
   if (items.length === 0) {
     renderEmpty(contentArea);
   } else if (filteredItems.length === 0) {
@@ -160,7 +166,7 @@ function renderView() {
       </div>
     `;
   } else {
-    renderCaptureList(contentArea, filteredItems);
+    renderCaptureList(contentArea, active, completed);
   }
 }
 
@@ -197,15 +203,28 @@ function renderEmpty(targetEl) {
   `;
 }
 
-function renderCaptureList(targetEl, listItems) {
+function renderCaptureList(targetEl, active, completed) {
   targetEl.innerHTML = `
-    <div class="tasks-list-active" id="capture-items-list" role="listbox" tabindex="-1"></div>
+    <div style="display: flex; flex-direction: column;">
+      <div class="tasks-list-active" id="capture-items-list" role="listbox" tabindex="-1"></div>
+      ${completed.length > 0 ? `
+        <div class="completed-header" style="margin-top: var(--space-md);">Completed</div>
+        <div class="tasks-list-completed" id="completed-tasks-completed-list" role="list" aria-label="Completed tasks"></div>
+      ` : ''}
+    </div>
   `;
 
   const listEl = document.getElementById('capture-items-list');
-  listItems.forEach(item => {
+  active.forEach(item => {
     listEl.appendChild(buildCaptureRow(item));
   });
+
+  const completedListEl = document.getElementById('completed-tasks-completed-list');
+  if (completedListEl) {
+    completed.forEach(item => {
+      completedListEl.appendChild(buildCaptureRow(item));
+    });
+  }
 
   // Restore focus if an item was selected (only if user is not editing in the Inspector)
   if (selectedItemId) {
@@ -222,19 +241,19 @@ function buildCaptureRow(item) {
   const row = document.createElement('div');
   row.className = 'task-item'; // Reuse same list row styling
   row.setAttribute('data-id', item.id);
-  row.setAttribute('role', 'option');
-  row.setAttribute('tabindex', '0');
 
   const isCompleted = item.status === 'completed';
   const isFocused = item.focused && item.status === 'active';
 
-  if (selectedItemId === item.id) {
-    row.classList.add('selected');
-    row.setAttribute('aria-selected', 'true');
-  }
-
   if (isCompleted) {
     row.classList.add('completed');
+    row.setAttribute('role', 'listitem');
+    row.setAttribute('tabindex', '-1');
+  } else {
+    row.setAttribute('role', 'option');
+    row.setAttribute('aria-selected', item.id === selectedItemId ? 'true' : 'false');
+    row.setAttribute('tabindex', '0');
+    if (item.id === selectedItemId) row.classList.add('selected');
   }
 
   if (isFocused) {
@@ -331,10 +350,12 @@ function buildCaptureRow(item) {
   actions.appendChild(delBtn);
   row.appendChild(actions);
 
-  row.addEventListener('click', () => {
-    setSelectedItemId(item.id);
-    renderView();
-  });
+  if (!isCompleted) {
+    row.addEventListener('click', () => {
+      setSelectedItemId(item.id);
+      renderView();
+    });
+  }
 
   return row;
 }
@@ -407,7 +428,8 @@ function handleGlobalKeydown(event) {
   );
   if (editing) return;
 
-  let filtered = filterAreaId ? items.filter(t => t.areaId === filterAreaId) : items;
+  const active = items.filter(t => t.status === 'active');
+  let filtered = filterAreaId ? active.filter(t => t.areaId === filterAreaId) : active;
   if (searchQuery) {
     const q = searchQuery.toLowerCase();
     filtered = filtered.filter(t => (t.title || '').toLowerCase().includes(q));
