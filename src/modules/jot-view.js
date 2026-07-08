@@ -24,11 +24,22 @@ export function renderJotView(container) {
     JotStore.saveJot(textarea.value);
   });
 
-  // Support Ctrl+S / Cmd+S manual save confirmation
+  // Support Ctrl+S / Cmd+S manual save confirmation and Tab insertion
   textarea.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
       ToastService.show('Saved.', 'success');
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const val = textarea.value;
+      
+      textarea.value = val.substring(0, start) + '\t' + val.substring(end);
+      textarea.selectionStart = textarea.selectionEnd = start + 1;
+      
+      // Dispatch input event to trigger auto-save
+      textarea.dispatchEvent(new Event('input'));
     }
   });
 
