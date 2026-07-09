@@ -21,7 +21,9 @@ const CHECKED_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height=
 // Register core default commands on initialization
 
 const KEYBOARD_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="12" rx="2" x="2" y="6"/><path d="M6 12h.01"/><path d="M10 12h.01"/><path d="M14 12h.01"/><path d="M18 12h.01"/><path d="M6 16h.01"/><path d="M18 16h.01"/><path d="M10 16h4"/></svg>`;
+const BOOK_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`;
 CommandRegistry.register({ id: 'show-shortcuts', label: 'Show Keyboard Shortcuts', category: 'Help', action: showShortcutsModal, icon: KEYBOARD_ICON });
+CommandRegistry.register({ id: 'show-guide', label: 'Bench Guide', category: 'Help', action: showBenchGuide, icon: BOOK_ICON });
 
 CommandRegistry.register({ id: 'action-start-fresh', label: 'Start fresh (Clear Completed Focus Tasks)', category: 'Actions', action: triggerStartFresh, icon: CHECKED_ICON });
 CommandRegistry.register({ id: 'action-clear-workspace', label: 'Clear Workspace (Wipe Database)', category: 'Actions', action: triggerClearWorkspace, icon: TRASH_ICON });
@@ -381,6 +383,49 @@ function showShortcutsModal() {
 
   createModal({
     title: 'keyboard shortcuts',
+    contentNode: content
+  });
+}
+
+/**
+ * Action: Display the Bench Guide overview modal
+ */
+function showBenchGuide() {
+  const entry = (term, desc) =>
+    `<div class="guide-entry"><span class="guide-term">${term}</span><span class="guide-desc">${desc}</span></div>`;
+
+  const content = `
+    <div class="shortcuts-modal-container">
+
+      <div class="shortcuts-group-title">The Workflow</div>
+      <p class="guide-intro">Bench follows one simple loop: capture everything, organise it into areas, pick your three tasks for today, and work through them.</p>
+      <div class="guide-workflow">
+        <span class="guide-step">Capture</span>
+        <span class="guide-arrow">→</span>
+        <span class="guide-step">Organise</span>
+        <span class="guide-arrow">→</span>
+        <span class="guide-step">Focus</span>
+        <span class="guide-arrow">→</span>
+        <span class="guide-step">Complete</span>
+      </div>
+
+      <div class="shortcuts-group-title">Concepts</div>
+      ${entry('Capture', 'Your inbox. Dump any idea, task, or thought here the moment it appears. Don\'t judge it — just capture it.')}
+      ${entry('Focus', 'Your today list. Hold at most 3 tasks at a time. When you finish one, pull the next from the Parking Lot.')}
+      ${entry('Areas', 'Containers for related tasks (e.g. Work, Personal, Health). Use them to keep things organised and filterable.')}
+      ${entry('Parking Lot', 'Tasks that matter but aren\'t urgent today. Promote them to Focus when you have capacity.')}
+      ${entry('Archive', 'Completed or shelved tasks you want to keep for reference but no longer act on.')}
+      ${entry('Jot', 'A distraction-free scratchpad for free-form notes, ideas, and thinking. Nothing here is a task.')}
+      ${entry('Command Palette', 'Press Ctrl+K (or ⌘K) anywhere to search tasks, areas, and run actions without touching the mouse.')}
+
+      <div class="shortcuts-group-title">Why only 3 Focus tasks?</div>
+      <p class="guide-intro">Limiting Focus to three tasks forces you to choose what actually matters today. A shorter list means less indecision, less context switching, and more meaningful progress.</p>
+
+    </div>
+  `;
+
+  createModal({
+    title: 'bench guide',
     contentNode: content
   });
 }

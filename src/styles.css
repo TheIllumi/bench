@@ -1410,6 +1410,60 @@ html[data-sidebar-shortcuts="false"] .nav-shortcut {
   color: var(--color-text-secondary);
 }
 
+/* Bench Guide Modal */
+.guide-intro {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin-bottom: var(--space-xs);
+}
+
+.guide-workflow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: var(--space-sm) 0 var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.guide-step {
+  font-size: var(--font-size-xs);
+  font-weight: bold;
+  color: var(--color-accent-blue);
+  letter-spacing: 0.3px;
+}
+
+.guide-arrow {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.guide-entry {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: var(--space-sm);
+  padding: 5px 0;
+  border-bottom: 1px solid var(--color-border);
+  align-items: baseline;
+}
+
+.guide-entry:last-of-type {
+  border-bottom: none;
+}
+
+.guide-term {
+  font-size: var(--font-size-xs);
+  font-weight: bold;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.guide-desc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
 /* View Filter Bar & Search Component */
 .view-filter-bar {
   position: sticky;
