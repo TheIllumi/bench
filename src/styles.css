@@ -1656,7 +1656,7 @@ html[data-reduce-animations="true"] {
 .bench-checkbox:focus-visible,
 .bench-radio:focus-visible {
   border-color: var(--color-accent-blue);
-  box-shadow: 0 0 0 2px var(--color-accent-focus);
+  box-shadow: 0 0 0 2px rgba(122, 162, 247, 0.25);
 }
 
 /* Checked State */
@@ -1746,7 +1746,7 @@ html[data-reduce-animations="true"] {
 
 .settings-select:focus-visible {
   border-color: var(--color-accent-blue);
-  box-shadow: 0 0 0 2px var(--color-accent-focus);
+  box-shadow: 0 0 0 2px rgba(122, 162, 247, 0.25);
 }
 
 .settings-select:disabled {
@@ -1792,7 +1792,12 @@ html[data-reduce-animations="true"] {
 
 .settings-btn:focus-visible {
   border-color: var(--color-accent-blue);
-  box-shadow: 0 0 0 2px var(--color-accent-focus);
+  box-shadow: 0 0 0 2px rgba(122, 162, 247, 0.25);
+}
+
+.settings-btn.btn-danger:focus-visible {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 2px rgba(247, 118, 142, 0.25);
 }
 
 .settings-btn.btn-danger {
