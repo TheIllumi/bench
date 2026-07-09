@@ -1506,12 +1506,20 @@ body {
 }
 
 .settings-item {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr 140px;
   align-items: center;
   font-size: var(--font-size-sm);
   padding: 4px 8px;
   color: var(--color-text-secondary);
+  gap: var(--space-md);
+}
+
+.settings-item > select,
+.settings-item > input,
+.settings-item > .settings-value,
+.settings-item > .settings-action-text {
+  justify-self: start;
 }
 
 .settings-label {
