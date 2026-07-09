@@ -225,11 +225,11 @@ export function renderSettingsView(container) {
           <div class="settings-list">
             <div class="settings-item">
               <span class="settings-label">Version</span>
-              <span class="settings-value">0.1.0</span>
+              <span class="settings-value">0.2.0</span>
             </div>
             <div class="settings-item">
               <span class="settings-label">Changelog</span>
-              <span class="settings-value">v0.1.0-alpha</span>
+              <span class="settings-value">v0.2.0-alpha</span>
             </div>
             <div class="settings-item">
               <span class="settings-label">Credits</span>
