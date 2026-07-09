@@ -366,20 +366,28 @@ function showShortcutsModal() {
   const settings = SettingsStore.load();
   const isMac = settings.shortcutStyle === 'mac';
 
+  const format = (win, mac) => {
+    if (isMac) {
+      return `<span style="color: var(--color-text-muted); font-weight: normal;">${win}</span> <span style="color: var(--color-text-muted); font-weight: normal; margin: 0 4px;">/</span> <span>${mac}</span>`;
+    } else {
+      return `<span>${win}</span> <span style="color: var(--color-text-muted); font-weight: normal; margin: 0 4px;">/</span> <span style="color: var(--color-text-muted); font-weight: normal;">${mac}</span>`;
+    }
+  };
+
   const content = `
     <div class="shortcuts-modal-container">
       <div class="shortcuts-group-title">Global</div>
       <table class="shortcuts-table">
-        <tr><td class="shortcuts-key">${isMac ? '⌘K' : 'Ctrl+K'}</td><td class="shortcuts-desc">Open Command Palette</td></tr>
-        <tr><td class="shortcuts-key">${isMac ? '⌘N / C' : 'Ctrl+N / C'}</td><td class="shortcuts-desc">Open Quick Capture</td></tr>
-        <tr><td class="shortcuts-key">${isMac ? '⌥1' : 'Alt+1'}</td><td class="shortcuts-desc">Go to Focus</td></tr>
-        <tr><td class="shortcuts-key">${isMac ? '⌥2' : 'Alt+2'}</td><td class="shortcuts-desc">Go to Capture</td></tr>
-        <tr><td class="shortcuts-key">${isMac ? '⌥3' : 'Alt+3'}</td><td class="shortcuts-desc">Go to Areas</td></tr>
-        <tr><td class="shortcuts-key">${isMac ? '⌥4' : 'Alt+4'}</td><td class="shortcuts-desc">Go to Parking Lot</td></tr>
-        <tr><td class="shortcuts-key">${isMac ? '⌥5' : 'Alt+5'}</td><td class="shortcuts-desc">Go to Archive</td></tr>
-        <tr><td class="shortcuts-key">${isMac ? '⌥6' : 'Alt+6'}</td><td class="shortcuts-desc">Go to Jot</td></tr>
-        <tr><td class="shortcuts-key">${isMac ? '⌥7' : 'Alt+7'}</td><td class="shortcuts-desc">Go to Settings</td></tr>
-        <tr><td class="shortcuts-key">${isMac ? '⌘B' : 'Ctrl+B'}</td><td class="shortcuts-desc">Toggle Sidebar</td></tr>
+        <tr><td class="shortcuts-key">${format('Ctrl+K', '⌘K')}</td><td class="shortcuts-desc">Open Command Palette</td></tr>
+        <tr><td class="shortcuts-key">${format('Ctrl+N / C', '⌘N / C')}</td><td class="shortcuts-desc">Open Quick Capture</td></tr>
+        <tr><td class="shortcuts-key">${format('Alt+1', '⌥1')}</td><td class="shortcuts-desc">Go to Focus</td></tr>
+        <tr><td class="shortcuts-key">${format('Alt+2', '⌥2')}</td><td class="shortcuts-desc">Go to Capture</td></tr>
+        <tr><td class="shortcuts-key">${format('Alt+3', '⌥3')}</td><td class="shortcuts-desc">Go to Areas</td></tr>
+        <tr><td class="shortcuts-key">${format('Alt+4', '⌥4')}</td><td class="shortcuts-desc">Go to Parking Lot</td></tr>
+        <tr><td class="shortcuts-key">${format('Alt+5', '⌥5')}</td><td class="shortcuts-desc">Go to Archive</td></tr>
+        <tr><td class="shortcuts-key">${format('Alt+6', '⌥6')}</td><td class="shortcuts-desc">Go to Jot</td></tr>
+        <tr><td class="shortcuts-key">${format('Alt+7', '⌥7')}</td><td class="shortcuts-desc">Go to Settings</td></tr>
+        <tr><td class="shortcuts-key">${format('Ctrl+B', '⌘B')}</td><td class="shortcuts-desc">Toggle Sidebar</td></tr>
         <tr><td class="shortcuts-key">Escape</td><td class="shortcuts-desc">Close active overlay / modal</td></tr>
       </table>
       
@@ -395,9 +403,9 @@ function showShortcutsModal() {
       
       <div class="shortcuts-group-title">Inspector & Notes Editor</div>
       <table class="shortcuts-table">
-        <tr><td class="shortcuts-key">${isMac ? '⌘L' : 'Ctrl+L'}</td><td class="shortcuts-desc">Focus title field</td></tr>
-        <tr><td class="shortcuts-key">${isMac ? '⌘Enter' : 'Ctrl+Enter'}</td><td class="shortcuts-desc">Save changes & return focus to list</td></tr>
-        <tr><td class="shortcuts-key">${isMac ? '⌘S' : 'Ctrl+S'}</td><td class="shortcuts-desc">Force immediate save</td></tr>
+        <tr><td class="shortcuts-key">${format('Ctrl+L', '⌘L')}</td><td class="shortcuts-desc">Focus title field</td></tr>
+        <tr><td class="shortcuts-key">${format('Ctrl+Enter', '⌘Enter')}</td><td class="shortcuts-desc">Save changes & return focus to list</td></tr>
+        <tr><td class="shortcuts-key">${format('Ctrl+S', '⌘S')}</td><td class="shortcuts-desc">Force immediate save</td></tr>
         <tr><td class="shortcuts-key">Escape</td><td class="shortcuts-desc">Blur editor first / close Inspector</td></tr>
         <tr><td class="shortcuts-key">Tab</td><td class="shortcuts-desc">Insert 2 spaces</td></tr>
       </table>
