@@ -437,10 +437,14 @@ function handleCreateKeyDown(event) {
     const title = event.target.value.trim();
     if (!title) return;
 
+    const settings = SettingsStore.load();
+    const defaultAreaId = settings.defaultArea && settings.defaultArea !== 'none' ? settings.defaultArea : '';
+
     Repository.save({
       title,
       status: 'active',
-      module: 'focus'
+      module: 'focus',
+      areaId: filterAreaId || defaultAreaId
     });
     event.target.value = '';
     isCreating = false;

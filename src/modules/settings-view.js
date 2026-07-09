@@ -6,6 +6,10 @@ import { JotStore } from '../core/jot-store.js';
 
 export function renderSettingsView(container) {
   const settings = SettingsStore.load();
+  const activeAreas = Repository.getAreas().filter(a => !a.archived);
+  const areaOptions = activeAreas.map(area => 
+    `<option value="${area.id}" ${settings.defaultArea === area.id ? 'selected' : ''}>${area.name}</option>`
+  ).join('');
 
   const backup = localStorage.getItem('bench_local_backup');
   let backupTimeText = '';
@@ -135,12 +139,13 @@ export function renderSettingsView(container) {
             <div class="settings-list">
               <div class="settings-item">
                 <span class="settings-label">Confirm archive</span>
-                <input type="checkbox" class="bench-checkbox" disabled checked>
+                <input type="checkbox" id="settings-confirm-archive-area" class="bench-checkbox" ${settings.confirmArchiveArea ? 'checked' : ''}>
               </div>
               <div class="settings-item">
                 <span class="settings-label">Default area</span>
-                <select class="settings-select" disabled>
-                  <option value="none">None</option>
+                <select id="settings-default-area" class="settings-select">
+                  <option value="none" ${settings.defaultArea === 'none' ? 'selected' : ''}>None</option>
+                  ${areaOptions}
                 </select>
               </div>
             </div>
@@ -241,6 +246,8 @@ export function renderSettingsView(container) {
   const rememberLastModuleCheck = container.querySelector('#settings-remember-last-module');
   const shortcutStyleSelect = container.querySelector('#settings-shortcut-style');
   const autoClearCompletedCheck = container.querySelector('#settings-auto-clear-completed');
+  const confirmArchiveAreaCheck = container.querySelector('#settings-confirm-archive-area');
+  const defaultAreaSelect = container.querySelector('#settings-default-area');
 
   function updateSettings() {
     const nextSettings = {
@@ -257,7 +264,9 @@ export function renderSettingsView(container) {
       shortcutStyle: shortcutStyleSelect.value,
       lastOpenedModule: settings.lastOpenedModule,
       
-      autoClearCompleted: autoClearCompletedCheck.checked
+      autoClearCompleted: autoClearCompletedCheck.checked,
+      confirmArchiveArea: confirmArchiveAreaCheck.checked,
+      defaultArea: defaultAreaSelect.value
     };
 
     startupModuleSelect.disabled = rememberLastModuleCheck.checked;
@@ -275,6 +284,8 @@ export function renderSettingsView(container) {
   rememberLastModuleCheck.addEventListener('change', updateSettings);
   shortcutStyleSelect.addEventListener('change', updateSettings);
   autoClearCompletedCheck.addEventListener('change', updateSettings);
+  confirmArchiveAreaCheck.addEventListener('change', updateSettings);
+  defaultAreaSelect.addEventListener('change', updateSettings);
 
   // Data actions
   const importBtn = container.querySelector('#settings-data-import');

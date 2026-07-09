@@ -16,7 +16,11 @@ const DEFAULT_SETTINGS = {
   lastOpenedModule: 'focus',
   
   // Focus
-  autoClearCompleted: false
+  autoClearCompleted: false,
+  
+  // Areas
+  confirmArchiveArea: true,
+  defaultArea: 'none'
 };
 
 export const SettingsStore = {

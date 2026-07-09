@@ -632,7 +632,7 @@ function archiveArea(areaId) {
   };
 
   const settings = SettingsStore.load();
-  if (settings.confirmArchive) {
+  if (settings.confirmArchiveArea) {
     DialogService.confirm({
       title: 'Archive Area',
       message: `Are you sure you want to archive the Area [${area.name}]?`,

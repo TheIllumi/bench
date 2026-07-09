@@ -1,5 +1,6 @@
 import { Repository } from './repository.js';
 import { ToastService } from '../ui/toast.js';
+import { SettingsStore } from './settings-store.js';
 
 let isOpen = false;
 let modalEl = null;
@@ -49,11 +50,13 @@ export const QuickCapture = {
         e.preventDefault();
         const value = input.value.trim();
         if (value) {
+          const settings = SettingsStore.load();
+          const fallbackAreaId = settings.defaultArea && settings.defaultArea !== 'none' ? settings.defaultArea : '';
           Repository.save({
             title: value,
             status: 'active',
             module: 'capture',
-            areaId: defaultAreaId
+            areaId: defaultAreaId !== undefined ? defaultAreaId : fallbackAreaId
           });
           ToastService.show('Captured.', 'success');
         }
