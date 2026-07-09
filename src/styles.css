@@ -1505,9 +1505,10 @@ body {
   margin-top: var(--space-xs);
 }
 
+/* Settings item layout */
 .settings-item {
   display: grid;
-  grid-template-columns: 1fr 140px;
+  grid-template-columns: 1fr 160px;
   align-items: center;
   font-size: var(--font-size-sm);
   padding: 4px 8px;
@@ -1518,7 +1519,8 @@ body {
 .settings-item > select,
 .settings-item > input,
 .settings-item > .settings-value,
-.settings-item > .settings-action-text {
+.settings-item > .settings-action-text,
+.settings-item > .settings-btn {
   justify-self: start;
 }
 
@@ -1713,4 +1715,77 @@ html[data-reduce-animations="true"] {
   height: 1px;
   background-color: var(--color-border);
   opacity: 0.6;
+}
+
+/* Standardized Settings Select Dropdown */
+.settings-select {
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  padding: 2px 4px;
+  cursor: pointer;
+  outline: none;
+  width: 100%;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+              background-color var(--duration-fast) var(--ease-standard);
+}
+
+.settings-select:hover:not(:disabled) {
+  border-color: var(--color-text-secondary);
+}
+
+.settings-select:focus-visible {
+  border-color: var(--color-accent-blue);
+  box-shadow: 0 0 0 2px var(--color-accent-focus);
+}
+
+.settings-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: var(--color-border);
+}
+
+.settings-select option {
+  background-color: var(--color-bg-workspace);
+  color: var(--color-text-primary);
+}
+
+/* Standardized Settings Button */
+.settings-btn {
+  background: transparent;
+  color: var(--color-accent-blue);
+  border: 1px solid var(--color-border);
+  padding: 2px 4px;
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  outline: none;
+  width: 100%;
+  text-align: center;
+  display: inline-block;
+  user-select: none;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+              background-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+
+.settings-btn:hover:not(:disabled) {
+  background-color: var(--color-accent-focus);
+  border-color: var(--color-text-secondary);
+}
+
+.settings-btn:focus-visible {
+  border-color: var(--color-accent-blue);
+  box-shadow: 0 0 0 2px var(--color-accent-focus);
+}
+
+.settings-btn.btn-danger {
+  color: var(--color-danger);
+}
+
+.settings-btn.btn-danger:hover:not(:disabled) {
+  background-color: rgba(247, 118, 142, 0.1);
+  border-color: var(--color-danger);
 }

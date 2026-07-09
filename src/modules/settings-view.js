@@ -37,7 +37,7 @@ export function renderSettingsView(container) {
             <div class="settings-list">
               <div class="settings-item">
                 <span class="settings-label">Theme</span>
-                <select id="settings-theme" class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);">
+                <select id="settings-theme" class="settings-select">
                   <option value="system" ${settings.theme === 'system' ? 'selected' : ''}>System</option>
                   <option value="dark" ${settings.theme === 'dark' ? 'selected' : ''}>Dark</option>
                   <option value="light" ${settings.theme === 'light' ? 'selected' : ''}>Light</option>
@@ -46,7 +46,7 @@ export function renderSettingsView(container) {
 
               <div class="settings-item">
                 <span class="settings-label">Accent color</span>
-                <select id="settings-accent" class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);" disabled>
+                <select id="settings-accent" class="settings-select" disabled>
                   <option value="blue">Blue (Default)</option>
                 </select>
               </div>
@@ -58,7 +58,7 @@ export function renderSettingsView(container) {
 
               <div class="settings-item">
                 <span class="settings-label">Font size</span>
-                <select id="settings-font-size" class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);">
+                <select id="settings-font-size" class="settings-select">
                   <option value="small" ${settings.fontSize === 'small' ? 'selected' : ''}>Small</option>
                   <option value="medium" ${settings.fontSize === 'medium' ? 'selected' : ''}>Medium</option>
                   <option value="large" ${settings.fontSize === 'large' ? 'selected' : ''}>Large</option>
@@ -85,7 +85,7 @@ export function renderSettingsView(container) {
 
               <div class="settings-item">
                 <span class="settings-label">Startup module</span>
-                <select id="settings-startup-module" class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);" ${settings.rememberLastModule ? 'disabled' : ''}>
+                <select id="settings-startup-module" class="settings-select" ${settings.rememberLastModule ? 'disabled' : ''}>
                   <option value="focus" ${settings.startupModule === 'focus' ? 'selected' : ''}>Focus</option>
                   <option value="capture" ${settings.startupModule === 'capture' ? 'selected' : ''}>Capture</option>
                   <option value="areas" ${settings.startupModule === 'areas' ? 'selected' : ''}>Areas</option>
@@ -131,7 +131,7 @@ export function renderSettingsView(container) {
               </div>
               <div class="settings-item">
                 <span class="settings-label">Default area</span>
-                <select class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);" disabled>
+                <select class="settings-select" disabled>
                   <option value="none">None</option>
                 </select>
               </div>
@@ -141,13 +141,13 @@ export function renderSettingsView(container) {
             <div class="settings-list">
               <div class="settings-item">
                 <span class="settings-label">Font family</span>
-                <select class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);" disabled>
+                <select class="settings-select" disabled>
                   <option value="monospace">Monospace</option>
                 </select>
               </div>
               <div class="settings-item">
                 <span class="settings-label">Tab size</span>
-                <select class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);" disabled>
+                <select class="settings-select" disabled>
                   <option value="tab">Tab Character</option>
                 </select>
               </div>
@@ -166,19 +166,19 @@ export function renderSettingsView(container) {
           <div class="settings-list">
             <div class="settings-item action-item" id="settings-data-import">
               <span class="settings-label">Import</span>
-              <span class="settings-action-text">import JSON</span>
+              <span class="settings-btn">import JSON</span>
             </div>
             <div class="settings-item action-item" id="settings-data-export">
               <span class="settings-label">Export</span>
-              <span class="settings-action-text">export JSON</span>
+              <span class="settings-btn">export JSON</span>
             </div>
             <div class="settings-item action-item" id="settings-data-backup">
               <span class="settings-label">Backup</span>
-              <span class="settings-action-text">create backup</span>
+              <span class="settings-btn">create backup</span>
             </div>
             <div class="settings-item action-item" id="settings-data-restore">
               <span class="settings-label">Restore</span>
-              <span class="settings-action-text" id="settings-data-restore-btn">${backupTimeText}</span>
+              <span class="settings-btn" id="settings-data-restore-btn">${backupTimeText}</span>
             </div>
           </div>
         </div>
@@ -189,11 +189,11 @@ export function renderSettingsView(container) {
           <div class="settings-list" style="border-left-color: rgba(247, 118, 142, 0.2);">
             <div class="settings-item action-item" id="settings-danger-clear-archive">
               <span class="settings-label" style="color: var(--color-danger);">Clear Archive</span>
-              <span class="settings-action-text" style="color: var(--color-danger);">clear</span>
+              <span class="settings-btn btn-danger">clear</span>
             </div>
             <div class="settings-item action-item" id="settings-danger-clear-database">
               <span class="settings-label" style="color: var(--color-danger);">Clear Database</span>
-              <span class="settings-action-text" style="color: var(--color-danger);">wipe</span>
+              <span class="settings-btn btn-danger">wipe</span>
             </div>
           </div>
         </div>
