@@ -217,7 +217,7 @@ export function renderSettingsView(container) {
             </div>
             <div class="settings-item">
               <span class="settings-label">Credits</span>
-              <span class="settings-value">DeepMind Team</span>
+              <span class="settings-value">Saad M.</span>
             </div>
           </div>
         </div>
