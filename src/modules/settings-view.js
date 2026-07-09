@@ -184,15 +184,15 @@ export function renderSettingsView(container) {
         </div>
 
         <!-- Danger Zone -->
-        <div>
-          <div class="settings-section-header" style="color: var(--color-danger);">Danger Zone</div>
-          <div class="settings-list" style="border-left-color: rgba(247, 118, 142, 0.2);">
+        <div class="settings-danger-zone-container">
+          <div class="settings-section-header">Danger Zone</div>
+          <div class="settings-list">
             <div class="settings-item action-item" id="settings-danger-clear-archive">
-              <span class="settings-label" style="color: var(--color-danger);">Clear Archive</span>
+              <span class="settings-label">Clear Archive</span>
               <span class="settings-btn btn-danger">clear</span>
             </div>
             <div class="settings-item action-item" id="settings-danger-clear-database">
-              <span class="settings-label" style="color: var(--color-danger);">Clear Database</span>
+              <span class="settings-label">Clear Database</span>
               <span class="settings-btn btn-danger">wipe</span>
             </div>
           </div>

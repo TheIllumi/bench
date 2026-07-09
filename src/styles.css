@@ -1789,3 +1789,29 @@ html[data-reduce-animations="true"] {
   background-color: rgba(247, 118, 142, 0.1);
   border-color: var(--color-danger);
 }
+
+/* Danger Zone Section styling */
+.settings-danger-zone-container {
+  border: 1px solid rgba(247, 118, 142, 0.3);
+  padding: var(--space-md);
+  background-color: rgba(247, 118, 142, 0.02);
+  margin-top: var(--space-xs);
+}
+
+.settings-danger-zone-container .settings-section-header {
+  color: var(--color-danger);
+}
+
+.settings-danger-zone-container .settings-section-header::after {
+  background-color: rgba(247, 118, 142, 0.3);
+}
+
+.settings-danger-zone-container .settings-list {
+  border-left: none;
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.settings-danger-zone-container .settings-label {
+  color: var(--color-danger);
+}
