@@ -65,6 +65,9 @@ export const SettingsStore = {
       root.setAttribute('data-theme', isDark ? 'dark' : 'light');
     }
 
+    // Apply Accent Color
+    root.setAttribute('data-accent', settings.accentColor || 'blue');
+
     // Apply Compact Mode
     root.setAttribute('data-compact', settings.compactMode ? 'true' : 'false');
 
