@@ -459,6 +459,13 @@ function toggleCompletion(taskId) {
     setSelectedTaskId(null);
   }
   
+  const settings = SettingsStore.load();
+  if (nextStatus === 'completed' && settings.autoClearCompleted) {
+    Repository.remove(taskId);
+    ToastService.show('Task completed and cleared.', 'success');
+    return;
+  }
+
   const updated = Repository.update(taskId, { status: nextStatus });
   if (nextStatus === 'active' && task.focused && updated && !updated.focused) {
     return;

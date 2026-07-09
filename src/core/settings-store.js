@@ -13,7 +13,10 @@ const DEFAULT_SETTINGS = {
   confirmArchive: false,
   startupModule: 'focus',
   rememberLastModule: false,
-  lastOpenedModule: 'focus'
+  lastOpenedModule: 'focus',
+  
+  // Focus
+  autoClearCompleted: false
 };
 
 export const SettingsStore = {

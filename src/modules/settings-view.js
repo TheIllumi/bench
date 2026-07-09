@@ -126,7 +126,7 @@ export function renderSettingsView(container) {
               </div>
               <div class="settings-item">
                 <span class="settings-label">Auto-clear completed</span>
-                <input type="checkbox" class="bench-checkbox" disabled>
+                <input type="checkbox" id="settings-auto-clear-completed" class="bench-checkbox" ${settings.autoClearCompleted ? 'checked' : ''}>
               </div>
 
             </div>
@@ -240,6 +240,7 @@ export function renderSettingsView(container) {
   const startupModuleSelect = container.querySelector('#settings-startup-module');
   const rememberLastModuleCheck = container.querySelector('#settings-remember-last-module');
   const shortcutStyleSelect = container.querySelector('#settings-shortcut-style');
+  const autoClearCompletedCheck = container.querySelector('#settings-auto-clear-completed');
 
   function updateSettings() {
     const nextSettings = {
@@ -254,7 +255,9 @@ export function renderSettingsView(container) {
       startupModule: startupModuleSelect.value,
       rememberLastModule: rememberLastModuleCheck.checked,
       shortcutStyle: shortcutStyleSelect.value,
-      lastOpenedModule: settings.lastOpenedModule
+      lastOpenedModule: settings.lastOpenedModule,
+      
+      autoClearCompleted: autoClearCompletedCheck.checked
     };
 
     startupModuleSelect.disabled = rememberLastModuleCheck.checked;
@@ -271,6 +274,7 @@ export function renderSettingsView(container) {
   startupModuleSelect.addEventListener('change', updateSettings);
   rememberLastModuleCheck.addEventListener('change', updateSettings);
   shortcutStyleSelect.addEventListener('change', updateSettings);
+  autoClearCompletedCheck.addEventListener('change', updateSettings);
 
   // Data actions
   const importBtn = container.querySelector('#settings-data-import');
