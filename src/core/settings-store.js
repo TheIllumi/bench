@@ -25,7 +25,8 @@ const DEFAULT_SETTINGS = {
   // Jot
   jotFontFamily: 'monospace',
   jotTabSize: 'tab',
-  jotAutoSave: true
+  jotAutoSave: true,
+  jotShowLineNumbers: false
 };
 
 export const SettingsStore = {

@@ -1467,7 +1467,35 @@ body {
   box-sizing: border-box;
 }
 
+.jot-editor-wrapper {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.jot-gutter {
+  flex-shrink: 0;
+  width: 45px;
+  padding-right: var(--space-sm);
+  text-align: right;
+  color: var(--color-text-muted);
+  border-right: 1px solid var(--color-border);
+  margin-right: var(--space-sm);
+  font-size: var(--font-size-md);
+  line-height: 1.6;
+  user-select: none;
+  overflow: hidden;
+  box-sizing: border-box;
+  white-space: pre;
+  background: transparent;
+  height: 100%;
+}
+
 .jot-editor {
+  flex-grow: 1;
   width: 100%;
   height: 100%;
   background: transparent;

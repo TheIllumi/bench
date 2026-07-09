@@ -172,6 +172,10 @@ export function renderSettingsView(container) {
                 <span class="settings-label">Auto-save</span>
                 <input type="checkbox" id="settings-jot-auto-save" class="bench-checkbox" ${settings.jotAutoSave ? 'checked' : ''}>
               </div>
+              <div class="settings-item">
+                <span class="settings-label">Show line numbers</span>
+                <input type="checkbox" id="settings-jot-show-line-numbers" class="bench-checkbox" ${settings.jotShowLineNumbers ? 'checked' : ''}>
+              </div>
             </div>
             
           </div>
@@ -255,6 +259,7 @@ export function renderSettingsView(container) {
   const jotFontFamilySelect = container.querySelector('#settings-jot-font-family');
   const jotTabSizeSelect = container.querySelector('#settings-jot-tab-size');
   const jotAutoSaveCheck = container.querySelector('#settings-jot-auto-save');
+  const jotShowLineNumbersCheck = container.querySelector('#settings-jot-show-line-numbers');
 
   function updateSettings() {
     const nextSettings = {
@@ -276,7 +281,8 @@ export function renderSettingsView(container) {
       defaultArea: defaultAreaSelect.value,
       jotFontFamily: jotFontFamilySelect.value,
       jotTabSize: jotTabSizeSelect.value,
-      jotAutoSave: jotAutoSaveCheck.checked
+      jotAutoSave: jotAutoSaveCheck.checked,
+      jotShowLineNumbers: jotShowLineNumbersCheck.checked
     };
 
     startupModuleSelect.disabled = rememberLastModuleCheck.checked;
@@ -299,6 +305,7 @@ export function renderSettingsView(container) {
   jotFontFamilySelect.addEventListener('change', updateSettings);
   jotTabSizeSelect.addEventListener('change', updateSettings);
   jotAutoSaveCheck.addEventListener('change', updateSettings);
+  jotShowLineNumbersCheck.addEventListener('change', updateSettings);
 
   // Data actions
   const importBtn = container.querySelector('#settings-data-import');

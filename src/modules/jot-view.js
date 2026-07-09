@@ -11,8 +11,8 @@ export function renderJotView(container) {
 
   const settings = SettingsStore.load();
 
-  const wrapper = document.createElement('div');
-  wrapper.className = 'jot-container';
+  const containerWrapper = document.createElement('div');
+  containerWrapper.className = 'jot-container';
 
   const textarea = document.createElement('textarea');
   textarea.className = 'jot-editor';
@@ -64,8 +64,40 @@ export function renderJotView(container) {
     }
   });
 
-  wrapper.appendChild(textarea);
-  container.appendChild(wrapper);
+  if (settings.jotShowLineNumbers) {
+    const editorWrapper = document.createElement('div');
+    editorWrapper.className = 'jot-editor-wrapper';
+
+    const gutter = document.createElement('div');
+    gutter.className = 'jot-gutter';
+    gutter.setAttribute('aria-hidden', 'true');
+    gutter.style.fontFamily = settings.jotFontFamily || 'monospace';
+
+    const updateLineNumbers = () => {
+      const lineCount = textarea.value.split('\n').length;
+      const lines = [];
+      for (let i = 1; i <= lineCount; i++) {
+        lines.push(i);
+      }
+      gutter.textContent = lines.join('\n');
+    };
+
+    textarea.addEventListener('input', updateLineNumbers);
+    textarea.addEventListener('scroll', () => {
+      gutter.scrollTop = textarea.scrollTop;
+    });
+
+    // Populate initial lines
+    updateLineNumbers();
+
+    editorWrapper.appendChild(gutter);
+    editorWrapper.appendChild(textarea);
+    containerWrapper.appendChild(editorWrapper);
+  } else {
+    containerWrapper.appendChild(textarea);
+  }
+
+  container.appendChild(containerWrapper);
 
   // Focus the editor
   requestAnimationFrame(() => {
