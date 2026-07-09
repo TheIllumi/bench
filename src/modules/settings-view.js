@@ -45,19 +45,19 @@ export function renderSettingsView(container) {
               </div>
 
               <div class="settings-item">
-                <span class="settings-label">Accent Color</span>
+                <span class="settings-label">Accent color</span>
                 <select id="settings-accent" class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);" disabled>
                   <option value="blue">Blue (Default)</option>
                 </select>
               </div>
 
               <div class="settings-item">
-                <span class="settings-label">Compact Mode</span>
+                <span class="settings-label">Compact mode</span>
                 <input type="checkbox" id="settings-compact" class="bench-checkbox" ${settings.compactMode ? 'checked' : ''}>
               </div>
 
               <div class="settings-item">
-                <span class="settings-label">Font Size</span>
+                <span class="settings-label">Font size</span>
                 <select id="settings-font-size" class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);">
                   <option value="small" ${settings.fontSize === 'small' ? 'selected' : ''}>Small</option>
                   <option value="medium" ${settings.fontSize === 'medium' ? 'selected' : ''}>Medium</option>
@@ -66,7 +66,7 @@ export function renderSettingsView(container) {
               </div>
 
               <div class="settings-item">
-                <span class="settings-label">Reduce Animations</span>
+                <span class="settings-label">Reduce animations</span>
                 <input type="checkbox" id="settings-reduce-animations" class="bench-checkbox" ${settings.reduceAnimations ? 'checked' : ''}>
               </div>
             </div>
@@ -74,17 +74,17 @@ export function renderSettingsView(container) {
             <div class="settings-subheader" style="margin-top: var(--space-md);">Behavior</div>
             <div class="settings-list">
               <div class="settings-item">
-                <span class="settings-label">Confirm before deleting</span>
+                <span class="settings-label">Confirm delete</span>
                 <input type="checkbox" id="settings-confirm-delete" class="bench-checkbox" ${settings.confirmDelete ? 'checked' : ''}>
               </div>
 
               <div class="settings-item">
-                <span class="settings-label">Confirm before archiving</span>
+                <span class="settings-label">Confirm archive</span>
                 <input type="checkbox" id="settings-confirm-archive" class="bench-checkbox" ${settings.confirmArchive ? 'checked' : ''}>
               </div>
 
               <div class="settings-item">
-                <span class="settings-label">Default startup module</span>
+                <span class="settings-label">Startup module</span>
                 <select id="settings-startup-module" class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);" ${settings.rememberLastModule ? 'disabled' : ''}>
                   <option value="focus" ${settings.startupModule === 'focus' ? 'selected' : ''}>Focus</option>
                   <option value="capture" ${settings.startupModule === 'capture' ? 'selected' : ''}>Capture</option>
@@ -97,7 +97,7 @@ export function renderSettingsView(container) {
               </div>
 
               <div class="settings-item">
-                <span class="settings-label">Remember last opened module</span>
+                <span class="settings-label">Remember last module</span>
                 <input type="checkbox" id="settings-remember-last-module" class="bench-checkbox" ${settings.rememberLastModule ? 'checked' : ''}>
               </div>
             </div>
@@ -113,11 +113,11 @@ export function renderSettingsView(container) {
             <div class="settings-subheader">Focus</div>
             <div class="settings-list">
               <div class="settings-item">
-                <span class="settings-label">Max Focus Tasks</span>
+                <span class="settings-label">Max focus tasks</span>
                 <span class="settings-value">3 (Strict Limit)</span>
               </div>
               <div class="settings-item">
-                <span class="settings-label">Auto-clear completed tasks</span>
+                <span class="settings-label">Auto-clear completed</span>
                 <input type="checkbox" class="bench-checkbox" disabled>
               </div>
 
@@ -126,11 +126,11 @@ export function renderSettingsView(container) {
             <div class="settings-subheader" style="margin-top: var(--space-md);">Areas</div>
             <div class="settings-list">
               <div class="settings-item">
-                <span class="settings-label">Confirm before archiving Area</span>
+                <span class="settings-label">Confirm archive</span>
                 <input type="checkbox" class="bench-checkbox" disabled checked>
               </div>
               <div class="settings-item">
-                <span class="settings-label">Default Area for new tasks</span>
+                <span class="settings-label">Default area</span>
                 <select class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);" disabled>
                   <option value="none">None</option>
                 </select>
@@ -140,7 +140,7 @@ export function renderSettingsView(container) {
             <div class="settings-subheader" style="margin-top: var(--space-md);">Jot</div>
             <div class="settings-list">
               <div class="settings-item">
-                <span class="settings-label">Default Font Family</span>
+                <span class="settings-label">Font family</span>
                 <select class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);" disabled>
                   <option value="monospace">Monospace</option>
                 </select>
@@ -152,7 +152,7 @@ export function renderSettingsView(container) {
                 </select>
               </div>
               <div class="settings-item">
-                <span class="settings-label">Auto-save on keystroke</span>
+                <span class="settings-label">Auto-save</span>
                 <input type="checkbox" class="bench-checkbox" disabled checked>
               </div>
             </div>
