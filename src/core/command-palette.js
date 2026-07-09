@@ -19,13 +19,6 @@ const CHECKBOX_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height
 const CHECKED_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>`;
 
 // Register core default commands on initialization
-CommandRegistry.register({ id: 'nav-focus', label: 'Go to Focus', category: 'Navigation', action: () => navigateTo('focus'), shortcut: '⌥1', icon: TARGET_ICON });
-CommandRegistry.register({ id: 'nav-capture', label: 'Go to Capture', category: 'Navigation', action: () => navigateTo('capture'), shortcut: '⌥2', icon: INBOX_ICON });
-CommandRegistry.register({ id: 'nav-areas', label: 'Go to Areas', category: 'Navigation', action: () => navigateTo('areas'), shortcut: '⌥3', icon: LAYERS_ICON });
-CommandRegistry.register({ id: 'nav-parking-lot', label: 'Go to Parking Lot', category: 'Navigation', action: () => navigateTo('parking-lot'), shortcut: '⌥4', icon: COFFEE_ICON });
-CommandRegistry.register({ id: 'nav-archive', label: 'Go to Archive', category: 'Navigation', action: () => navigateTo('archive'), shortcut: '⌥5', icon: ARCHIVE_ICON });
-CommandRegistry.register({ id: 'nav-jot', label: 'Go to Jot', category: 'Navigation', action: () => navigateTo('jot'), shortcut: '⌥6', icon: JOT_ICON });
-CommandRegistry.register({ id: 'nav-settings', label: 'Go to Settings', category: 'Navigation', action: () => navigateTo('settings'), shortcut: '⌥7', icon: SETTINGS_ICON });
 
 const KEYBOARD_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="12" rx="2" x="2" y="6"/><path d="M6 12h.01"/><path d="M10 12h.01"/><path d="M14 12h.01"/><path d="M18 12h.01"/><path d="M6 16h.01"/><path d="M18 16h.01"/><path d="M10 16h4"/></svg>`;
 CommandRegistry.register({ id: 'show-shortcuts', label: 'Show Keyboard Shortcuts', category: 'Help', action: showShortcutsModal, icon: KEYBOARD_ICON });
@@ -181,9 +174,7 @@ function updateResults(query) {
     (i.focused === true && i.status === 'active') || 
     (i.module === 'focus' && i.status === 'completed')
   );
-  const captureItems = filteredItems.filter(i => i.module === 'capture' && !i.focused);
   const parkingItems = filteredItems.filter(i => i.module === 'parking-lot' && !i.focused);
-  const archiveItems = filteredItems.filter(i => i.module === 'archive' && !i.focused);
 
   // Focus
   if (focusItems.length > 0) {
@@ -198,19 +189,6 @@ function updateResults(query) {
     });
   }
 
-  // Capture
-  if (captureItems.length > 0) {
-    visibleItems.push({ type: 'header', label: 'Captured Ideas' });
-    captureItems.forEach(task => {
-      visibleItems.push({
-        type: 'task',
-        label: task.title,
-        icon: CHECKBOX_ICON,
-        action: () => triggerSelectCapture(task.id)
-      });
-    });
-  }
-
   // Parking Lot
   if (parkingItems.length > 0) {
     visibleItems.push({ type: 'header', label: 'Parking Lot' });
@@ -220,19 +198,6 @@ function updateResults(query) {
         label: task.title,
         icon: CHECKBOX_ICON,
         action: () => triggerSelectParked(task.id)
-      });
-    });
-  }
-
-  // Archive
-  if (archiveItems.length > 0) {
-    visibleItems.push({ type: 'header', label: 'Archive' });
-    archiveItems.forEach(task => {
-      visibleItems.push({
-        type: 'task',
-        label: `[Archive] ${task.title}`,
-        icon: CHECKBOX_ICON,
-        action: () => triggerSelectArchived(task.id)
       });
     });
   }
