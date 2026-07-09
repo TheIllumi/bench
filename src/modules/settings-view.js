@@ -87,19 +87,60 @@ export function renderSettingsView(container) {
         <!-- Productivity -->
         <div>
           <div class="completed-header">Productivity</div>
-          <div class="settings-list">
-            <div class="settings-item">
-              <span class="settings-label">Focus</span>
-              <span class="settings-value">Active (3 tasks max)</span>
+          <div class="settings-list-group">
+            
+            <div class="settings-subheader">Focus</div>
+            <div class="settings-list">
+              <div class="settings-item">
+                <span class="settings-label">Max Focus Tasks</span>
+                <span class="settings-value">3 (Strict Limit)</span>
+              </div>
+              <div class="settings-item">
+                <span class="settings-label">Auto-clear completed tasks</span>
+                <input type="checkbox" style="cursor: pointer;" disabled>
+              </div>
+              <div class="settings-item">
+                <span class="settings-label">Focus session duration</span>
+                <select class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);" disabled>
+                  <option value="25">25 minutes</option>
+                </select>
+              </div>
             </div>
-            <div class="settings-item">
-              <span class="settings-label">Areas</span>
-              <span class="settings-value">Active</span>
+
+            <div class="settings-subheader" style="margin-top: var(--space-md);">Areas</div>
+            <div class="settings-list">
+              <div class="settings-item">
+                <span class="settings-label">Confirm before archiving Area</span>
+                <input type="checkbox" style="cursor: pointer;" disabled checked>
+              </div>
+              <div class="settings-item">
+                <span class="settings-label">Default Area for new tasks</span>
+                <select class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);" disabled>
+                  <option value="none">None</option>
+                </select>
+              </div>
             </div>
-            <div class="settings-item">
-              <span class="settings-label">Jot</span>
-              <span class="settings-value">Active</span>
+
+            <div class="settings-subheader" style="margin-top: var(--space-md);">Jot</div>
+            <div class="settings-list">
+              <div class="settings-item">
+                <span class="settings-label">Default Font Family</span>
+                <select class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);" disabled>
+                  <option value="monospace">Monospace</option>
+                </select>
+              </div>
+              <div class="settings-item">
+                <span class="settings-label">Tab size</span>
+                <select class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);" disabled>
+                  <option value="tab">Tab Character</option>
+                </select>
+              </div>
+              <div class="settings-item">
+                <span class="settings-label">Auto-save on keystroke</span>
+                <input type="checkbox" style="cursor: pointer;" disabled checked>
+              </div>
             </div>
+            
           </div>
         </div>
 
