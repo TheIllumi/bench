@@ -100,6 +100,14 @@ export function renderSettingsView(container) {
                 <span class="settings-label">Remember last module</span>
                 <input type="checkbox" id="settings-remember-last-module" class="bench-checkbox" ${settings.rememberLastModule ? 'checked' : ''}>
               </div>
+
+              <div class="settings-item">
+                <span class="settings-label">Shortcut style</span>
+                <select id="settings-shortcut-style" class="settings-select">
+                  <option value="windows" ${settings.shortcutStyle === 'windows' ? 'selected' : ''}>Windows</option>
+                  <option value="mac" ${settings.shortcutStyle === 'mac' ? 'selected' : ''}>macOS</option>
+                </select>
+              </div>
             </div>
 
           </div>
@@ -231,6 +239,7 @@ export function renderSettingsView(container) {
   const confirmArchiveCheck = container.querySelector('#settings-confirm-archive');
   const startupModuleSelect = container.querySelector('#settings-startup-module');
   const rememberLastModuleCheck = container.querySelector('#settings-remember-last-module');
+  const shortcutStyleSelect = container.querySelector('#settings-shortcut-style');
 
   function updateSettings() {
     const nextSettings = {
@@ -244,6 +253,7 @@ export function renderSettingsView(container) {
       confirmArchive: confirmArchiveCheck.checked,
       startupModule: startupModuleSelect.value,
       rememberLastModule: rememberLastModuleCheck.checked,
+      shortcutStyle: shortcutStyleSelect.value,
       lastOpenedModule: settings.lastOpenedModule
     };
 
@@ -260,6 +270,7 @@ export function renderSettingsView(container) {
   confirmArchiveCheck.addEventListener('change', updateSettings);
   startupModuleSelect.addEventListener('change', updateSettings);
   rememberLastModuleCheck.addEventListener('change', updateSettings);
+  shortcutStyleSelect.addEventListener('change', updateSettings);
 
   // Data actions
   const importBtn = container.querySelector('#settings-data-import');

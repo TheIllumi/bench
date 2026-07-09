@@ -6,6 +6,7 @@ const DEFAULT_SETTINGS = {
   compactMode: false,
   fontSize: 'medium',
   reduceAnimations: false,
+  shortcutStyle: (typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform)) ? 'mac' : 'windows',
   
   // Behavior
   confirmDelete: true,
@@ -59,6 +60,54 @@ export const SettingsStore = {
 
     // Apply Reduce Animations
     root.setAttribute('data-reduce-animations', settings.reduceAnimations ? 'true' : 'false');
+
+    // Apply Shortcut Style
+    this.applyShortcutStyle(settings.shortcutStyle || 'windows');
+  },
+
+  applyShortcutStyle(style) {
+    if (typeof document === 'undefined') return;
+    const isMac = style === 'mac';
+
+    // Update sidebar nav items navigation shortcuts
+    const navItems = document.querySelectorAll('.sidebar-nav .nav-item[data-module]');
+    navItems.forEach(item => {
+      const shortcutSpan = item.querySelector('.nav-shortcut');
+      if (shortcutSpan) {
+        const moduleName = item.getAttribute('data-module');
+        const numMap = {
+          'focus': 1,
+          'capture': 2,
+          'areas': 3,
+          'parking-lot': 4,
+          'archive': 5,
+          'jot': 6,
+          'settings': 7
+        };
+        const num = numMap[moduleName];
+        if (num) {
+          shortcutSpan.textContent = isMac ? `⌥${num}` : `Alt+${num}`;
+        }
+      }
+    });
+
+    // Update Palette button shortcut
+    const paletteBtn = document.getElementById('sidebar-palette-btn');
+    if (paletteBtn) {
+      const shortcutSpan = paletteBtn.querySelector('.nav-shortcut');
+      if (shortcutSpan) {
+        shortcutSpan.textContent = isMac ? '⌘K' : 'Ctrl+K';
+      }
+    }
+
+    // Update Toggle Sidebar button shortcut
+    const toggleBtn = document.getElementById('sidebar-toggle');
+    if (toggleBtn) {
+      const shortcutSpan = toggleBtn.querySelector('.nav-shortcut');
+      if (shortcutSpan) {
+        shortcutSpan.textContent = isMac ? '⌘B' : 'Ctrl+B';
+      }
+    }
   },
 
   initialize() {
