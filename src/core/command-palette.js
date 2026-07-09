@@ -394,11 +394,13 @@ function showShortcutsModal() {
       <div class="shortcuts-group-title">List Navigation & Actions</div>
       <table class="shortcuts-table">
         <tr><td class="shortcuts-key">Arrow Up / Down</td><td class="shortcuts-desc">Move selection</td></tr>
-        <tr><td class="shortcuts-key">Enter</td><td class="shortcuts-desc">Open selected item in Inspector</td></tr>
+        <tr><td class="shortcuts-key">Enter / E</td><td class="shortcuts-desc">Edit selected item inline</td></tr>
+        <tr><td class="shortcuts-key">Space</td><td class="shortcuts-desc">Toggle completion of selected item</td></tr>
         <tr><td class="shortcuts-key">F</td><td class="shortcuts-desc">Move selected item to Focus</td></tr>
         <tr><td class="shortcuts-key">P</td><td class="shortcuts-desc">Move selected item to Parking Lot</td></tr>
         <tr><td class="shortcuts-key">A</td><td class="shortcuts-desc">Move selected item to Archive</td></tr>
         <tr><td class="shortcuts-key">D / Delete</td><td class="shortcuts-desc">Delete selected item</td></tr>
+        <tr><td class="shortcuts-key">R</td><td class="shortcuts-desc">Restore item (Archive) / Clear completed (Focus)</td></tr>
       </table>
       
       <div class="shortcuts-group-title">Inspector & Notes Editor</div>

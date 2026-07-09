@@ -588,13 +588,18 @@ function handleGlobalKeydown(event) {
 
   // Global Keys (when not typing)
   if (event.key.toLowerCase() === 'a') {
-    if (active.length < 3) {
+    if (selectedTaskId) {
       event.preventDefault();
-      isCreating = true;
-      setSelectedTaskId(null);
-      renderView();
+      archiveTask(selectedTaskId);
     } else {
-      ToastService.show("Focus is full. Complete a task first.", "info");
+      if (active.length < 3) {
+        event.preventDefault();
+        isCreating = true;
+        setSelectedTaskId(null);
+        renderView();
+      } else {
+        ToastService.show("Focus is full. Complete a task first.", "info");
+      }
     }
     return;
   }
@@ -664,6 +669,11 @@ function handleGlobalKeydown(event) {
     case 'X':
       event.preventDefault();
       deleteTask(selectedTaskId);
+      break;
+    case 'p':
+    case 'P':
+      event.preventDefault();
+      parkTask(selectedTaskId);
       break;
   }
 }

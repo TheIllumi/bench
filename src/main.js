@@ -158,8 +158,11 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Register Ctrl+B shortcut to toggle sidebar
+  // Register Ctrl+B / Cmd+B shortcut to toggle sidebar
   registerShortcut('ctrl+b', () => {
+    toggleSidebar();
+  });
+  registerShortcut('meta+b', () => {
     toggleSidebar();
   });
 

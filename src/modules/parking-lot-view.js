@@ -513,6 +513,8 @@ function handleGlobalKeydown(event) {
       }
       break;
     case 'Enter':
+    case 'e':
+    case 'E':
       event.preventDefault();
       startEditing(selectedItemId);
       break;
@@ -528,6 +530,8 @@ function handleGlobalKeydown(event) {
       break;
     case 'p':
     case 'P':
+    case 'f':
+    case 'F':
       event.preventDefault();
       toggleFocus(selectedItemId);
       break;
