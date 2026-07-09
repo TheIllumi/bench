@@ -154,19 +154,23 @@ export function renderSettingsView(container) {
             <div class="settings-list">
               <div class="settings-item">
                 <span class="settings-label">Font family</span>
-                <select class="settings-select" disabled>
-                  <option value="monospace">Monospace</option>
+                <select id="settings-jot-font-family" class="settings-select">
+                  <option value="monospace" ${settings.jotFontFamily === 'monospace' ? 'selected' : ''}>Monospace</option>
+                  <option value="sans-serif" ${settings.jotFontFamily === 'sans-serif' ? 'selected' : ''}>Sans-serif</option>
+                  <option value="serif" ${settings.jotFontFamily === 'serif' ? 'selected' : ''}>Serif</option>
                 </select>
               </div>
               <div class="settings-item">
                 <span class="settings-label">Tab size</span>
-                <select class="settings-select" disabled>
-                  <option value="tab">Tab Character</option>
+                <select id="settings-jot-tab-size" class="settings-select">
+                  <option value="tab" ${settings.jotTabSize === 'tab' ? 'selected' : ''}>Tab Character</option>
+                  <option value="2" ${settings.jotTabSize === '2' ? 'selected' : ''}>2 Spaces</option>
+                  <option value="4" ${settings.jotTabSize === '4' ? 'selected' : ''}>4 Spaces</option>
                 </select>
               </div>
               <div class="settings-item">
                 <span class="settings-label">Auto-save</span>
-                <input type="checkbox" class="bench-checkbox" disabled checked>
+                <input type="checkbox" id="settings-jot-auto-save" class="bench-checkbox" ${settings.jotAutoSave ? 'checked' : ''}>
               </div>
             </div>
             
@@ -248,6 +252,9 @@ export function renderSettingsView(container) {
   const autoClearCompletedCheck = container.querySelector('#settings-auto-clear-completed');
   const confirmArchiveAreaCheck = container.querySelector('#settings-confirm-archive-area');
   const defaultAreaSelect = container.querySelector('#settings-default-area');
+  const jotFontFamilySelect = container.querySelector('#settings-jot-font-family');
+  const jotTabSizeSelect = container.querySelector('#settings-jot-tab-size');
+  const jotAutoSaveCheck = container.querySelector('#settings-jot-auto-save');
 
   function updateSettings() {
     const nextSettings = {
@@ -266,7 +273,10 @@ export function renderSettingsView(container) {
       
       autoClearCompleted: autoClearCompletedCheck.checked,
       confirmArchiveArea: confirmArchiveAreaCheck.checked,
-      defaultArea: defaultAreaSelect.value
+      defaultArea: defaultAreaSelect.value,
+      jotFontFamily: jotFontFamilySelect.value,
+      jotTabSize: jotTabSizeSelect.value,
+      jotAutoSave: jotAutoSaveCheck.checked
     };
 
     startupModuleSelect.disabled = rememberLastModuleCheck.checked;
@@ -286,6 +296,9 @@ export function renderSettingsView(container) {
   autoClearCompletedCheck.addEventListener('change', updateSettings);
   confirmArchiveAreaCheck.addEventListener('change', updateSettings);
   defaultAreaSelect.addEventListener('change', updateSettings);
+  jotFontFamilySelect.addEventListener('change', updateSettings);
+  jotTabSizeSelect.addEventListener('change', updateSettings);
+  jotAutoSaveCheck.addEventListener('change', updateSettings);
 
   // Data actions
   const importBtn = container.querySelector('#settings-data-import');

@@ -1,5 +1,6 @@
 import { JotStore } from '../core/jot-store.js';
 import { ToastService } from '../ui/toast.js';
+import { SettingsStore } from '../core/settings-store.js';
 
 /**
  * Jot View Module
@@ -7,6 +8,8 @@ import { ToastService } from '../ui/toast.js';
  */
 export function renderJotView(container) {
   container.innerHTML = '';
+
+  const settings = SettingsStore.load();
 
   const wrapper = document.createElement('div');
   wrapper.className = 'jot-container';
@@ -16,11 +19,21 @@ export function renderJotView(container) {
   textarea.placeholder = 'Write down your thoughts...';
   textarea.setAttribute('aria-label', 'Jot text editor');
 
+  // Apply Font Family configuration
+  textarea.style.fontFamily = settings.jotFontFamily || 'monospace';
+
   // Restore saved content
   textarea.value = JotStore.loadJot();
 
-  // Auto-save on input
+  // Auto-save on input (if enabled)
   textarea.addEventListener('input', () => {
+    if (settings.jotAutoSave) {
+      JotStore.saveJot(textarea.value);
+    }
+  });
+
+  // Also save on blur to protect user data from view switching loss
+  textarea.addEventListener('blur', () => {
     JotStore.saveJot(textarea.value);
   });
 
@@ -28,6 +41,7 @@ export function renderJotView(container) {
   textarea.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
+      JotStore.saveJot(textarea.value);
       ToastService.show('Saved.', 'success');
     } else if (e.key === 'Tab') {
       e.preventDefault();
@@ -35,10 +49,17 @@ export function renderJotView(container) {
       const end = textarea.selectionEnd;
       const val = textarea.value;
       
-      textarea.value = val.substring(0, start) + '\t' + val.substring(end);
-      textarea.selectionStart = textarea.selectionEnd = start + 1;
+      let tabChar = '\t';
+      if (settings.jotTabSize === '2') {
+        tabChar = '  ';
+      } else if (settings.jotTabSize === '4') {
+        tabChar = '    ';
+      }
+
+      textarea.value = val.substring(0, start) + tabChar + val.substring(end);
+      textarea.selectionStart = textarea.selectionEnd = start + tabChar.length;
       
-      // Dispatch input event to trigger auto-save
+      // Dispatch input event to trigger auto-save (if enabled)
       textarea.dispatchEvent(new Event('input'));
     }
   });

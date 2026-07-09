@@ -20,7 +20,12 @@ const DEFAULT_SETTINGS = {
   
   // Areas
   confirmArchiveArea: true,
-  defaultArea: 'none'
+  defaultArea: 'none',
+  
+  // Jot
+  jotFontFamily: 'monospace',
+  jotTabSize: 'tab',
+  jotAutoSave: true
 };
 
 export const SettingsStore = {
