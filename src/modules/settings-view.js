@@ -1,7 +1,28 @@
 import { SettingsStore } from '../core/settings-store.js';
+import { Repository } from '../core/repository.js';
+import { DialogService } from '../ui/dialog.js';
+import { ToastService } from '../ui/toast.js';
+import { JotStore } from '../core/jot-store.js';
 
 export function renderSettingsView(container) {
   const settings = SettingsStore.load();
+
+  const backup = localStorage.getItem('bench_local_backup');
+  let backupTimeText = 'restore backup';
+  if (backup) {
+    try {
+      const parsed = JSON.parse(backup);
+      if (parsed && parsed.timestamp) {
+        const timeStr = new Date(parsed.timestamp).toLocaleDateString(undefined, {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        backupTimeText = `restore (backup: ${timeStr})`;
+      }
+    } catch (e) {}
+  }
 
   container.innerHTML = `
     <div class="settings-view">
@@ -148,21 +169,21 @@ export function renderSettingsView(container) {
         <div>
           <div class="completed-header">Data</div>
           <div class="settings-list">
-            <div class="settings-item action-item">
+            <div class="settings-item action-item" id="settings-data-import">
               <span class="settings-label">Import</span>
               <span class="settings-action-text">import JSON</span>
             </div>
-            <div class="settings-item action-item">
+            <div class="settings-item action-item" id="settings-data-export">
               <span class="settings-label">Export</span>
               <span class="settings-action-text">export JSON</span>
             </div>
-            <div class="settings-item action-item">
+            <div class="settings-item action-item" id="settings-data-backup">
               <span class="settings-label">Backup</span>
               <span class="settings-action-text">create backup</span>
             </div>
-            <div class="settings-item action-item">
+            <div class="settings-item action-item" id="settings-data-restore">
               <span class="settings-label">Restore</span>
-              <span class="settings-action-text">restore backup</span>
+              <span class="settings-action-text" id="settings-data-restore-btn">${backupTimeText}</span>
             </div>
           </div>
         </div>
@@ -244,4 +265,150 @@ export function renderSettingsView(container) {
   confirmArchiveCheck.addEventListener('change', updateSettings);
   startupModuleSelect.addEventListener('change', updateSettings);
   rememberLastModuleCheck.addEventListener('change', updateSettings);
+
+  // Data actions
+  const importBtn = container.querySelector('#settings-data-import');
+  const exportBtn = container.querySelector('#settings-data-export');
+  const backupBtn = container.querySelector('#settings-data-backup');
+  const restoreBtn = container.querySelector('#settings-data-restore');
+
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+      try {
+        const exportData = {
+          version: '0.1.0',
+          items: Repository.getAll(),
+          settings: SettingsStore.load(),
+          jot: JotStore.loadJot()
+        };
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `bench_export_${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        ToastService.show('Data exported successfully.', 'success');
+      } catch (err) {
+        console.error(err);
+        ToastService.show('Failed to export data.', 'error');
+      }
+    });
+  }
+
+  if (importBtn) {
+    importBtn.addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const imported = JSON.parse(event.target.result);
+            if (!imported || !Array.isArray(imported.items)) {
+              ToastService.show('Invalid file format. Missing items.', 'error');
+              return;
+            }
+            DialogService.confirm({
+              title: 'Import Data',
+              message: 'Importing will completely overwrite all your current tasks, projects, areas, settings, and jots. Are you sure you want to proceed?',
+              confirmText: 'Import',
+              cancelText: 'Cancel',
+              variant: 'danger'
+            }).then((confirmed) => {
+              if (confirmed) {
+                localStorage.setItem('bench_items', JSON.stringify(imported.items));
+                if (imported.settings) {
+                  SettingsStore.save(imported.settings);
+                }
+                if (imported.jot !== undefined) {
+                  localStorage.setItem('bench_jot', imported.jot);
+                }
+                ToastService.show('Data imported successfully.', 'success');
+                setTimeout(() => {
+                  window.location.reload();
+                }, 1000);
+              }
+            });
+          } catch (err) {
+            ToastService.show('Failed to parse JSON file.', 'error');
+          }
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    });
+  }
+
+  if (backupBtn) {
+    backupBtn.addEventListener('click', () => {
+      try {
+        const backupData = {
+          timestamp: Date.now(),
+          items: Repository.getAll(),
+          settings: SettingsStore.load(),
+          jot: JotStore.loadJot()
+        };
+        localStorage.setItem('bench_local_backup', JSON.stringify(backupData));
+        ToastService.show('Local backup created successfully.', 'success');
+        
+        const restoreText = container.querySelector('#settings-data-restore-btn');
+        if (restoreText) {
+          const timeStr = new Date(backupData.timestamp).toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          restoreText.textContent = `restore (backup: ${timeStr})`;
+        }
+      } catch (err) {
+        console.error(err);
+        ToastService.show('Failed to create backup.', 'error');
+      }
+    });
+  }
+
+  if (restoreBtn) {
+    restoreBtn.addEventListener('click', () => {
+      const backup = localStorage.getItem('bench_local_backup');
+      if (!backup) {
+        ToastService.show('No local backup found. Create a backup first.', 'error');
+        return;
+      }
+      try {
+        const parsed = JSON.parse(backup);
+        const backupTime = new Date(parsed.timestamp).toLocaleString();
+        DialogService.confirm({
+          title: 'Restore Backup',
+          message: `Restoring will replace all your current data with the backup from ${backupTime}. Are you sure you want to proceed?`,
+          confirmText: 'Restore',
+          cancelText: 'Cancel',
+          variant: 'danger'
+        }).then((confirmed) => {
+          if (confirmed) {
+            localStorage.setItem('bench_items', JSON.stringify(parsed.items));
+            if (parsed.settings) {
+              SettingsStore.save(parsed.settings);
+            }
+            if (parsed.jot !== undefined) {
+              localStorage.setItem('bench_jot', parsed.jot);
+            }
+            ToastService.show('Data restored successfully.', 'success');
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          }
+        });
+      } catch (err) {
+        console.error(err);
+        ToastService.show('Failed to restore backup.', 'error');
+      }
+    });
+  }
 }
