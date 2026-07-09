@@ -120,12 +120,7 @@ export function renderSettingsView(container) {
                 <span class="settings-label">Auto-clear completed tasks</span>
                 <input type="checkbox" class="bench-checkbox" disabled>
               </div>
-              <div class="settings-item">
-                <span class="settings-label">Focus session duration</span>
-                <select class="inspector-select" style="width: 140px; padding: 2px 4px; border: 1px solid var(--color-border);" disabled>
-                  <option value="25">25 minutes</option>
-                </select>
-              </div>
+
             </div>
 
             <div class="settings-subheader" style="margin-top: var(--space-md);">Areas</div>
