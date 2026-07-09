@@ -8,7 +8,7 @@ export function renderSettingsView(container) {
   const settings = SettingsStore.load();
 
   const backup = localStorage.getItem('bench_local_backup');
-  let backupTimeText = 'restore backup';
+  let backupTimeText = '';
   if (backup) {
     try {
       const parsed = JSON.parse(backup);
@@ -19,7 +19,7 @@ export function renderSettingsView(container) {
           hour: '2-digit',
           minute: '2-digit'
         });
-        backupTimeText = `restore (backup: ${timeStr})`;
+        backupTimeText = `(backup: ${timeStr})`;
       }
     } catch (e) {}
   }
@@ -177,8 +177,8 @@ export function renderSettingsView(container) {
               <button id="settings-data-backup" class="settings-btn">create backup</button>
             </div>
             <div class="settings-item">
-              <span class="settings-label">Restore</span>
-              <button id="settings-data-restore" class="settings-btn">${backupTimeText}</button>
+              <span class="settings-label">Restore <span id="settings-data-restore-details" style="font-weight: normal; font-size: var(--font-size-xs); color: var(--color-text-muted); margin-left: var(--space-xs);">${backupTimeText}</span></span>
+              <button id="settings-data-restore" class="settings-btn">restore</button>
             </div>
           </div>
         </div>
@@ -352,14 +352,15 @@ export function renderSettingsView(container) {
         localStorage.setItem('bench_local_backup', JSON.stringify(backupData));
         ToastService.show('Local backup created successfully.', 'success');
         
-        if (restoreBtn) {
+        const restoreDetails = container.querySelector('#settings-data-restore-details');
+        if (restoreDetails) {
           const timeStr = new Date(backupData.timestamp).toLocaleDateString(undefined, {
             month: 'short',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
           });
-          restoreBtn.textContent = `restore (backup: ${timeStr})`;
+          restoreDetails.textContent = `(backup: ${timeStr})`;
         }
       } catch (err) {
         console.error(err);
