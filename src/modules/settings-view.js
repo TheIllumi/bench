@@ -53,7 +53,7 @@ export function renderSettingsView(container) {
 
               <div class="settings-item">
                 <span class="settings-label">Compact Mode</span>
-                <input type="checkbox" id="settings-compact" style="cursor: pointer;" ${settings.compactMode ? 'checked' : ''}>
+                <input type="checkbox" id="settings-compact" class="bench-checkbox" ${settings.compactMode ? 'checked' : ''}>
               </div>
 
               <div class="settings-item">
@@ -67,7 +67,7 @@ export function renderSettingsView(container) {
 
               <div class="settings-item">
                 <span class="settings-label">Reduce Animations</span>
-                <input type="checkbox" id="settings-reduce-animations" style="cursor: pointer;" ${settings.reduceAnimations ? 'checked' : ''}>
+                <input type="checkbox" id="settings-reduce-animations" class="bench-checkbox" ${settings.reduceAnimations ? 'checked' : ''}>
               </div>
             </div>
 
@@ -75,12 +75,12 @@ export function renderSettingsView(container) {
             <div class="settings-list">
               <div class="settings-item">
                 <span class="settings-label">Confirm before deleting</span>
-                <input type="checkbox" id="settings-confirm-delete" style="cursor: pointer;" ${settings.confirmDelete ? 'checked' : ''}>
+                <input type="checkbox" id="settings-confirm-delete" class="bench-checkbox" ${settings.confirmDelete ? 'checked' : ''}>
               </div>
 
               <div class="settings-item">
                 <span class="settings-label">Confirm before archiving</span>
-                <input type="checkbox" id="settings-confirm-archive" style="cursor: pointer;" ${settings.confirmArchive ? 'checked' : ''}>
+                <input type="checkbox" id="settings-confirm-archive" class="bench-checkbox" ${settings.confirmArchive ? 'checked' : ''}>
               </div>
 
               <div class="settings-item">
@@ -98,7 +98,7 @@ export function renderSettingsView(container) {
 
               <div class="settings-item">
                 <span class="settings-label">Remember last opened module</span>
-                <input type="checkbox" id="settings-remember-last-module" style="cursor: pointer;" ${settings.rememberLastModule ? 'checked' : ''}>
+                <input type="checkbox" id="settings-remember-last-module" class="bench-checkbox" ${settings.rememberLastModule ? 'checked' : ''}>
               </div>
             </div>
 
@@ -118,7 +118,7 @@ export function renderSettingsView(container) {
               </div>
               <div class="settings-item">
                 <span class="settings-label">Auto-clear completed tasks</span>
-                <input type="checkbox" style="cursor: pointer;" disabled>
+                <input type="checkbox" class="bench-checkbox" disabled>
               </div>
               <div class="settings-item">
                 <span class="settings-label">Focus session duration</span>
@@ -132,7 +132,7 @@ export function renderSettingsView(container) {
             <div class="settings-list">
               <div class="settings-item">
                 <span class="settings-label">Confirm before archiving Area</span>
-                <input type="checkbox" style="cursor: pointer;" disabled checked>
+                <input type="checkbox" class="bench-checkbox" disabled checked>
               </div>
               <div class="settings-item">
                 <span class="settings-label">Default Area for new tasks</span>
@@ -158,7 +158,7 @@ export function renderSettingsView(container) {
               </div>
               <div class="settings-item">
                 <span class="settings-label">Auto-save on keystroke</span>
-                <input type="checkbox" style="cursor: pointer;" disabled checked>
+                <input type="checkbox" class="bench-checkbox" disabled checked>
               </div>
             </div>
             

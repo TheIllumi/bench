@@ -1602,3 +1602,87 @@ html[data-reduce-animations="true"] {
   margin-bottom: var(--space-2xs);
   font-weight: 600;
 }
+
+/* Custom Bench Checkbox & Radio Controls */
+.bench-checkbox,
+.bench-radio {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+  margin: 0;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+              background-color var(--duration-fast) var(--ease-standard);
+  position: relative;
+  vertical-align: middle;
+}
+
+.bench-checkbox {
+  border-radius: 0px; /* Flat TUI Style */
+}
+
+.bench-radio {
+  border-radius: 50%; /* Radios must be circular */
+}
+
+/* Hover State */
+.bench-checkbox:hover:not(:disabled),
+.bench-radio:hover:not(:disabled) {
+  border-color: var(--color-text-secondary);
+}
+
+/* Keyboard Focus State */
+.bench-checkbox:focus-visible,
+.bench-radio:focus-visible {
+  border-color: var(--color-accent-blue);
+  box-shadow: 0 0 0 2px var(--color-accent-focus);
+}
+
+/* Checked State */
+.bench-checkbox:checked:not(:disabled) {
+  border-color: var(--color-accent-blue);
+}
+
+.bench-checkbox:checked:not(:disabled)::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background-color: var(--color-accent-blue);
+  display: block;
+}
+
+.bench-radio:checked:not(:disabled) {
+  border-color: var(--color-accent-blue);
+}
+
+.bench-radio:checked:not(:disabled)::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background-color: var(--color-accent-blue);
+  border-radius: 50%;
+  display: block;
+}
+
+/* Disabled State */
+.bench-checkbox:disabled,
+.bench-radio:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: var(--color-border);
+}
+
+.bench-checkbox:disabled:checked::before {
+  background-color: var(--color-text-secondary);
+}
+
+.bench-radio:disabled:checked::before {
+  background-color: var(--color-text-secondary);
+}
