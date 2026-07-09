@@ -14,6 +14,7 @@ const DEFAULT_SETTINGS = {
   startupModule: 'focus',
   rememberLastModule: false,
   lastOpenedModule: 'focus',
+  showSidebarShortcuts: true,
   
   // Focus
   autoClearCompleted: false,
@@ -76,6 +77,9 @@ export const SettingsStore = {
 
     // Apply Reduce Animations
     root.setAttribute('data-reduce-animations', settings.reduceAnimations ? 'true' : 'false');
+
+    // Apply Sidebar Shortcuts visibility
+    root.setAttribute('data-sidebar-shortcuts', settings.showSidebarShortcuts === false ? 'false' : 'true');
 
     // Apply Shortcut Style
     this.applyShortcutStyle(settings.shortcutStyle || 'windows');

@@ -118,6 +118,11 @@ export function renderSettingsView(container) {
                   <option value="mac" ${settings.shortcutStyle === 'mac' ? 'selected' : ''}>macOS</option>
                 </select>
               </div>
+
+              <div class="settings-item">
+                <span class="settings-label">Show sidebar shortcuts</span>
+                <input type="checkbox" id="settings-show-sidebar-shortcuts" class="bench-checkbox" ${settings.showSidebarShortcuts !== false ? 'checked' : ''}>
+              </div>
             </div>
 
           </div>
@@ -260,6 +265,7 @@ export function renderSettingsView(container) {
   const startupModuleSelect = container.querySelector('#settings-startup-module');
   const rememberLastModuleCheck = container.querySelector('#settings-remember-last-module');
   const shortcutStyleSelect = container.querySelector('#settings-shortcut-style');
+  const showSidebarShortcutsCheck = container.querySelector('#settings-show-sidebar-shortcuts');
   const autoClearCompletedCheck = container.querySelector('#settings-auto-clear-completed');
   const confirmArchiveAreaCheck = container.querySelector('#settings-confirm-archive-area');
   const defaultAreaSelect = container.querySelector('#settings-default-area');
@@ -282,6 +288,7 @@ export function renderSettingsView(container) {
       rememberLastModule: rememberLastModuleCheck.checked,
       shortcutStyle: shortcutStyleSelect.value,
       lastOpenedModule: settings.lastOpenedModule,
+      showSidebarShortcuts: showSidebarShortcutsCheck.checked,
       
       autoClearCompleted: autoClearCompletedCheck.checked,
       confirmArchiveArea: confirmArchiveAreaCheck.checked,
@@ -307,6 +314,7 @@ export function renderSettingsView(container) {
   startupModuleSelect.addEventListener('change', updateSettings);
   rememberLastModuleCheck.addEventListener('change', updateSettings);
   shortcutStyleSelect.addEventListener('change', updateSettings);
+  showSidebarShortcutsCheck.addEventListener('change', updateSettings);
   autoClearCompletedCheck.addEventListener('change', updateSettings);
   confirmArchiveAreaCheck.addEventListener('change', updateSettings);
   defaultAreaSelect.addEventListener('change', updateSettings);
