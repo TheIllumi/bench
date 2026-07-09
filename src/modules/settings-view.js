@@ -26,11 +26,11 @@ export function renderSettingsView(container) {
 
   container.innerHTML = `
     <div class="settings-view">
-      <div style="display: flex; flex-direction: column; gap: var(--space-md);">
+      <div style="display: flex; flex-direction: column; gap: var(--space-xl);">
         
         <!-- General -->
         <div>
-          <div class="completed-header">General</div>
+          <div class="settings-section-header">General</div>
           <div class="settings-list-group">
             
             <div class="settings-subheader">Appearance</div>
@@ -107,7 +107,7 @@ export function renderSettingsView(container) {
 
         <!-- Productivity -->
         <div>
-          <div class="completed-header">Productivity</div>
+          <div class="settings-section-header">Productivity</div>
           <div class="settings-list-group">
             
             <div class="settings-subheader">Focus</div>
@@ -162,7 +162,7 @@ export function renderSettingsView(container) {
 
         <!-- Data -->
         <div>
-          <div class="completed-header">Data</div>
+          <div class="settings-section-header">Data</div>
           <div class="settings-list">
             <div class="settings-item action-item" id="settings-data-import">
               <span class="settings-label">Import</span>
@@ -185,7 +185,7 @@ export function renderSettingsView(container) {
 
         <!-- Danger Zone -->
         <div>
-          <div class="completed-header" style="color: var(--color-danger);">Danger Zone</div>
+          <div class="settings-section-header" style="color: var(--color-danger);">Danger Zone</div>
           <div class="settings-list" style="border-left-color: rgba(247, 118, 142, 0.2);">
             <div class="settings-item action-item" id="settings-danger-clear-archive">
               <span class="settings-label" style="color: var(--color-danger);">Clear Archive</span>
@@ -200,7 +200,7 @@ export function renderSettingsView(container) {
 
         <!-- About -->
         <div>
-          <div class="completed-header">About</div>
+          <div class="settings-section-header">About</div>
           <div class="settings-list">
             <div class="settings-item">
               <span class="settings-label">Version</span>

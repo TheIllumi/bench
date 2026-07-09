@@ -1686,3 +1686,23 @@ html[data-reduce-animations="true"] {
 .bench-radio:disabled:checked::before {
   background-color: var(--color-text-secondary);
 }
+
+/* Settings Visual Hierarchy */
+.settings-section-header {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-2xs) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  user-select: none;
+}
+
+.settings-section-header::after {
+  content: '';
+  flex-grow: 1;
+  height: 1px;
+  background-color: var(--color-border);
+  opacity: 0.6;
+}
