@@ -192,11 +192,11 @@ export function renderSettingsView(container) {
         <div>
           <div class="completed-header" style="color: var(--color-danger);">Danger Zone</div>
           <div class="settings-list" style="border-left-color: rgba(247, 118, 142, 0.2);">
-            <div class="settings-item action-item">
+            <div class="settings-item action-item" id="settings-danger-clear-archive">
               <span class="settings-label" style="color: var(--color-danger);">Clear Archive</span>
               <span class="settings-action-text" style="color: var(--color-danger);">clear</span>
             </div>
-            <div class="settings-item action-item">
+            <div class="settings-item action-item" id="settings-danger-clear-database">
               <span class="settings-label" style="color: var(--color-danger);">Clear Database</span>
               <span class="settings-action-text" style="color: var(--color-danger);">wipe</span>
             </div>
@@ -409,6 +409,56 @@ export function renderSettingsView(container) {
         console.error(err);
         ToastService.show('Failed to restore backup.', 'error');
       }
+    });
+  }
+
+  // Danger Zone actions
+  const clearArchiveBtn = container.querySelector('#settings-danger-clear-archive');
+  const clearDatabaseBtn = container.querySelector('#settings-danger-clear-database');
+
+  if (clearArchiveBtn) {
+    clearArchiveBtn.addEventListener('click', () => {
+      DialogService.confirm({
+        title: 'Clear Archive',
+        message: 'Are you sure you want to permanently delete all archived projects, tasks, and areas? This action cannot be undone.',
+        confirmText: 'Clear Archive',
+        cancelText: 'Cancel',
+        variant: 'danger'
+      }).then((confirmed) => {
+        if (confirmed) {
+          Repository.clearModule('archive');
+          // Also clear archived areas
+          Repository.getAreas().forEach(area => {
+            if (area.archived) {
+              Repository.deleteAreaForce(area.id, null);
+            }
+          });
+          ToastService.show('Archive cleared successfully.', 'success');
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        }
+      });
+    });
+  }
+
+  if (clearDatabaseBtn) {
+    clearDatabaseBtn.addEventListener('click', () => {
+      DialogService.confirm({
+        title: 'Clear Database',
+        message: 'Are you sure you want to permanently wipe the entire database? This will delete all tasks, projects, areas, and checklists. This action cannot be undone.',
+        confirmText: 'Wipe Everything',
+        cancelText: 'Cancel',
+        variant: 'danger'
+      }).then((confirmed) => {
+        if (confirmed) {
+          Repository._saveRaw([]);
+          ToastService.show('Database cleared successfully.', 'success');
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        }
+      });
     });
   }
 }
