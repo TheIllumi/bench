@@ -50,8 +50,14 @@ export function renderSettingsView(container) {
 
               <div class="settings-item">
                 <span class="settings-label">Accent color</span>
-                <select id="settings-accent" class="settings-select" disabled>
-                  <option value="blue">Blue (Default)</option>
+                <select id="settings-accent" class="settings-select">
+                  <option value="blue"    ${settings.accentColor === 'blue'     ? 'selected' : ''}>Blue</option>
+                  <option value="cyan"    ${settings.accentColor === 'cyan'     ? 'selected' : ''}>Cyan</option>
+                  <option value="frost"   ${settings.accentColor === 'frost'    ? 'selected' : ''}>Frost</option>
+                  <option value="teal"    ${settings.accentColor === 'teal'     ? 'selected' : ''}>Teal</option>
+                  <option value="lavender" ${settings.accentColor === 'lavender' ? 'selected' : ''}>Lavender</option>
+                  <option value="purple"  ${settings.accentColor === 'purple'   ? 'selected' : ''}>Purple</option>
+                  <option value="iris"    ${settings.accentColor === 'iris'     ? 'selected' : ''}>Iris</option>
                 </select>
               </div>
 
@@ -244,6 +250,7 @@ export function renderSettingsView(container) {
 
   // Bind change events to save configuration state
   const themeSelect = container.querySelector('#settings-theme');
+  const accentSelect = container.querySelector('#settings-accent');
   const compactCheck = container.querySelector('#settings-compact');
   const fontSizeSelect = container.querySelector('#settings-font-size');
   const reduceAnimCheck = container.querySelector('#settings-reduce-animations');
@@ -264,7 +271,7 @@ export function renderSettingsView(container) {
   function updateSettings() {
     const nextSettings = {
       theme: themeSelect.value,
-      accentColor: 'blue',
+      accentColor: accentSelect.value,
       compactMode: compactCheck.checked,
       fontSize: fontSizeSelect.value,
       reduceAnimations: reduceAnimCheck.checked,
@@ -290,6 +297,7 @@ export function renderSettingsView(container) {
   }
 
   themeSelect.addEventListener('change', updateSettings);
+  accentSelect.addEventListener('change', updateSettings);
   compactCheck.addEventListener('change', updateSettings);
   fontSizeSelect.addEventListener('change', updateSettings);
   reduceAnimCheck.addEventListener('change', updateSettings);
