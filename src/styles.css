@@ -1511,7 +1511,7 @@ body {
   grid-template-columns: 1fr 160px;
   align-items: center;
   font-size: var(--font-size-sm);
-  padding: 4px 8px;
+  padding: 5px 8px;
   color: var(--color-text-secondary);
   gap: var(--space-md);
 }
@@ -1613,6 +1613,10 @@ html[data-reduce-animations="true"] {
   font-weight: 600;
 }
 
+.settings-list + .settings-subheader {
+  margin-top: var(--space-md);
+}
+
 /* Custom Bench Checkbox & Radio Controls */
 .bench-checkbox,
 .bench-radio {
@@ -1702,7 +1706,7 @@ html[data-reduce-animations="true"] {
   font-size: var(--font-size-sm);
   font-weight: 700;
   color: var(--color-text-primary);
-  margin: 0 0 var(--space-2xs) 0;
+  margin: 0 0 var(--space-xs) 0;
   display: flex;
   align-items: center;
   gap: var(--space-xs);
@@ -1805,7 +1809,6 @@ html[data-reduce-animations="true"] {
   border: 1px solid rgba(247, 118, 142, 0.3);
   padding: var(--space-md);
   background-color: rgba(247, 118, 142, 0.02);
-  margin-top: var(--space-xs);
 }
 
 .settings-danger-zone-container .settings-section-header {

@@ -71,7 +71,7 @@ export function renderSettingsView(container) {
               </div>
             </div>
 
-            <div class="settings-subheader" style="margin-top: var(--space-md);">Behavior</div>
+            <div class="settings-subheader">Behavior</div>
             <div class="settings-list">
               <div class="settings-item">
                 <span class="settings-label">Confirm delete</span>
@@ -123,7 +123,7 @@ export function renderSettingsView(container) {
 
             </div>
 
-            <div class="settings-subheader" style="margin-top: var(--space-md);">Areas</div>
+            <div class="settings-subheader">Areas</div>
             <div class="settings-list">
               <div class="settings-item">
                 <span class="settings-label">Confirm archive</span>
@@ -137,7 +137,7 @@ export function renderSettingsView(container) {
               </div>
             </div>
 
-            <div class="settings-subheader" style="margin-top: var(--space-md);">Jot</div>
+            <div class="settings-subheader">Jot</div>
             <div class="settings-list">
               <div class="settings-item">
                 <span class="settings-label">Font family</span>
