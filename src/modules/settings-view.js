@@ -164,21 +164,21 @@ export function renderSettingsView(container) {
         <div>
           <div class="settings-section-header">Data</div>
           <div class="settings-list">
-            <div class="settings-item action-item" id="settings-data-import">
+            <div class="settings-item">
               <span class="settings-label">Import</span>
-              <span class="settings-btn">import JSON</span>
+              <button id="settings-data-import" class="settings-btn">import JSON</button>
             </div>
-            <div class="settings-item action-item" id="settings-data-export">
+            <div class="settings-item">
               <span class="settings-label">Export</span>
-              <span class="settings-btn">export JSON</span>
+              <button id="settings-data-export" class="settings-btn">export JSON</button>
             </div>
-            <div class="settings-item action-item" id="settings-data-backup">
+            <div class="settings-item">
               <span class="settings-label">Backup</span>
-              <span class="settings-btn">create backup</span>
+              <button id="settings-data-backup" class="settings-btn">create backup</button>
             </div>
-            <div class="settings-item action-item" id="settings-data-restore">
+            <div class="settings-item">
               <span class="settings-label">Restore</span>
-              <span class="settings-btn" id="settings-data-restore-btn">${backupTimeText}</span>
+              <button id="settings-data-restore" class="settings-btn">${backupTimeText}</button>
             </div>
           </div>
         </div>
@@ -187,13 +187,13 @@ export function renderSettingsView(container) {
         <div class="settings-danger-zone-container">
           <div class="settings-section-header">Danger Zone</div>
           <div class="settings-list">
-            <div class="settings-item action-item" id="settings-danger-clear-archive">
+            <div class="settings-item">
               <span class="settings-label">Clear Archive</span>
-              <span class="settings-btn btn-danger">clear</span>
+              <button id="settings-danger-clear-archive" class="settings-btn btn-danger">clear</button>
             </div>
-            <div class="settings-item action-item" id="settings-danger-clear-database">
+            <div class="settings-item">
               <span class="settings-label">Clear Database</span>
-              <span class="settings-btn btn-danger">wipe</span>
+              <button id="settings-danger-clear-database" class="settings-btn btn-danger">wipe</button>
             </div>
           </div>
         </div>
@@ -352,15 +352,14 @@ export function renderSettingsView(container) {
         localStorage.setItem('bench_local_backup', JSON.stringify(backupData));
         ToastService.show('Local backup created successfully.', 'success');
         
-        const restoreText = container.querySelector('#settings-data-restore-btn');
-        if (restoreText) {
+        if (restoreBtn) {
           const timeStr = new Date(backupData.timestamp).toLocaleDateString(undefined, {
             month: 'short',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
           });
-          restoreText.textContent = `restore (backup: ${timeStr})`;
+          restoreBtn.textContent = `restore (backup: ${timeStr})`;
         }
       } catch (err) {
         console.error(err);
