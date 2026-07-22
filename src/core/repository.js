@@ -51,6 +51,16 @@ export const Repository = {
   },
 
   /**
+   * Retrieve a single item by ID (task or area).
+   * @param {string} id
+   * @returns {object|null} The item, or null if not found
+   */
+  get(id) {
+    if (!id) return null;
+    return this.getAll().find(item => item.id === id) || null;
+  },
+
+  /**
    * Determine if an item is an active Focus task.
    * Single source of truth across the application.
    * @param {object} item
