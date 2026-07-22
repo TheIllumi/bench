@@ -26,9 +26,17 @@ experiment, not a finished product yet.
 
 # Screenshots
 
-| Focus | Areas | Command Palette |
-|:---:|:---:|:---:|
-| ![Focus View](./screenshots/focus.png) | ![Areas View](./screenshots/areas.png) | ![Command Palette](./screenshots/palette.png) |
+### Focus
+
+![Focus View](./screenshots/focus.png)
+
+### Areas
+
+![Areas View](./screenshots/areas.png)
+
+### Command Palette
+
+![Command Palette](./screenshots/palette.png)
 
 ------------------------------------------------------------------------
 
