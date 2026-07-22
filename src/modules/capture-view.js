@@ -4,6 +4,7 @@ import { ToastService } from '../ui/toast.js';
 import { crossfade, getRelativeTime } from '../ui/utils.js';
 import { createSearchInput } from '../ui/search.js';
 import { openAreaPicker } from '../ui/area-picker.js';
+import { createResponsiveTaskActions } from '../ui/task-action-menu.js';
 import { QuickCapture } from '../core/quick-capture.js';
 import { createCheckbox } from '../ui/checkbox.js';
 import { SettingsStore } from '../core/settings-store.js';
@@ -312,9 +313,8 @@ function buildCaptureRow(item) {
   timeBadge.textContent = getRelativeTime(item.createdAt);
   row.appendChild(timeBadge);
 
-  // Right Actions (TUI plain text actions)
-  const actions = document.createElement('div');
-  actions.className = 'task-actions';
+  // Right Actions
+  const actionButtons = [];
 
   const focusBtn = document.createElement('button');
   focusBtn.className = 'action-btn';
@@ -327,6 +327,7 @@ function buildCaptureRow(item) {
     e.stopPropagation();
     toggleFocus(item.id);
   });
+  actionButtons.push(focusBtn);
 
   const assignBtn = document.createElement('button');
   assignBtn.className = 'action-btn';
@@ -339,6 +340,7 @@ function buildCaptureRow(item) {
       Repository.update(item.id, { areaId });
     });
   });
+  actionButtons.push(assignBtn);
 
   const parkBtn = document.createElement('button');
   parkBtn.className = 'action-btn';
@@ -348,6 +350,7 @@ function buildCaptureRow(item) {
     e.stopPropagation();
     parkItem(item.id);
   });
+  actionButtons.push(parkBtn);
 
   const archiveBtn = document.createElement('button');
   archiveBtn.className = 'action-btn';
@@ -357,6 +360,7 @@ function buildCaptureRow(item) {
     e.stopPropagation();
     archiveItem(item.id);
   });
+  actionButtons.push(archiveBtn);
 
   const delBtn = document.createElement('button');
   delBtn.className = 'action-btn btn-danger';
@@ -366,13 +370,9 @@ function buildCaptureRow(item) {
     e.stopPropagation();
     deleteItem(item.id);
   });
+  actionButtons.push(delBtn);
 
-  actions.appendChild(focusBtn);
-  actions.appendChild(assignBtn);
-  actions.appendChild(parkBtn);
-  actions.appendChild(archiveBtn);
-  actions.appendChild(delBtn);
-  row.appendChild(actions);
+  row.appendChild(createResponsiveTaskActions(actionButtons));
 
   if (!isCompleted) {
     row.addEventListener('click', () => {

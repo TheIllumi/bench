@@ -6,6 +6,7 @@ import { crossfade, getRelativeTime } from '../ui/utils.js';
 import { createSearchInput } from '../ui/search.js';
 import { showAreaDeleteDialog } from '../ui/area-delete-dialog.js';
 import { SettingsStore } from '../core/settings-store.js';
+import { createResponsiveTaskActions } from '../ui/task-action-menu.js';
 
 const FOLDER_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="area-folder-icon" style="color: var(--color-text-muted); flex-shrink: 0; margin-top: 2px;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg>`;
 
@@ -298,29 +299,28 @@ function buildArchivedAreaRow(area) {
   archivedTime.textContent = `archived ${getRelativeTime(area.updatedAt)}`;
   row.appendChild(archivedTime);
 
-  // TUI plain text hover actions
-  const actions = document.createElement('div');
-  actions.className = 'task-actions';
+  // Contextual actions
+  const areaActionButtons = [];
 
-  const restoreBtn = document.createElement('button');
-  restoreBtn.className = 'action-btn';
-  restoreBtn.textContent = 'restore';
-  restoreBtn.addEventListener('click', (e) => {
+  const restoreAreaBtn = document.createElement('button');
+  restoreAreaBtn.className = 'action-btn';
+  restoreAreaBtn.textContent = 'restore';
+  restoreAreaBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     restoreArea(area);
   });
+  areaActionButtons.push(restoreAreaBtn);
 
-  const delBtn = document.createElement('button');
-  delBtn.className = 'action-btn btn-danger';
-  delBtn.textContent = 'del';
-  delBtn.addEventListener('click', (e) => {
+  const delAreaBtn = document.createElement('button');
+  delAreaBtn.className = 'action-btn btn-danger';
+  delAreaBtn.textContent = 'del';
+  delAreaBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     deleteItem(area.id);
   });
+  areaActionButtons.push(delAreaBtn);
 
-  actions.appendChild(restoreBtn);
-  actions.appendChild(delBtn);
-  row.appendChild(actions);
+  row.appendChild(createResponsiveTaskActions(areaActionButtons));
 
   row.addEventListener('click', () => {
     setSelectedItemId(area.id);
@@ -333,7 +333,7 @@ function buildArchivedAreaRow(area) {
 function restoreArea(area) {
   Repository.update(area.id, { archived: false });
   if (selectedItemId === area.id) setSelectedItemId(null);
-  ToastService.show('Area restored.', 'success');
+  ToastService.show('Area restored.', 'info');
 }
 
 function escapeHtml(str) {
@@ -348,7 +348,7 @@ function escapeHtml(str) {
 
 function buildArchiveRow(item) {
   const row = document.createElement('div');
-  row.className = 'task-item completed'; // Render muted/completed style
+  row.className = 'task-item';
   row.style.opacity = '0.6'; // Make archived items feel intentionally quiet
   row.setAttribute('data-id', item.id);
   row.setAttribute('role', 'option');
@@ -357,8 +357,14 @@ function buildArchiveRow(item) {
 
   if (item.id === selectedItemId) {
     row.classList.add('selected');
-    row.style.opacity = '0.95'; // Make selected row visible clearly
+    row.style.opacity = '1';
   }
+
+  // Checkbox (read-only in archive)
+  row.appendChild(createCheckbox({
+    checked: true,
+    onChange: () => {}
+  }));
 
   // Title with Area name label
   const title = document.createElement('span');
@@ -382,9 +388,8 @@ function buildArchiveRow(item) {
   archivedTime.textContent = `archived ${getRelativeTime(item.updatedAt)}`;
   row.appendChild(archivedTime);
 
-  // TUI plain text hover actions
-  const actions = document.createElement('div');
-  actions.className = 'task-actions';
+  // Contextual actions
+  const actionButtons = [];
 
   const restoreBtn = document.createElement('button');
   restoreBtn.className = 'action-btn';
@@ -392,6 +397,7 @@ function buildArchiveRow(item) {
   restoreBtn.addEventListener('click', (e) => {
     openRestorePicker(e, item);
   });
+  actionButtons.push(restoreBtn);
 
   const delBtn = document.createElement('button');
   delBtn.className = 'action-btn btn-danger';
@@ -400,10 +406,9 @@ function buildArchiveRow(item) {
     e.stopPropagation();
     deleteItem(item.id);
   });
+  actionButtons.push(delBtn);
 
-  actions.appendChild(restoreBtn);
-  actions.appendChild(delBtn);
-  row.appendChild(actions);
+  row.appendChild(createResponsiveTaskActions(actionButtons));
 
   row.addEventListener('click', () => {
     setSelectedItemId(item.id);

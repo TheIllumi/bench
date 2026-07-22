@@ -497,6 +497,8 @@ html[data-sidebar-shortcuts="false"] .nav-shortcut {
   outline: none;
   user-select: none;
   position: relative;
+  container-type: inline-size;
+  container-name: taskcontainer;
 }
 
 .task-item::before {
@@ -647,18 +649,80 @@ html[data-sidebar-shortcuts="false"] .nav-shortcut {
 .task-actions {
   margin-left: auto;
   display: flex;
-  gap: var(--space-xs);
   align-items: center;
   opacity: 0;
   flex-shrink: 0;
 }
 
-.task-item:hover .task-actions {
-  opacity: 0.6;
+.task-item:hover .task-actions,
+.task-item.selected .task-actions,
+.task-item:focus-within .task-actions {
+  opacity: 1;
 }
 
-.task-actions:hover {
-  opacity: 1 !important;
+.task-actions-inline {
+  display: flex;
+  gap: var(--space-xs);
+  align-items: center;
+}
+
+.task-actions-more {
+  display: none;
+  align-items: center;
+}
+
+/* Container query switching inline vs compact More menu */
+@container (max-width: 440px) {
+  .task-actions-inline {
+    display: none !important;
+  }
+  .task-actions-more {
+    display: flex !important;
+  }
+}
+
+/* Floating Contextual Task Action Menu */
+.task-action-menu {
+  position: absolute;
+  z-index: 1000;
+  background-color: var(--color-bg-workspace);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  min-width: 110px;
+}
+
+.task-action-menu-item {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-xs);
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  padding: 4px 8px;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.task-action-menu-item:hover {
+  background-color: var(--color-accent-focus);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+.task-action-menu-item.btn-danger {
+  color: var(--color-danger, #f7768e);
+}
+
+.task-action-menu-item.btn-danger:hover {
+  background-color: rgba(247, 118, 142, 0.15);
+  border-color: var(--color-danger, #f7768e);
 }
 
 .action-btn {

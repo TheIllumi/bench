@@ -6,6 +6,7 @@ import { createInput } from '../ui/input.js';
 import { crossfade, getRelativeTime } from '../ui/utils.js';
 import { createSearchInput } from '../ui/search.js';
 import { openAreaPicker } from '../ui/area-picker.js';
+import { createResponsiveTaskActions } from '../ui/task-action-menu.js';
 import { SettingsStore } from '../core/settings-store.js';
 
 let containerEl = null;
@@ -282,9 +283,8 @@ function buildParkRow(item) {
   parkedTime.textContent = `parked ${getRelativeTime(item.updatedAt)}`;
   row.appendChild(parkedTime);
 
-  // TUI plain text hover actions
-  const actions = document.createElement('div');
-  actions.className = 'task-actions';
+  // Contextual actions
+  const actionButtons = [];
 
   const focusBtn = document.createElement('button');
   focusBtn.className = 'action-btn';
@@ -296,6 +296,7 @@ function buildParkRow(item) {
     e.stopPropagation();
     toggleFocus(item.id);
   });
+  actionButtons.push(focusBtn);
 
   const assignBtn = document.createElement('button');
   assignBtn.className = 'action-btn';
@@ -308,6 +309,7 @@ function buildParkRow(item) {
       Repository.update(item.id, { areaId });
     });
   });
+  actionButtons.push(assignBtn);
 
   const captureBtn = document.createElement('button');
   captureBtn.className = 'action-btn';
@@ -316,6 +318,7 @@ function buildParkRow(item) {
     e.stopPropagation();
     moveToCapture(item.id);
   });
+  actionButtons.push(captureBtn);
 
   const archiveBtn = document.createElement('button');
   archiveBtn.className = 'action-btn';
@@ -324,6 +327,7 @@ function buildParkRow(item) {
     e.stopPropagation();
     moveToArchive(item.id);
   });
+  actionButtons.push(archiveBtn);
 
   const delBtn = document.createElement('button');
   delBtn.className = 'action-btn btn-danger';
@@ -332,13 +336,9 @@ function buildParkRow(item) {
     e.stopPropagation();
     deleteItem(item.id);
   });
+  actionButtons.push(delBtn);
 
-  actions.appendChild(focusBtn);
-  actions.appendChild(assignBtn);
-  actions.appendChild(captureBtn);
-  actions.appendChild(archiveBtn);
-  actions.appendChild(delBtn);
-  row.appendChild(actions);
+  row.appendChild(createResponsiveTaskActions(actionButtons));
 
   if (!isEditing) {
     row.addEventListener('click', () => {

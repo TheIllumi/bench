@@ -8,6 +8,7 @@ import { createCheckbox } from '../ui/checkbox.js';
 import { crossfade } from '../ui/utils.js';
 import { createSearchInput } from '../ui/search.js';
 import { openAreaPicker } from '../ui/area-picker.js';
+import { createResponsiveTaskActions } from '../ui/task-action-menu.js';
 import { SettingsStore } from '../core/settings-store.js';
 import { DialogService } from '../ui/dialog.js';
 
@@ -364,9 +365,8 @@ function buildTaskRow(task) {
     row.appendChild(title);
   }
 
-  // Hover actions (TUI style text actions)
-  const actions = document.createElement('div');
-  actions.className = 'task-actions';
+  // Contextual actions
+  const actionButtons = [];
 
   if (!isCompleted && !isEditing) {
     const editBtn = document.createElement('button');
@@ -375,7 +375,7 @@ function buildTaskRow(task) {
     editBtn.setAttribute('tabindex', '-1');
     editBtn.textContent = 'edit';
     editBtn.addEventListener('click', (e) => { e.stopPropagation(); startEditing(task.id); });
-    actions.appendChild(editBtn);
+    actionButtons.push(editBtn);
 
     const assignBtn = document.createElement('button');
     assignBtn.className = 'action-btn';
@@ -388,7 +388,7 @@ function buildTaskRow(task) {
         Repository.update(task.id, { areaId });
       });
     });
-    actions.appendChild(assignBtn);
+    actionButtons.push(assignBtn);
 
     const parkBtn = document.createElement('button');
     parkBtn.className = 'action-btn';
@@ -396,7 +396,7 @@ function buildTaskRow(task) {
     parkBtn.setAttribute('tabindex', '-1');
     parkBtn.textContent = 'park';
     parkBtn.addEventListener('click', (e) => { e.stopPropagation(); parkTask(task.id); });
-    actions.appendChild(parkBtn);
+    actionButtons.push(parkBtn);
   }
 
   if (!isEditing) {
@@ -406,7 +406,7 @@ function buildTaskRow(task) {
     archiveBtn.setAttribute('tabindex', '-1');
     archiveBtn.textContent = 'archive';
     archiveBtn.addEventListener('click', (e) => { e.stopPropagation(); archiveTask(task.id); });
-    actions.appendChild(archiveBtn);
+    actionButtons.push(archiveBtn);
   }
 
   const delBtn = document.createElement('button');
@@ -415,8 +415,9 @@ function buildTaskRow(task) {
   delBtn.setAttribute('tabindex', '-1');
   delBtn.textContent = 'del';
   delBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteTask(task.id); });
-  actions.appendChild(delBtn);
-  row.appendChild(actions);
+  actionButtons.push(delBtn);
+
+  row.appendChild(createResponsiveTaskActions(actionButtons));
 
   // Click to select (active, non-editing only)
   if (!isCompleted && !isEditing) {

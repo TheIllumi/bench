@@ -7,6 +7,7 @@ import { crossfade } from '../ui/utils.js';
 import { createSearchInput } from '../ui/search.js';
 import { showAreaDeleteDialog } from '../ui/area-delete-dialog.js';
 import { SettingsStore } from '../core/settings-store.js';
+import { createResponsiveTaskActions } from '../ui/task-action-menu.js';
 
 const FOLDER_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="area-folder-icon" style="color: var(--color-text-muted); flex-shrink: 0; margin-top: 2px;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg>`;
 
@@ -491,9 +492,8 @@ function buildAreaRow(area) {
     row.appendChild(body);
   }
 
-  // TUI plain text hover actions
-  const actions = document.createElement('div');
-  actions.className = 'task-actions';
+  // Contextual actions
+  const actionButtons = [];
 
   if (!isEditing) {
     const editBtn = document.createElement('button');
@@ -503,7 +503,7 @@ function buildAreaRow(area) {
       e.stopPropagation();
       startEditing(area.id);
     });
-    actions.appendChild(editBtn);
+    actionButtons.push(editBtn);
 
     const archiveBtn = document.createElement('button');
     archiveBtn.className = 'action-btn';
@@ -512,7 +512,7 @@ function buildAreaRow(area) {
       e.stopPropagation();
       archiveArea(area.id);
     });
-    actions.appendChild(archiveBtn);
+    actionButtons.push(archiveBtn);
 
     const delBtn = document.createElement('button');
     delBtn.className = 'action-btn btn-danger';
@@ -521,10 +521,10 @@ function buildAreaRow(area) {
       e.stopPropagation();
       deleteAreaWorkflow(area.id);
     });
-    actions.appendChild(delBtn);
-  }
+    actionButtons.push(delBtn);
 
-  row.appendChild(actions);
+    row.appendChild(createResponsiveTaskActions(actionButtons));
+  }
 
   if (!isEditing) {
     row.addEventListener('click', () => {
