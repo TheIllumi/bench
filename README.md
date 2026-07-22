@@ -26,13 +26,9 @@ experiment, not a finished product yet.
 
 # Screenshots
 
-> _Add a few screenshots or a short GIF here showing Focus, Areas, and the
-> Command Palette in action — this is the single highest-impact addition
-> for making the GitHub page look mature. A simple layout:_
-
 | Focus | Areas | Command Palette |
-|---|---|---|
-| _screenshot_ | _screenshot_ | _screenshot_ |
+|:---:|:---:|:---:|
+| ![Focus View](./screenshots/focus.png) | ![Areas View](./screenshots/areas.png) | ![Command Palette](./screenshots/palette.png) |
 
 ------------------------------------------------------------------------
 
