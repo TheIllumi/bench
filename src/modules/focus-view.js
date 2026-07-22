@@ -20,7 +20,6 @@ let isCreating = false;
 let filterAreaId = '';
 let searchQuery = '';
 
-const GRIP_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>`;
 const EDIT_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
 const TRASH_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>`;
 
@@ -323,15 +322,6 @@ function buildTaskRow(task) {
   }
 
   const isEditing = task.id === editingTaskId && !isCompleted;
-
-  // Drag handle (active tasks only)
-  if (!isCompleted) {
-    const handle = document.createElement('div');
-    handle.className = 'drag-handle';
-    handle.innerHTML = GRIP_ICON;
-    handle.addEventListener('pointerdown', (e) => startDrag(e, row));
-    row.appendChild(handle);
-  }
 
   // Checkbox
   row.appendChild(createCheckbox({
@@ -690,73 +680,6 @@ function handleGlobalKeydown(event) {
   }
 }
 
-// --- Pointer Drag-and-Drop with Ghost Preview ---
 
-let dragEl = null;
-let ghostEl = null;
-
-function startDrag(event, row) {
-  const handle = event.target;
-  handle.setPointerCapture(event.pointerId);
-  dragEl = row;
-  dragEl.classList.add('dragging');
-
-  // Create floating ghost preview
-  ghostEl = row.cloneNode(true);
-  ghostEl.className = 'task-item drag-ghost';
-  ghostEl.style.width = row.offsetWidth + 'px';
-  ghostEl.style.left = row.getBoundingClientRect().left + 'px';
-  ghostEl.style.top = event.clientY - row.offsetHeight / 2 + 'px';
-  document.body.appendChild(ghostEl);
-
-  function onMove(e) {
-    if (!dragEl) return;
-    e.preventDefault();
-
-    if (ghostEl) {
-      ghostEl.style.top = e.clientY - ghostEl.offsetHeight / 2 + 'px';
-    }
-
-    const list = document.getElementById('active-tasks-list');
-    if (!list) return;
-
-    const siblings = [...list.querySelectorAll('.task-item:not(.dragging)')];
-    const target = siblings.find(s => {
-      const rect = s.getBoundingClientRect();
-      return e.clientY <= rect.top + rect.height / 2;
-    });
-
-    if (target) {
-      list.insertBefore(dragEl, target);
-    } else {
-      list.appendChild(dragEl);
-    }
-  }
-
-  function onUp(e) {
-    handle.releasePointerCapture(e.pointerId);
-    handle.removeEventListener('pointermove', onMove);
-    handle.removeEventListener('pointerup', onUp);
-    handle.removeEventListener('pointercancel', onUp);
-
-    if (ghostEl && ghostEl.parentNode) {
-      ghostEl.parentNode.removeChild(ghostEl);
-      ghostEl = null;
-    }
-
-    if (!dragEl) return;
-    dragEl.classList.remove('dragging');
-
-    const list = document.getElementById('active-tasks-list');
-    const ids = [...list.querySelectorAll('.task-item')].map(el => el.dataset.id);
-    
-    Repository.reorder('focus', ids);
-    dragEl = null;
-  }
-
-  handle.addEventListener('pointermove', onMove);
-  handle.addEventListener('pointerup', onUp);
-  handle.addEventListener('pointercancel', onUp);
-}
 
 
