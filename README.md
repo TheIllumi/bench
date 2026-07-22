@@ -3,7 +3,7 @@
 > **Your brain is for making decisions, not storing them.**
 
 ![Status](https://img.shields.io/badge/status-early%20alpha-orange)
-![Version](https://img.shields.io/badge/version-v0.2.0-blue)
+![Version](https://img.shields.io/badge/version-v0.2.1-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
 ![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri-24C8DB)
