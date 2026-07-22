@@ -36,7 +36,7 @@ If a feature violates these principles, it should not be added.
 
 ---
 
-# Milestone 1 — Workbench (v0.1.0)
+# Milestone 1 — Workbench (v0.1.0) ✅ Shipped
 
 ## Goal
 
@@ -44,53 +44,76 @@ Build the foundation.
 
 Bench should already be useful before any advanced functionality is introduced.
 
-### Planned Features
+### Delivered
 
-- Tauri desktop application
-- Sidebar navigation
-- Projects
-- Tasks
-- Focus
-- Capture
-- Lists
-- Parking Lot
-- Notes
-- Local JSON persistence
-- Keyboard shortcuts
-- Dark mode
+- [x] Tauri desktop application
+- [x] Sidebar navigation
+- [x] Areas (documented as Projects; implemented as Areas — see ADR 0003)
+- [x] Tasks
+- [x] Focus
+- [x] Capture
+- [x] Parking Lot
+- [x] Local JSON persistence
+- [x] Keyboard shortcuts
+- [x] Dark mode
 
-### Success Criteria
+### Success Criteria — met
 
 A user can:
 
-- Create projects
+- Create Areas
 - Capture ideas
 - Organize work
 - Select focus tasks
 - Work entirely offline
 
-Bench should already replace the user's Notepad workflow.
+Bench already replaces the user's Notepad workflow.
 
 ---
 
-# Milestone 2 — Sharpen (v0.2.0)
+# Milestone 2 — Sharpen (v0.2.0) 🚧 In Progress
 
 ## Goal
 
 Improve speed and usability.
 
-### Planned Features
+### Delivered so far
 
-- Global search
-- Better archive management
-- Improved keyboard navigation
-- Faster interactions
-- UI polish
-- Performance improvements
+- [x] Areas Foundation and task assignment
+- [x] Areas task organization & navigation
+- [x] Areas list redesign (icons, descriptions, live statistics, sorting)
+- [x] Areas empty states (no tasks / no Areas)
+- [x] Jot module (replaces the earlier "Notes" concept)
+- [x] Settings overhaul
+- [x] Search across modules
+- [x] Command Palette cleanup and Keyboard Shortcuts overlay
+- [x] Focus workflow improvements
+- [x] Desktop layout and window-constraint polish
+- [x] Multi-resolution application icon suite configured across Tauri desktop targets and web favicons
+- [x] Global custom scrollbars (Tokyo Night style)
+- [x] Numerous bug fixes and performance improvements
+
+### In progress right now
+
+Areas UX polish — moving from a dedicated Area page to an **Inspector-as-workspace**
+model, so opening an Area, browsing its tasks, and switching between Area/Task
+details all happen in one place. Remaining work:
+
+- [ ] Area Inspector shows the Area's task list directly (no separate page)
+- [ ] Create-task shortcut (`N`) wired up from inside the Area Inspector
+- [ ] Area Inspector metadata layout finalized (name, description, stats, timestamps)
+- [ ] Optional Lucide icons per Area
+- [ ] Area results in the Command Palette
+- [ ] Archive validation (block archiving Areas with active tasks)
+- [ ] Keyboard navigation for the Areas list and Area Inspector
+- [ ] Switching cleanly between Area Inspector and Task Inspector
+- [ ] Final visual polish pass across the Areas module
 
 ### Success Criteria
 
 Bench feels significantly faster and smoother without increasing complexity.
+Met for search, Command Palette, and Settings; Areas polish is the remaining
+piece before this milestone is fully closed out.
 
 ---
 
@@ -131,6 +154,20 @@ Ship the first stable release.
 ### Success Criteria
 
 Bench is polished, reliable, and ready to recommend to others.
+
+---
+
+# Under Consideration
+
+An open question worth deciding deliberately (with an ADR) before it's
+built rather than falling out of implementation by accident:
+
+- **Projects, as a concept distinct from Areas.** Early docs used "Project"
+  as the name for what's now implemented as "Area." A future idea is a
+  *separate* Projects layer nested under Areas — with progress tracking,
+  completion percentage, due dates, and its own notes — rather than Areas
+  and Projects being the same thing under two names. This needs a decision,
+  not a default.
 
 ---
 

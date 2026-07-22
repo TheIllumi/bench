@@ -2,7 +2,37 @@
 
 > **Your brain is for making decisions, not storing them.**
 
+![Status](https://img.shields.io/badge/status-early%20alpha-orange)
+![Version](https://img.shields.io/badge/version-v0.2.0-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
+![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri-24C8DB)
+
 A lightweight, local-first desktop command center built with Tauri.
+
+------------------------------------------------------------------------
+
+# Current Status
+
+Bench is in **early alpha**. Focus, Capture, Areas, Parking Lot, Archive,
+Jot, the Command Palette, and Settings all work end-to-end and are used
+daily by the author — but expect rough edges, incomplete polish, and
+occasional breaking changes between releases until `v1.0.0`.
+
+If you're trying Bench out for the first time, treat it as a daily-driver
+experiment, not a finished product yet.
+
+------------------------------------------------------------------------
+
+# Screenshots
+
+> _Add a few screenshots or a short GIF here showing Focus, Areas, and the
+> Command Palette in action — this is the single highest-impact addition
+> for making the GitHub page look mature. A simple layout:_
+
+| Focus | Areas | Command Palette |
+|---|---|---|
+| _screenshot_ | _screenshot_ | _screenshot_ |
 
 ------------------------------------------------------------------------
 
@@ -39,9 +69,9 @@ Bench is founded on one belief:
 
 Ideas belong in Capture.
 
-Tasks belong in Projects.
+Tasks belong in Areas.
 
-Projects belong inside Bench.
+Areas belong inside Bench.
 
 Your attention belongs on your work.
 
@@ -122,7 +152,7 @@ Everything in Bench exists for a reason.
 
 -   A desktop command center
 -   A focus system
--   A project companion
+-   An Areas companion
 -   Local-first
 -   Keyboard-first
 -   Opinionated by design
@@ -152,7 +182,7 @@ Bench intentionally solves a smaller problem.
 -   Local over cloud
 -   Keyboard over mouse
 -   Opinionated over configurable
--   Projects over categories
+-   Areas over categories
 -   Decisions over organization
 
 ------------------------------------------------------------------------
@@ -171,37 +201,115 @@ The interface should feel like a quiet desk, not a busy dashboard.
 
 ------------------------------------------------------------------------
 
-# Features (v0.1)
+# Installation
 
--   Focus
--   Projects
+Bench doesn't yet ship packaged installers — it's built from source (see
+**Development** below). Packaged builds for Windows, macOS, and Linux are
+planned ahead of `v1.0.0`.
+
+If a build is available, check the
+[Releases page](https://github.com/TheIllumi/bench/releases) for the
+latest one.
+
+------------------------------------------------------------------------
+
+# Development
+
+### Prerequisites
+
+-   [Git](https://git-scm.com/)
+-   [Node.js](https://nodejs.org/) (current LTS)
+-   [Rust](https://www.rust-lang.org/tools/install) (via `rustup`)
+-   Platform-specific [Tauri prerequisites](https://tauri.app/start/prerequisites/) for your OS
+
+### Setup
+
+```bash
+git clone https://github.com/TheIllumi/bench.git
+cd bench
+npm install
+npm run tauri dev
+```
+
+### Build
+
+```bash
+npm run tauri build
+```
+
+> Using `pnpm` instead? Swap in `pnpm install` / `pnpm tauri dev` — just
+> keep a single package manager's lockfile committed so contributors
+> don't collide.
+
+------------------------------------------------------------------------
+
+# Features (v0.2.0)
+
 -   Capture
--   Notes
--   Lists
+-   Focus
+-   Areas
 -   Parking Lot
--   Keyboard-first navigation
--   Local storage
--   Dark mode
+-   Archive
+-   Jot
+-   Command Palette
+-   Settings
+-   Quick Capture
+-   Multi-resolution Application Icons
+-   Local-first persistence
+-   Keyboard-first workflow
+
+------------------------------------------------------------------------
+
+# Keyboard Shortcuts
+
+### Global Navigation & Shell
+
+| Shortcut | Action |
+|---|---|
+| `Ctrl+K` / `⌘K` | Open Command Palette |
+| `Ctrl+N` / `⌘N` / `C` | Quick Capture |
+| `Ctrl+B` / `⌘B` | Toggle Sidebar |
+| `Alt+1` / `⌥1` | Switch to Focus |
+| `Alt+2` / `⌥2` | Switch to Capture |
+| `Alt+3` / `⌥3` | Switch to Areas |
+| `Alt+4` / `⌥4` | Switch to Parking Lot |
+| `Alt+5` / `⌥5` | Switch to Archive |
+| `Alt+6` / `⌥6` | Switch to Jot |
+| `Alt+7` / `⌥7` | Switch to Settings |
+| `Escape` | Close active modal / clear selection |
+
+### List Navigation & Actions
+
+| Shortcut | Action |
+|---|---|
+| `N` | Create a new item in current module |
+| `↑` / `↓` | Move list selection |
+| `Enter` / `E` | Open Inspector / edit selection |
+| `Space` | Toggle item completion |
+| `F` | Move selected item to Focus |
+| `P` | Move selected item to Parking Lot |
+| `A` | Move selected item to Archive |
+| `Delete` / `D` | Delete / archive selected item |
+| `R` | Restore item (Archive) / Clear completed (Focus) |
+
+> Press `Ctrl+K` and select **Keyboard Shortcuts** for the complete, always-current overlay.
 
 ------------------------------------------------------------------------
 
 # Roadmap
 
-## v0.1 --- Workbench
+Bench is built incrementally, one milestone at a time. The short version:
 
-The foundation.
+-   **v0.1.0 — Workbench** ✅ the foundation (shipped)
+-   **v0.2.0 — Sharpen** 🚧 Areas, Jot, Settings, search, Command Palette
+    and keyboard improvements (current)
+-   **v0.3.0 — Craft** 🔜 SQLite persistence, import/export,
+    backup/restore, attachments
+-   **v1.0.0 — Built** 🔜 stability, accessibility, and polish for a
+    recommendable release
 
-## v0.2 --- Sharpen
-
-Search, archive, themes.
-
-## v0.3 --- Craft
-
-SQLite, attachments, import/export.
-
-## v1.0 --- Built
-
-A stable, polished productivity companion.
+See [`ROADMAP.md`](./ROADMAP.md) for the full breakdown, including what's
+already done and what's next.
 
 ------------------------------------------------------------------------
 
