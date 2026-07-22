@@ -76,6 +76,14 @@ body {
   position: relative;
 }
 
+.titlebar-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  pointer-events: none;
+  object-fit: contain;
+}
+
 .titlebar-logo {
   font-weight: 700;
   color: var(--color-accent-blue);
