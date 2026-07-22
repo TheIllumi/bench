@@ -208,47 +208,171 @@ function renderEmpty(targetEl) {
   `;
 }
 
-function renderCaptureList(targetEl, active, completed) {
-  targetEl.innerHTML = `
-    <div style="display: flex; flex-direction: column;">
-      <div class="tasks-list-active" id="capture-items-list" role="listbox" tabindex="-1"></div>
-      ${completed.length > 0 ? `
-        <div class="completed-header" style="margin-top: var(--space-md);">Completed</div>
-        <div class="tasks-list-completed" id="completed-tasks-completed-list" role="list" aria-label="Completed tasks"></div>
-      ` : ''}
-    </div>
-  `;
+const collapsedCaptureSections = new Set();
 
-  const listEl = document.getElementById('capture-items-list');
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function renderCaptureList(targetEl, active, completed) {
+  targetEl.innerHTML = `<div style="display: flex; flex-direction: column;" id="capture-content-wrapper"></div>`;
+
+  const contentWrapper = document.getElementById('capture-content-wrapper');
   const { noAreaTasks, activeAreas, areaTasksMap } = getOrderedActiveTasks(active);
 
   // 1. Render default section (no area)
-  noAreaTasks.forEach(item => {
-    listEl.appendChild(buildCaptureRow(item));
-  });
+  if (noAreaTasks.length > 0) {
+    if (activeAreas.length > 0) {
+      const sectionKey = 'area:none';
+      const isCollapsed = collapsedCaptureSections.has(sectionKey);
 
-  // 2. Render each Area section with its header
+      const unassignedWrapper = document.createElement('div');
+      unassignedWrapper.className = 'capture-section-wrapper';
+
+      const header = document.createElement('button');
+      header.type = 'button';
+      header.className = 'completed-header capture-section-header';
+      header.setAttribute('aria-expanded', !isCollapsed);
+      header.setAttribute('aria-label', 'Toggle unassigned section');
+
+      header.innerHTML = `
+        <span class="capture-section-toggle-icon">${isCollapsed ? '►' : '▼'}</span>
+        <span class="capture-section-title">unassigned</span>
+        <span class="capture-section-count">(${noAreaTasks.length})</span>
+      `;
+
+      header.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (collapsedCaptureSections.has(sectionKey)) {
+          collapsedCaptureSections.delete(sectionKey);
+        } else {
+          collapsedCaptureSections.add(sectionKey);
+        }
+        renderView();
+      });
+
+      const tasksContainer = document.createElement('div');
+      tasksContainer.className = 'tasks-list-active capture-section-tasks';
+      tasksContainer.setAttribute('role', 'listbox');
+      tasksContainer.setAttribute('tabindex', '-1');
+      tasksContainer.style.display = isCollapsed ? 'none' : 'flex';
+      tasksContainer.style.flexDirection = 'column';
+
+      noAreaTasks.forEach(item => {
+        tasksContainer.appendChild(buildCaptureRow(item));
+      });
+
+      unassignedWrapper.appendChild(header);
+      unassignedWrapper.appendChild(tasksContainer);
+      contentWrapper.appendChild(unassignedWrapper);
+    } else {
+      const listEl = document.createElement('div');
+      listEl.className = 'tasks-list-active';
+      listEl.setAttribute('role', 'listbox');
+      listEl.setAttribute('tabindex', '-1');
+      noAreaTasks.forEach(item => {
+        listEl.appendChild(buildCaptureRow(item));
+      });
+      contentWrapper.appendChild(listEl);
+    }
+  }
+
+  // 2. Render each Area section with its toggle header
   activeAreas.forEach(area => {
     const tasksInArea = areaTasksMap[area.id] || [];
     if (tasksInArea.length > 0) {
-      const header = document.createElement('div');
-      header.className = 'completed-header';
-      header.style.marginTop = 'var(--space-md)';
-      header.textContent = area.name;
-      listEl.appendChild(header);
+      const sectionKey = `area:${area.id}`;
+      const isCollapsed = collapsedCaptureSections.has(sectionKey);
+
+      const sectionWrapper = document.createElement('div');
+      sectionWrapper.className = 'capture-section-wrapper';
+      sectionWrapper.style.marginTop = 'var(--space-md)';
+
+      const header = document.createElement('button');
+      header.type = 'button';
+      header.className = 'completed-header capture-section-header';
+      header.setAttribute('aria-expanded', !isCollapsed);
+      header.setAttribute('aria-label', `Toggle ${area.name} section`);
+
+      header.innerHTML = `
+        <span class="capture-section-toggle-icon">${isCollapsed ? '►' : '▼'}</span>
+        <span class="capture-section-title">${escapeHtml(area.name)}</span>
+        <span class="capture-section-count">(${tasksInArea.length})</span>
+      `;
+
+      header.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (collapsedCaptureSections.has(sectionKey)) {
+          collapsedCaptureSections.delete(sectionKey);
+        } else {
+          collapsedCaptureSections.add(sectionKey);
+        }
+        renderView();
+      });
+
+      const tasksContainer = document.createElement('div');
+      tasksContainer.className = 'tasks-list-active capture-section-tasks';
+      tasksContainer.setAttribute('role', 'listbox');
+      tasksContainer.setAttribute('tabindex', '-1');
+      tasksContainer.style.display = isCollapsed ? 'none' : 'flex';
+      tasksContainer.style.flexDirection = 'column';
 
       tasksInArea.forEach(item => {
-        listEl.appendChild(buildCaptureRow(item));
+        tasksContainer.appendChild(buildCaptureRow(item));
       });
+
+      sectionWrapper.appendChild(header);
+      sectionWrapper.appendChild(tasksContainer);
+      contentWrapper.appendChild(sectionWrapper);
     }
   });
 
   // 3. Render completed section
-  const completedListEl = document.getElementById('completed-tasks-completed-list');
-  if (completedListEl) {
+  if (completed.length > 0) {
+    const sectionKey = 'section:completed';
+    const isCollapsed = collapsedCaptureSections.has(sectionKey);
+
+    const completedWrapper = document.createElement('div');
+    completedWrapper.className = 'capture-section-wrapper';
+    completedWrapper.style.marginTop = 'var(--space-md)';
+
+    const header = document.createElement('button');
+    header.type = 'button';
+    header.className = 'completed-header capture-section-header';
+    header.setAttribute('aria-expanded', !isCollapsed);
+    header.setAttribute('aria-label', 'Toggle completed section');
+
+    header.innerHTML = `
+      <span class="capture-section-toggle-icon">${isCollapsed ? '►' : '▼'}</span>
+      <span class="capture-section-title">Completed</span>
+      <span class="capture-section-count">(${completed.length})</span>
+    `;
+
+    header.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (collapsedCaptureSections.has(sectionKey)) {
+        collapsedCaptureSections.delete(sectionKey);
+      } else {
+        collapsedCaptureSections.add(sectionKey);
+      }
+      renderView();
+    });
+
+    const completedListEl = document.createElement('div');
+    completedListEl.className = 'tasks-list-completed capture-section-tasks';
+    completedListEl.setAttribute('role', 'list');
+    completedListEl.setAttribute('aria-label', 'Completed tasks');
+    completedListEl.style.display = isCollapsed ? 'none' : 'flex';
+    completedListEl.style.flexDirection = 'column';
+
     completed.forEach(item => {
       completedListEl.appendChild(buildCaptureRow(item));
     });
+
+    completedWrapper.appendChild(header);
+    completedWrapper.appendChild(completedListEl);
+    contentWrapper.appendChild(completedWrapper);
   }
 
   // Restore focus if an item was selected (only if user is not editing in the Inspector)
@@ -256,7 +380,7 @@ function renderCaptureList(targetEl, active, completed) {
     const activeEl = document.activeElement;
     const isEditingInInspector = activeEl && activeEl.closest('#inspector-panel');
     if (!isEditingInInspector) {
-      const selectedEl = listEl.querySelector(`[data-id="${selectedItemId}"]`);
+      const selectedEl = contentWrapper.querySelector(`[data-id="${selectedItemId}"]`);
       if (selectedEl) selectedEl.focus();
     }
   }
