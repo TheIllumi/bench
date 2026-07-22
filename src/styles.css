@@ -1344,20 +1344,31 @@ html[data-sidebar-shortcuts="false"] .nav-shortcut {
 }
 
 .inspector-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
   color: var(--color-text-muted);
   cursor: pointer;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-sm);
-  padding: 0 var(--space-xs);
-  transition: color var(--duration-fast) var(--ease-standard);
+  padding: 4px;
+  line-height: 1;
+  transition: all var(--duration-fast) var(--ease-standard);
   outline: none;
   user-select: none;
 }
 
 .inspector-close-btn:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-hover);
+  border-color: var(--color-border);
+}
+
+.inspector-close-btn:focus-visible {
   color: var(--color-accent-blue);
+  border-color: var(--color-accent-blue);
+  box-shadow: 0 0 0 1px var(--color-accent-blue);
 }
 
 /* Shortcuts Modal styles */

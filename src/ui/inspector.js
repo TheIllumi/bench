@@ -286,7 +286,9 @@ function renderItem() {
         </span>
         <div class="inspector-header-right">
           <span class="inspector-save-indicator" id="inspector-save-indicator"></span>
-          <button class="inspector-close-btn" id="inspector-close-btn" aria-label="Close inspector">[&times;]</button>
+          <button class="inspector-close-btn" id="inspector-close-btn" tabindex="0" aria-label="Close inspector" title="Close inspector (Esc)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
       </div>
       <div class="inspector-fields">
@@ -394,7 +396,8 @@ function renderItem() {
   // Bind close button
   const closeBtn = document.getElementById('inspector-close-btn');
   if (closeBtn) {
-    closeBtn.addEventListener('click', () => {
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
       EventBus.emit('itemSelected', null);
     });
   }
