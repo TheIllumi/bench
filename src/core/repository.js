@@ -89,8 +89,29 @@ export const Repository = {
     return this.getAll().filter(item => 
       item.type !== 'area' && 
       item.module !== 'archive' &&
+      item.archived !== true &&
       ((item.focused === true && item.status === 'active') || 
        (item.module === 'focus' && item.status === 'completed'))
+    );
+  },
+
+  /**
+   * Retrieve all archived task items.
+   * @returns {Array<object>}
+   */
+  getArchivedTasks() {
+    return this.getAll().filter(item => 
+      item.type !== 'area' && (item.archived === true || item.module === 'archive')
+    );
+  },
+
+  /**
+   * Retrieve all archived area items.
+   * @returns {Array<object>}
+   */
+  getArchivedAreas() {
+    return this.getAll().filter(item => 
+      item.type === 'area' && item.archived === true
     );
   },
 
@@ -100,7 +121,14 @@ export const Repository = {
    * @returns {Array<object>}
    */
   getByModule(moduleName) {
-    return this.getAll().filter(item => item.module === moduleName && item.type !== 'area');
+    if (moduleName === 'archive') {
+      return this.getArchivedTasks();
+    }
+    return this.getAll().filter(item => 
+      item.module === moduleName && 
+      item.type !== 'area' && 
+      item.archived !== true
+    );
   },
 
   /**
@@ -252,7 +280,12 @@ export const Repository = {
    * @returns {object|null}
    */
   move(id, targetModule) {
-    return this.update(id, { module: targetModule });
+    const isArchiving = targetModule === 'archive';
+    return this.update(id, { 
+      module: targetModule, 
+      archived: isArchiving,
+      focused: isArchiving ? false : undefined
+    });
   },
 
   /**

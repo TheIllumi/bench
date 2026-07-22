@@ -25,7 +25,7 @@ export function renderArchiveView(container) {
   containerEl.className = 'archive-view';
   container.appendChild(containerEl);
 
-  items = Repository.getByModule('archive').sort((a, b) => b.updatedAt - a.updatedAt);
+  items = Repository.getArchivedTasks().sort((a, b) => b.updatedAt - a.updatedAt);
   searchQuery = '';
 
   if (selectedItemId && !items.find(i => i.id === selectedItemId)) {
@@ -67,9 +67,9 @@ export function focusAndSelectArchivedTask(itemId) {
 }
 
 function handleItemChange() {
-  items = Repository.getByModule('archive').sort((a, b) => b.updatedAt - a.updatedAt);
+  items = Repository.getArchivedTasks().sort((a, b) => b.updatedAt - a.updatedAt);
   if (selectedItemId) {
-    const allSelectable = [...items, ...Repository.getAreas().filter(a => a.archived)];
+    const allSelectable = [...items, ...Repository.getArchivedAreas()];
     if (!allSelectable.find(i => i.id === selectedItemId)) {
       setSelectedItemId(null);
     }
@@ -80,7 +80,7 @@ function handleItemChange() {
 function setSelectedItemId(id) {
   selectedItemId = id;
   if (id) {
-    const item = items.find(i => i.id === id) || Repository.getAreas().find(a => a.id === id && a.archived);
+    const item = items.find(i => i.id === id) || Repository.getArchivedAreas().find(a => a.id === id);
     EventBus.emit('itemSelected', item || null);
   } else {
     EventBus.emit('itemSelected', null);
@@ -114,7 +114,7 @@ function handleSearch(query) {
     filteredItems = filteredItems.filter(t => (t.title || '').toLowerCase().includes(q));
   }
 
-  const archivedAreas = Repository.getAreas().filter(a => a.archived);
+  const archivedAreas = Repository.getArchivedAreas();
   let filteredAreas = filterAreaId ? [] : archivedAreas;
   if (searchQuery && !filterAreaId) {
     const q = searchQuery.toLowerCase();
@@ -140,7 +140,7 @@ function renderView() {
     filteredItems = filteredItems.filter(t => (t.title || '').toLowerCase().includes(q));
   }
 
-  const archivedAreas = Repository.getAreas().filter(a => a.archived);
+  const archivedAreas = Repository.getArchivedAreas();
   let filteredAreas = filterAreaId ? [] : archivedAreas;
   if (searchQuery && !filterAreaId) {
     const q = searchQuery.toLowerCase();
@@ -418,10 +418,30 @@ function buildArchiveRow(item) {
   return row;
 }
 
+function getVisibleTrigger(e) {
+  if (e && e instanceof HTMLElement) {
+    const rect = e.getBoundingClientRect();
+    if (rect.width > 0 || rect.height > 0) return e;
+  }
+  let el = e?.currentTarget || e?.target;
+  if (el && el instanceof HTMLElement) {
+    const rect = el.getBoundingClientRect();
+    if (rect.width > 0 || rect.height > 0) return el;
+
+    const taskItem = el.closest('.task-item');
+    if (taskItem) {
+      const moreBtn = taskItem.querySelector('.task-more-btn');
+      if (moreBtn && moreBtn.getBoundingClientRect().width > 0) return moreBtn;
+      return taskItem;
+    }
+  }
+  return document.body;
+}
+
 // --- Archive Operations ---
 
 function openRestorePicker(e, item) {
-  e.stopPropagation();
+  if (e && e.stopPropagation) e.stopPropagation();
 
   if (item.type === 'area') {
     restoreArea(item);
@@ -432,13 +452,10 @@ function openRestorePicker(e, item) {
   const existing = document.querySelector('.restore-picker-dropdown');
   if (existing) existing.remove();
 
-  const rect = e.target.getBoundingClientRect();
+  const triggerEl = getVisibleTrigger(e);
+  const rect = triggerEl.getBoundingClientRect();
   const picker = document.createElement('div');
   picker.className = 'restore-picker-dropdown';
-  
-  // Align picker below the action button
-  picker.style.top = `${rect.bottom + window.scrollY}px`;
-  picker.style.left = `${rect.left + window.scrollX}px`;
 
   const destinations = [
     { name: 'Focus', value: 'focus' },
@@ -446,27 +463,62 @@ function openRestorePicker(e, item) {
     { name: 'Parking Lot', value: 'parking-lot' }
   ];
 
+  const closeAndRemove = () => {
+    picker.remove();
+    document.removeEventListener('mousedown', closePicker);
+    document.removeEventListener('keydown', handleKeydown);
+  };
+
   destinations.forEach(dest => {
     const el = document.createElement('div');
     el.className = 'restore-picker-item';
     el.textContent = dest.name;
-    el.addEventListener('click', () => {
+    el.addEventListener('click', (evt) => {
+      evt.stopPropagation();
       restoreItem(item, dest.value);
-      picker.remove();
+      closeAndRemove();
     });
     picker.appendChild(el);
   });
 
   document.body.appendChild(picker);
 
+  // Position and clamp within viewport
+  const pickerWidth = picker.offsetWidth || 120;
+  const pickerHeight = picker.offsetHeight || 100;
+
+  let top = rect.bottom + window.scrollY + 2;
+  let left = rect.left + window.scrollX;
+
+  if (rect.bottom + pickerHeight > window.innerHeight && rect.top - pickerHeight > 0) {
+    top = rect.top + window.scrollY - pickerHeight - 2;
+  }
+  if (left + pickerWidth > window.innerWidth - 10) {
+    left = window.innerWidth - pickerWidth - 10;
+  }
+  left = Math.max(10, left);
+
+  picker.style.top = `${top}px`;
+  picker.style.left = `${left}px`;
+
   // Close dropdown on click outside
   const closePicker = (event) => {
-    if (!picker.contains(event.target) && event.target !== e.target) {
-      picker.remove();
-      document.removeEventListener('mousedown', closePicker);
+    if (!picker.contains(event.target) && event.target !== triggerEl) {
+      closeAndRemove();
     }
   };
-  document.addEventListener('mousedown', closePicker);
+
+  // Close dropdown on Escape key
+  const handleKeydown = (event) => {
+    if (event.key === 'Escape') {
+      closeAndRemove();
+    }
+  };
+
+  setTimeout(() => {
+    document.addEventListener('mousedown', closePicker);
+    document.addEventListener('keydown', handleKeydown);
+  }, 0);
 }
 
 function restoreItem(item, destination) {
@@ -476,9 +528,9 @@ function restoreItem(item, destination) {
       ToastService.show('Focus is full. Complete something first.', 'info');
       return;
     }
-    Repository.update(item.id, { module: 'focus', focused: true });
+    Repository.update(item.id, { module: 'focus', focused: true, archived: false });
   } else {
-    Repository.move(item.id, destination);
+    Repository.update(item.id, { module: destination, focused: false, archived: false });
   }
   if (selectedItemId === item.id) setSelectedItemId(null);
   ToastService.show(`Restored to ${destination === 'parking-lot' ? 'Parking Lot' : destination.charAt(0).toUpperCase() + destination.slice(1)}.`, 'success');
