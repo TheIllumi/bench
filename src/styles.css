@@ -300,6 +300,7 @@ html[data-sidebar-shortcuts="false"] .nav-shortcut {
   flex-direction: column;
   height: 100%;
   min-height: 0;
+  min-width: 180px;
 }
 
 .title-area {
@@ -1151,8 +1152,8 @@ html[data-sidebar-shortcuts="false"] .nav-shortcut {
 
 .inspector-panel.open {
   width: var(--inspector-width);
-  min-width: 260px;
-  max-width: 520px;
+  min-width: min(260px, calc(100vw - var(--sidebar-width, 200px) - 160px));
+  max-width: min(520px, calc(100vw - var(--sidebar-width, 200px) - 180px));
   opacity: 1;
   pointer-events: auto;
   border-left-color: var(--color-border);

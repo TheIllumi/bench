@@ -730,7 +730,15 @@ function handleResizeMove(e) {
   // Dragging left increases width, dragging right decreases
   const delta = resizeStartX - e.clientX;
   let newWidth = resizeStartWidth + delta;
-  newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth));
+
+  const containerWidth = window.innerWidth;
+  const sidebarEl = document.querySelector('.sidebar');
+  const sidebarWidth = sidebarEl ? sidebarEl.offsetWidth : 200;
+  const minMainWidth = 180;
+  const maxAllowedWidth = Math.max(MIN_WIDTH, containerWidth - sidebarWidth - minMainWidth);
+
+  const clampedMax = Math.min(MAX_WIDTH, maxAllowedWidth);
+  newWidth = Math.max(MIN_WIDTH, Math.min(clampedMax, newWidth));
   panelEl.style.setProperty('--inspector-width', `${newWidth}px`);
 }
 
