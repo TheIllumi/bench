@@ -50,12 +50,34 @@ export const Repository = {
   },
 
   /**
+   * Determine if an item is an active Focus task.
+   * Single source of truth across the application.
+   * @param {object} item
+   * @returns {boolean}
+   */
+  isFocusTask(item) {
+    if (!item || item.type === 'area') return false;
+    if (item.status !== 'active') return false;
+    if (item.module === 'archive' || item.module === 'parking-lot' || item.module === 'capture') return false;
+    return item.focused === true;
+  },
+
+  /**
+   * Retrieve all currently active Focus tasks.
+   * @returns {Array<object>}
+   */
+  getActiveFocusTasks() {
+    return this.getAll().filter(item => this.isFocusTask(item));
+  },
+
+  /**
    * Retrieve all items currently in Focus (either active and focused, or completed in the focus module).
    * @returns {Array<object>}
    */
   getFocusedTasks() {
     return this.getAll().filter(item => 
       item.type !== 'area' && 
+      item.module !== 'archive' &&
       ((item.focused === true && item.status === 'active') || 
        (item.module === 'focus' && item.status === 'completed'))
     );
@@ -82,7 +104,9 @@ export const Repository = {
     const now = Date.now();
 
     let focused = item.focused;
-    if (focused === undefined) {
+    if (item.module === 'archive' || item.module === 'parking-lot' || item.module === 'capture' || item.status === 'completed') {
+      focused = false;
+    } else if (focused === undefined) {
       if (item.module === 'focus' && (item.status === 'active' || !item.status)) {
         const activeFocusCount = items.filter(i => i.type !== 'area' && i.status === 'active' && i.focused === true).length;
         focused = activeFocusCount < 3;

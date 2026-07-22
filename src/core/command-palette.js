@@ -172,11 +172,8 @@ function updateResults(query) {
   }
 
   // Partition items
-  const focusItems = filteredItems.filter(i => 
-    (i.focused === true && i.status === 'active') || 
-    (i.module === 'focus' && i.status === 'completed')
-  );
-  const parkingItems = filteredItems.filter(i => i.module === 'parking-lot' && !i.focused);
+  const focusItems = filteredItems.filter(i => Repository.isFocusTask(i));
+  const parkingItems = filteredItems.filter(i => i.module === 'parking-lot' && !i.focused && i.status === 'active');
 
   // Focus
   if (focusItems.length > 0) {
@@ -185,7 +182,7 @@ function updateResults(query) {
       visibleItems.push({
         type: 'task',
         label: task.title,
-        icon: task.status === 'completed' ? CHECKED_ICON : CHECKBOX_ICON,
+        icon: CHECKBOX_ICON,
         action: () => triggerSelectTask(task.id)
       });
     });
