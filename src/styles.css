@@ -435,6 +435,8 @@ html[data-sidebar-shortcuts="false"] .nav-shortcut {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  container-type: inline-size;
+  container-name: viewcontainer;
 }
 
 #view-content-area {
@@ -1618,6 +1620,24 @@ html[data-sidebar-shortcuts="false"] .nav-shortcut {
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
   gap: var(--space-md);
+}
+
+/* Responsive header add button — collapses label at narrow container widths */
+.header-add-btn {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.header-add-label {
+  display: inline;
+}
+
+@container viewcontainer (max-width: 480px) {
+  .header-add-label {
+    display: none;
+  }
 }
 
 .view-filter-group {

@@ -281,7 +281,7 @@ function renderAreasList() {
           </select>
         </div>
         <div id="view-search-portal"></div>
-        <button id="add-area-btn-list" class="action-btn" style="text-decoration:none;">+ New Area</button>
+        <button id="add-area-btn-list" class="action-btn header-add-btn" style="text-decoration:none;" title="New Area (C)" aria-label="New Area"><span class="header-add-icon" aria-hidden="true">+</span><span class="header-add-label"> New Area</span></button>
       </div>
       <div class="tasks-list-active" id="areas-items-list" role="listbox" aria-label="Areas list"></div>
     </div>

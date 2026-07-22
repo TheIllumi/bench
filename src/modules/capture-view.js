@@ -133,7 +133,7 @@ function renderView() {
           </select>
         </div>
         <div id="view-search-portal"></div>
-        <button id="add-capture-btn-list" class="action-btn" style="text-decoration:none;" title="New Capture (C)">+ New Capture</button>
+        <button id="add-capture-btn-list" class="action-btn header-add-btn" style="text-decoration:none;" title="New Capture (C)" aria-label="New Capture"><span class="header-add-icon" aria-hidden="true">+</span><span class="header-add-label"> New Capture</span></button>
       </div>
       <div id="view-content-area"></div>
     </div>
