@@ -1,5 +1,6 @@
 import { EventBus } from './event-bus.js';
 import { ToastService } from '../ui/toast.js';
+import { JotStore } from './jot-store.js';
 
 const STORAGE_KEY = 'bench_items';
 const OLD_STORAGE_KEY = 'bench_focus_tasks';
@@ -299,6 +300,14 @@ export const Repository = {
 
     this._saveRaw(toKeep);
     toDelete.forEach(item => EventBus.emit('itemDeleted', item));
+  },
+
+  /**
+   * Wipe all items from the repository and clear Jot notes.
+   */
+  clearAll() {
+    this._saveRaw([]);
+    JotStore.clearJot();
   },
 
   /**

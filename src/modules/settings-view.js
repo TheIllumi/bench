@@ -509,7 +509,7 @@ export function renderSettingsView(container) {
         variant: 'danger'
       }).then((confirmed) => {
         if (confirmed) {
-          Repository._saveRaw([]);
+          Repository.clearAll();
           ToastService.show('Database cleared successfully.', 'success');
           setTimeout(() => {
             window.location.reload();

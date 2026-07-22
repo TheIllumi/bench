@@ -28,5 +28,16 @@ export const JotStore = {
     } catch (e) {
       console.error('Failed to save Jot content:', e);
     }
+  },
+
+  /**
+   * Clear the Jot content.
+   */
+  clearJot() {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {
+      console.error('Failed to clear Jot content:', e);
+    }
   }
 };
