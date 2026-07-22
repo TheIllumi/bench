@@ -1371,6 +1371,53 @@ html[data-sidebar-shortcuts="false"] .nav-shortcut {
   box-shadow: 0 0 0 1px var(--color-accent-blue);
 }
 
+.inspector-area-module-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  background: transparent;
+  border: none;
+  padding: 2px 0;
+  margin-bottom: 2px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  user-select: none;
+  outline: none;
+  border-radius: var(--radius-sm);
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.inspector-area-module-header:hover {
+  color: var(--color-text-primary);
+}
+
+.inspector-area-module-header:focus-visible {
+  color: var(--color-accent-blue);
+  box-shadow: 0 0 0 1px var(--color-accent-blue);
+}
+
+.inspector-module-toggle-icon {
+  font-size: 9px;
+  line-height: 1;
+  display: inline-block;
+  width: 10px;
+  flex-shrink: 0;
+}
+
+.inspector-module-label {
+  text-transform: lowercase;
+}
+
+.inspector-module-count {
+  color: var(--color-text-muted);
+  font-size: 10px;
+  margin-left: 2px;
+}
+
 /* Shortcuts Modal styles */
 .shortcuts-modal-container {
   display: flex;

@@ -17,6 +17,7 @@ let debounceTimer = null;
 let pendingField = null;
 let pendingValue = null;
 let savedFadeTimer = null;
+const collapsedAreaSections = new Set();
 
 // DOM references cached after render
 let titleInput = null;
@@ -484,10 +485,21 @@ function syncAreaTasks() {
     modulesToRender.forEach(m => {
       const moduleTasks = allTasks.filter(t => t.module === m.id);
       if (moduleTasks.length > 0) {
+        const key = `${currentItem.id}:${m.id}`;
+        const isCollapsed = collapsedAreaSections.has(key);
+
         tasksHtml += `
           <div class="inspector-area-module-group" style="margin-top: var(--space-xs);">
-            <div class="inspector-label" style="text-transform: lowercase; font-size: 11px; margin-bottom: 2px;">${m.label}</div>
-            <div style="display: flex; flex-direction: column; gap: var(--space-2xs); padding-left: var(--space-xs);">
+            <button type="button" 
+                    class="inspector-area-module-header" 
+                    data-section-key="${key}"
+                    aria-expanded="${!isCollapsed}"
+                    aria-label="Toggle ${m.label} tasks">
+              <span class="inspector-module-toggle-icon">${isCollapsed ? '►' : '▼'}</span>
+              <span class="inspector-module-label">${m.label}</span>
+              <span class="inspector-module-count">(${moduleTasks.length})</span>
+            </button>
+            <div class="inspector-area-module-tasks" style="display: ${isCollapsed ? 'none' : 'flex'}; flex-direction: column; gap: var(--space-2xs); padding-left: var(--space-xs);">
         `;
         moduleTasks.forEach(task => {
           tasksHtml += `
@@ -510,6 +522,20 @@ function syncAreaTasks() {
   }
 
   listContainer.innerHTML = tasksHtml;
+
+  // Bind collapse/expand section toggles
+  listContainer.querySelectorAll('.inspector-area-module-header').forEach(header => {
+    header.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const sectionKey = header.getAttribute('data-section-key');
+      if (collapsedAreaSections.has(sectionKey)) {
+        collapsedAreaSections.delete(sectionKey);
+      } else {
+        collapsedAreaSections.add(sectionKey);
+      }
+      syncAreaTasks();
+    });
+  });
 }
 
 // --- Title Handling ---
